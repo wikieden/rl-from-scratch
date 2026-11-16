@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>价值函数</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 7 章 · 价值函数：从一个状态出发跑很多次，回报的平均就是价值</h1>
+<p class="sub">配套讲义：<a href="../lessons/07-value.html">第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a)</a>。扫地机器人，γ = 0.9，每局截到 60 步（0.9⁶⁰ ≈ 0.002，后面可以忽略）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><button id="m0" class="on">按策略走 → v_π(低电)</button><button id="m1">第一步先充电 → q_π(低电, 充电)</button><button id="m2">第一步先搜索 → q_π(低电, 搜索)</button></div>
+<p class="note">看点：① 每个点是从"低电"出发跑一局的折扣回报；② 横线是到目前为止的平均，慢慢稳在 v_π(低电) ≈ 13.87（虚线是第 8 章精确算出的值）；③ 点上面的按钮固定第一步的动作，平均就靠向对应的 q_π；④ 右下角：v = Σ π(a|s) q(s, a) = 0.2 × 13.51 + 0.3 × 13.48 + 0.5 × 14.25 = 13.87。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv'),P=ROBOT.P(0.7),TRUE=[13.869,14.245,13.511],LAB=['v_π(低电)','q_π(低电, 充电)','q_π(低电, 搜索)'],FIRST=[null,2,0];
+let mode=0,pts=[],k=0,MAX=150;
+function episode(first){let s=1,G=0,d=1;for(let t=0;t<60;t++){const pi=ROBOT.PI[s],acts=Object.keys(pi).map(Number);
+  const a=(t===0&&first!==null)?first:acts[pick(acts.map(x=>pi[x]))];const o=P[s][a][pick(P[s][a].map(z=>z[0]))];G+=d*o[2];d*=0.9;s=o[1]}return G}
+function draw(){
+  clear(sv);const n=pts.length,avg=n?pts.reduce((a,b)=>a+b,0)/n:0;
+  txt(`${LAB[mode]}：跑了 ${n} 局，平均 ${n?avg.toFixed(2):'—'}（精确值 ${TRUE[mode]}）`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const x0=60,x1=640,y0=300,y1=50,lo=6,hi=22,ym=v=>y0-(clamp(v,lo,hi)-lo)/(hi-lo)*(y0-y1),xm=i=>x0+i/MAX*(x1-x0);
+  el('line',{x1:x0,y1:y0,x2:x1,y2:y0,stroke:'var(--line)'},sv);el('line',{x1:x0,y1:y0,x2:x0,y2:y1,stroke:'var(--line)'},sv);
+  [6,10,14,18,22].forEach(v=>txt(String(v),{x:x0-8,y:ym(v)+4,'text-anchor':'end',class:'m'},sv));
+  txt('第几局',{x:(x0+x1)/2,y:y0+20,'text-anchor':'middle',class:'m'},sv);
+  pts.forEach((v,i)=>el('circle',{cx:xm(i+1),cy:ym(v),r:3,fill:'var(--muted)',opacity:.6},sv));
+  el('line',{x1:x0,y1:ym(TRUE[mode]),x2:x1,y2:ym(TRUE[mode]),stroke:'var(--warm)','stroke-dasharray':'6 4','stroke-width':1.5},sv);
+  let s=0,d='';pts.forEach((v,i)=>{s+=v;d+=(i?' L':'M')+xm(i+1).toFixed(1)+','+ym(s/(i+1)).toFixed(1)});if(d)el('path',{d,fill:'none',stroke:'var(--accent)','stroke-width':2.5},sv);
+  txt('点 = 一局的回报；蓝线 = 平均；虚线 = 精确值',{x:x0,y:y0+44,class:'m'},sv);
+  const t=txt('v_π(低电) = 0.2 × 13.511 + 0.3 × 13.482 + 0.5 × 14.245 = 13.869',{x:x1,y:y0+76,'text-anchor':'end'},sv);t.style.fill='var(--purple)';
+}
+function setMode(m){mode=m;['m0','m1','m2'].forEach((id,i)=>$(id).classList.toggle('on',i===m));pts=[];draw()}
+function reset(sd){seed(sd);k=0;setMode(0)}
+function next(){if(k>=60)return false;k++;if(CAPTURE&&k===26)setMode(1);if(CAPTURE&&k===44)setMode(2);
+  const m=pts.length<10?1:5;for(let i=0;i<m&&pts.length<MAX;i++)pts.push(episode(FIRST[mode]));draw();return true}
+['m0','m1','m2'].forEach((id,i)=>$(id).onclick=()=>{setMode(i)});
+setupPlayer({captureSeed:4,reset,next},500);
+</script></body></html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>马尔可夫决策过程</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.e{font-size:12px}</style></head>
+<body><main>
+<h1>第 5 章 · 马尔可夫决策过程：扫地机器人的状态图</h1>
+<p class="sub">配套讲义：<a href="../lessons/05-mdp.html">第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a)</a>。数字是讲义第一步那张表（书里例 3.3 回收机器人，参数是讲义定的）；机器人按第 6 章的策略选动作。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 470"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="b">自己拖：β = 低电搜索后还是低电的概率</label><input type="range" id="b" min="0" max="1" step="0.05" value="0.7"><span id="bv">0.70</span></div>
+<p class="note">看点：① 大圆是状态，小黑点是"状态 + 动作"；② 每条箭头写着"概率，奖励"，从同一个小黑点出发的箭头概率加起来是 1；③ 播放时机器人先选动作（黑点亮），再由环境按概率给结果（箭头亮），下面记下轨迹；④ 拖 β 看 r(低电, 搜索) = β × 2 + (1 − β) × (−3) 怎么变。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');let beta=0.7,P=ROBOT.P(beta),s=0,phase=0,act=null,out=null,traj=[],k=0;
+const ST=[[130,200],[550,200]];
+const DOT={'0,0':[310,120],'0,1':[130,345],'1,0':[390,285],'1,1':[550,345],'1,2':[370,55]};
+function defs(){const d=el('defs',{},sv);['var(--muted)','var(--warm)'].forEach((c,i)=>{const m=el('marker',{id:'m'+i,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},d);el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m)})}
+function edge(x1,y1,x2,y2,bend,lab,hot,toState){
+  const mx=(x1+x2)/2,my=(y1+y2)/2,dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),nx=-dy/L,ny=dx/L,cx=mx+nx*bend,cy=my+ny*bend;
+  let ex=x2,ey=y2;if(toState){const tx=x2-cx,ty=y2-cy,tl=Math.hypot(tx,ty);ex=x2-tx/tl*52;ey=y2-ty/tl*52}
+  el('path',{d:`M${x1},${y1} Q${cx},${cy} ${ex},${ey}`,fill:'none',stroke:hot?'var(--warm)':'var(--muted)','stroke-width':hot?3:1.3,'marker-end':`url(#m${hot?1:0})`},sv);
+  if(lab){const t=txt(lab,{x:(mx+cx)/2+nx*6,y:(my+cy)/2+ny*6+4,'text-anchor':'middle',class:'e'},sv);if(hot)t.style.fill='var(--warm)'}
+}
+function draw(){
+  clear(sv);defs();
+  const cap=phase===0?`现在：${ROBOT.S[s]}`:phase===1?`${ROBOT.S[s]}：按策略选动作 → ${ROBOT.A[act]}`:`环境掷骰子 → ${ROBOT.S[out[1]]}，奖励 ${out[2]>0?'+':''}${out[2]}`;
+  txt(cap,{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);
+  for(const key in DOT){const[ss,a]=key.split(',').map(Number),[dx,dy]=DOT[key],[sx,sy]=ST[ss];
+    const isAct=phase>=1&&ss===s&&a===act;
+    el('line',{x1:sx,y1:sy,x2:dx,y2:dy,stroke:isAct?'var(--accent)':'var(--line)','stroke-width':isAct?3:1.2},sv);
+    P[ss][a].forEach(([p,ns,r],j)=>{const[tx,ty]=ST[ns];const hot=phase===2&&isAct&&out&&out[1]===ns&&out[2]===r;
+      const bend=ns===ss?(ss===0?(a===1?-70:60):(a===1?70:-60)):(j?-40:40);
+      edge(dx,dy,tx,ty,bend,`${+p.toFixed(2)}，${r>0?'+':''}${r}`,hot,true)});
+    el('circle',{cx:dx,cy:dy,r:isAct?10:7,fill:isAct?'var(--accent)':'var(--text)'},sv);
+    txt(`${ROBOT.S[ss]}+${ROBOT.A[a]}`,{x:dx,y:dy+(dy<200?-14:24),'text-anchor':'middle',class:'m'},sv)}
+  ST.forEach(([x,y],i)=>{el('circle',{cx:x,cy:y,r:50,fill:i===s?'var(--accent-bg)':'var(--card)',stroke:i===s?'var(--accent)':'var(--muted)','stroke-width':i===s?2.5:1},sv);txt(ROBOT.S[i],{x,y:y+5,'text-anchor':'middle',class:'big'},sv)});
+  const show=traj.slice(-9).join(', ');txt('轨迹：'+(traj.length>9?'…, ':'')+show,{x:20,y:418,class:'m'},sv);
+  const rls=beta*2+(1-beta)*(-3);const t=txt(`r(低电, 搜索) = ${beta.toFixed(2)} × 2 + ${(1-beta).toFixed(2)} × (−3) = ${rls.toFixed(2)}`,{x:20,y:448},sv);t.style.fill='var(--purple)';
+}
+function reset(sd){seed(sd);s=0;phase=0;act=null;out=null;traj=['S₀=高电'];k=0;draw()}
+const SUBS='₀₁₂₃₄₅₆₇₈₉';const sub=n=>String(n).split('').map(d=>SUBS[d]).join('');
+function next(){if(k>=36)return false;k++;
+  if(phase===0||phase===2){if(phase===2){s=out[1]}const pi=ROBOT.PI[s],acts=Object.keys(pi).map(Number);act=acts[pick(acts.map(a=>pi[a]))];phase=1;traj.push(`A${sub(Math.floor(traj.length/3))}=${ROBOT.A[act]}`)}
+  else{const outs=P[s][act];out=outs[pick(outs.map(o=>o[0]))];phase=2;const n=Math.floor(traj.length/3)+1;traj.push(`R${sub(n)}=${out[2]>0?'+':''}${out[2]}`);traj.push(`S${sub(n)}=${ROBOT.S[out[1]]}`)}
+  draw();return true}
+$('b').oninput=e=>{beta=+e.target.value;$('bv').textContent=beta.toFixed(2);P=ROBOT.P(beta);draw()};
+setupPlayer({captureSeed:3,reset,next},900);
+</script></body></html>

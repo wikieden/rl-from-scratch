@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>策略</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 6 章 · 策略 π(a|s)：掷加权骰子；两层加权算一步的平均奖励</h1>
+<p class="sub">配套讲义：<a href="../lessons/06-policy.html">第 6 章 · 策略 policy π(a|s)：智能体的&quot;行事手册&quot;</a>。低电时的策略：搜索 0.2、等待 0.3、充电 0.5；r(s, a) 用第 5 章算好的值。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="h">自己拖：π(搜索 | 高电)</label><input type="range" id="h" min="0" max="1" step="0.05" value="0.9"><span id="hv">0.90</span></div>
+<p class="note">看点：① 策略条上每段的宽度就是概率；② 每帧掷一次，指针落在哪段就选哪个动作，次数多了计数接近 2 : 3 : 5；③ 下面先按 π 选动作、再用 r(s, a)（环境那层已经平均好）相乘再加，就是一步的平均奖励；④ 拖滑块改高电时的策略，看高电那一行怎么变（0.9 时是 1.9）。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv'),PL=[0.2,0.3,0.5],COL=['var(--teal)','var(--purple)','var(--amber)'],RL=[0.5,1,0];
+let hs=0.9,cnt=[0,0,0],u=null,k=0;
+function draw(){
+  clear(sv);const n=cnt[0]+cnt[1]+cnt[2];
+  txt(`低电时的策略：掷了 ${n} 次`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  let x=80;PL.forEach((p,i)=>{const w=p*520;el('rect',{x,y:44,width:w,height:46,fill:COL[i],opacity:.25,stroke:COL[i]},sv);
+    txt(`${ROBOT.A[i]} ${p}`,{x:x+w/2,y:73,'text-anchor':'middle',class:'big'},sv);x+=w});
+  if(u!==null){const px=80+u*520;el('path',{d:`M${px},40 L${px-7},28 L${px+7},28 z`,fill:'var(--text)'},sv);el('line',{x1:px,y1:40,x2:px,y2:94,stroke:'var(--text)','stroke-width':2},sv)}
+  PL.forEach((p,i)=>{const bx=120+i*180,h=n?cnt[i]/n*90:0;el('rect',{x:bx,y:200-h,width:60,height:h,fill:COL[i],opacity:.8},sv);
+    el('line',{x1:bx-6,y1:200-p*90,x2:bx+66,y2:200-p*90,stroke:'var(--warm)','stroke-dasharray':'4 3'},sv);
+    txt(`${ROBOT.A[i]} ${cnt[i]}（${n?(cnt[i]/n).toFixed(2):'—'}）`,{x:bx+30,y:220,'text-anchor':'middle',class:'m'},sv)});
+  txt('虚线 = 策略里的概率',{x:620,y:120,'text-anchor':'end',class:'m'},sv);
+  txt('一步的平均奖励 = Σ π(a|s) × r(s, a)',{x:340,y:262,'text-anchor':'middle',class:'cap'},sv);
+  const lo=PL.map((p,i)=>p*RL[i]).reduce((a,b)=>a+b,0);
+  txt(`低电：0.2 × 0.5 + 0.3 × 1 + 0.5 × 0 = 0.1 + 0.3 + 0 = ${lo.toFixed(1)}`,{x:340,y:296,'text-anchor':'middle',class:'big'},sv);
+  const hi=hs*2+(1-hs)*1;const t=txt(`高电：${hs.toFixed(2)} × 2 + ${(1-hs).toFixed(2)} × 1 = ${hi.toFixed(2)}`,{x:340,y:330,'text-anchor':'middle',class:'big'},sv);t.style.fill='var(--accent)';
+  txt('第一层按策略 π 平均，第二层（环境）已经在 r(s, a) 里平均好了',{x:340,y:366,'text-anchor':'middle',class:'m'},sv);
+}
+function spin(){u=rnd();cnt[u<0.2?0:u<0.5?1:2]++}
+function reset(sd){seed(sd);cnt=[0,0,0];u=null;k=0;draw()}
+function next(){if(k>=40)return false;k++;const m=k<=12?1:k<=25?10:40;for(let i=0;i<m;i++)spin();draw();return true}
+$('h').oninput=e=>{hs=+e.target.value;$('hv').textContent=hs.toFixed(2);draw()};
+setupPlayer({captureSeed:2,reset,next},600);
+</script></body></html>

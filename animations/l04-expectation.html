@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>概率与期望</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 4 章 · 概率与期望：扭得越多，平均值越靠近期望</h1>
+<p class="sub">配套讲义：<a href="../lessons/04-expectation.html">第 4 章 · 概率与期望 expectation：按概率的加权平均</a>。扭蛋机：概率 p 出 10 块零食，否则 0（讲义 p = 0.3）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 360"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="p">自己拖：出 10 的概率 p</label><input type="range" id="p" min="0.05" max="0.95" step="0.05" value="0.3"><span id="pv">0.30</span></div>
+<p class="note">看点：① 期望 E[X] = 10 × p + 0 × (1 − p)，p = 0.3 时是 3（虚线）；② 每帧扭一次，曲线是"到目前为止的平均"；③ 前几次抖得很厉害，次数一多就贴着虚线走（大数定律）；④ 改 p，虚线移到 10p，曲线也跟着去。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv'),MAXN=400;let p=0.3,draws=[],k=0;
+function draw(){
+  clear(sv);const E=10*p,n=draws.length,sum=draws.reduce((a,b)=>a+b,0),avg=n?sum/n:0;
+  txt(`扭了 ${n} 次，平均 ${n?avg.toFixed(3):'—'}；期望 E[X] = 10 × ${p.toFixed(2)} = ${E.toFixed(2)}`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  el('rect',{x:30,y:60,width:150,height:180,rx:16,fill:'var(--card)',stroke:'var(--line)'},sv);
+  el('circle',{cx:105,cy:130,r:48,fill:'var(--accent-bg)',stroke:'var(--accent)'},sv);
+  const last=n?draws[n-1]:null;
+  if(last!==null){const c=el('circle',{cx:105,cy:215,r:18,fill:last?'var(--amber)':'var(--line)'},sv);txt(String(last),{x:105,y:220,'text-anchor':'middle',class:'big'},sv)}
+  txt('扭蛋机',{x:105,y:134,'text-anchor':'middle',class:'big'},sv);
+  txt(`${(p*100).toFixed(0)}% 出 10，${((1-p)*100).toFixed(0)}% 出 0`,{x:105,y:262,'text-anchor':'middle',class:'m'},sv);
+  const x0=230,x1=650,y0=300,y1=60,ym=v=>y0-(v/10)*(y0-y1),xm=i=>x0+(i/MAXN)*(x1-x0);
+  el('line',{x1:x0,y1:y0,x2:x1,y2:y0,stroke:'var(--line)'},sv);el('line',{x1:x0,y1:y0,x2:x0,y2:y1,stroke:'var(--line)'},sv);
+  [0,5,10].forEach(v=>txt(String(v),{x:x0-8,y:ym(v)+4,'text-anchor':'end',class:'m'},sv));
+  [0,100,200,300,400].forEach(i=>txt(String(i),{x:xm(i),y:y0+16,'text-anchor':'middle',class:'m'},sv));
+  txt('扭的次数',{x:(x0+x1)/2,y:y0+34,'text-anchor':'middle',class:'m'},sv);
+  el('line',{x1:x0,y1:ym(E),x2:x1,y2:ym(E),stroke:'var(--warm)','stroke-dasharray':'6 4','stroke-width':2},sv);
+  const t=txt(`期望 ${E.toFixed(1)}`,{x:x1,y:ym(E)-6,'text-anchor':'end'},sv);t.style.fill='var(--warm)';
+  let s=0,d='';draws.forEach((v,i)=>{s+=v;d+=(i?' L':'M')+xm(i+1).toFixed(1)+','+ym(s/(i+1)).toFixed(1)});
+  if(d)el('path',{d,fill:'none',stroke:'var(--accent)','stroke-width':2},sv);
+}
+function pull(){draws.push(rnd()<p?10:0)}
+function reset(s){seed(s);draws=[];k=0;draw()}
+function next(){if(draws.length>=MAXN)return false;const m=draws.length<10?1:draws.length<50?5:25;for(let i=0;i<m;i++)pull();draw();return true}
+$('p').oninput=e=>{p=+e.target.value;$('pv').textContent=p.toFixed(2);ANIM.stop();reset(Date.now())};
+setupPlayer({captureSeed:5,reset,next},500);
+</script></body></html>

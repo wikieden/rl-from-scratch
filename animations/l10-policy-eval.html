@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>策略评估</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 10 章 · 策略评估：4×4 网格，终点的 0 一轮轮往外渗</h1>
+<p class="sub">配套讲义：<a href="../lessons/10-policy-eval.html">第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程</a>。书上例 4.1：左上、右下是终点，每步 −1，随机策略，γ = 1（图 4.1 左列）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 380"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="k">自己拖：跳到第 k 轮</label><input type="range" id="k" min="0" max="12" step="1" value="0"><span id="kv">0</span></div>
+<p class="note">看点：① 每帧做一轮：每格 = 四个方向"−1 + 邻居上一轮的值"的平均；② 第 2 轮高亮终点右边那格：−2、−2、−2、−1 平均 −1.75（图 4.1 印成 −1.7）；③ 右边曲线是每轮的最大变化 Δ，越来越小；④ 最后一帧是收敛值 0、−14、−20、−22（k = ∞）。滑块的第 12 档 = 收敛。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');const H=[Array(16).fill(0)];while(H.length<400){const v=grid4sweep(H[H.length-1],false);H.push(v);if(Math.max(...v.map((x,i)=>Math.abs(x-H[H.length-2][i])))<1e-6)break}
+const SHOW=[0,1,2,3,4,5,6,7,8,10,20,50,H.length-1];let k=0;
+function draw(){
+  clear(sv);const it=SHOW[k],v=H[it],fin=it===H.length-1;
+  txt(fin?`收敛（第 ${it} 轮，k = ∞）`:`第 ${it} 轮`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const CS=72,x0=40,y0=50;
+  for(let s=0;s<16;s++){const r=Math.floor(s/4),c=s%4,x=x0+c*CS,y=y0+r*CS,term=s===0||s===15;
+    el('rect',{x,y,width:CS-4,height:CS-4,rx:6,fill:term?'var(--line)':heat(-v[s],0,22),stroke:it===2&&s===1?'var(--warm)':'var(--line)','stroke-width':it===2&&s===1?3:1},sv);
+    txt(term?'终点':fmt(v[s],fin||it>3?1:2),{x:x+CS/2-2,y:y+CS/2+4,'text-anchor':'middle',class:'c'},sv)}
+  if(it===2){const p=H[1],lines=['↑ 撞墙留原地：−1 + (−1) = −2','↓ 到下面一格：−1 + (−1) = −2','→ 到右边一格：−1 + (−1) = −2','← 到终点：−1 + 0 = −1','平均：(−2 − 2 − 2 − 1) / 4 = −1.75'];
+    lines.forEach((l,i)=>{const t=txt(l,{x:350,y:80+i*28},sv);if(i===4)t.style.fill='var(--warm)'});}
+  const gx=350,gy=240,gw=300,gh=110,n=Math.min(it,60);
+  el('line',{x1:gx,y1:gy+gh,x2:gx+gw,y2:gy+gh,stroke:'var(--line)'},sv);el('line',{x1:gx,y1:gy,x2:gx,y2:gy+gh,stroke:'var(--line)'},sv);
+  txt('每轮最大变化 Δ（前 60 轮）',{x:gx,y:gy-8,class:'m'},sv);let d='';
+  for(let i=1;i<=n;i++){const D=Math.max(...H[i].map((x,j)=>Math.abs(x-H[i-1][j])));d+=(i>1?' L':'M')+(gx+i/60*gw).toFixed(1)+','+(gy+gh-D*gh).toFixed(1)}
+  if(d)el('path',{d,fill:'none',stroke:'var(--accent)','stroke-width':2},sv);
+}
+function reset(){k=0;draw()}
+function next(){if(k>=SHOW.length-1)return false;k++;$('k').value=k;$('kv').textContent=SHOW[k];draw();return true}
+$('k').oninput=e=>{ANIM.stop();k=+e.target.value;$('kv').textContent=SHOW[k];draw()};
+setupPlayer({captureSeed:1,reset,next},1100);
+</script></body></html>

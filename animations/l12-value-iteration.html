@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>价值迭代与 GPI</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:13px}</style></head>
+<body><main>
+<h1>第 12 章 · 价值迭代与 GPI：取平均 vs 挑最好的</h1>
+<p class="sub">配套讲义：<a href="../lessons/12-value-iteration.html">第 12 章 · 价值迭代与 GPI：评估只算一轮就改进</a>。4×4 网格（例 4.1），两边都从全 0 出发，每帧各更新一轮。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 470"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<p class="note">看点：① 左边策略评估（随机策略，四个方向取平均），右边价值迭代（取 max）；② 挨着终点那格（橙框）：左边第 2 轮 −1.75，右边一直是 −1；③ 右边第 4 轮就不变了（0、−1、−2、−3），左边还要两百多轮；④ 下方 GPI 示意：评估把点拉向"v = v_π"线，改进把点拉向"π = 贪心(v)"线，来回走到交点就是最优。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');let L,R,k;
+function grid(x0,v,title,stable){txt(title,{x:x0+132,y:52,'text-anchor':'middle',class:'m'},sv);const CS=64;
+  for(let s=0;s<16;s++){const r=Math.floor(s/4),c=s%4,x=x0+c*CS,y=60+r*CS,term=s===0||s===15;
+    el('rect',{x,y,width:CS-4,height:CS-4,rx:6,fill:term?'var(--line)':heat(-v[s],0,6),stroke:s===1?'var(--warm)':'var(--line)','stroke-width':s===1?3:1},sv);
+    txt(term?'终点':fmt(v[s],2),{x:x+CS/2-2,y:y+CS/2+4,'text-anchor':'middle',class:'c'},sv)}
+  if(stable){const t=txt('已不再变化',{x:x0+130,y:330,'text-anchor':'middle'},sv);t.style.fill='var(--good)'}}
+function gpi(){const x0=120,y0=350,w=440,h=100;
+  el('line',{x1:x0,y1:y0+h,x2:x0+w,y2:y0,stroke:'var(--accent)','stroke-width':2},sv);el('line',{x1:x0,y1:y0,x2:x0+w,y2:y0+h,stroke:'var(--warm)','stroke-width':2},sv);
+  const a=txt('v = v_π（评估）',{x:x0+w+6,y:y0+4,class:'m'},sv);const b=txt('π = 贪心(v)（改进）',{x:x0+w+6,y:y0+h+4,class:'m'},sv);
+  let px=x0+10,py=y0+50,d=`M${px},${py}`;const n=Math.min(k,8);
+  for(let i=0;i<n;i++){const t=(px-x0)/w;if(i%2===0){py=y0+h-((px-x0)/w)*h}else{px=x0+((py-y0)/h)*w*0.5+(px-x0)*0.5+20;py=y0+((px-x0)/w)*h}d+=` L${px.toFixed(1)},${py.toFixed(1)}`}
+  el('path',{d,fill:'none',stroke:'var(--purple)','stroke-width':1.5,'stroke-dasharray':'4 3'},sv);el('circle',{cx:px,cy:py,r:5,fill:'var(--purple)'},sv);
+  txt('交点：v*、π*',{x:x0+w/2,y:y0+h/2+22,'text-anchor':'middle',class:'m'},sv)}
+function draw(){clear(sv);txt(`第 ${k} 轮`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const sR=k>0&&JSON.stringify(grid4sweep(R,true))===JSON.stringify(R);
+  grid(20,L,'策略评估：四个方向平均',false);grid(360,R,'价值迭代：四个方向取 max',sR);gpi()}
+function reset(){L=Array(16).fill(0);R=Array(16).fill(0);k=0;draw()}
+function next(){if(k>=8)return false;L=grid4sweep(L,false);R=grid4sweep(R,true);k++;draw();return true}
+setupPlayer({captureSeed:1,reset,next},1200);
+</script></body></html>

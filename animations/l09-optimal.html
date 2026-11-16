@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>最优价值</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:12px}svg text.ar{font-size:16px}</style></head>
+<body><main>
+<h1>第 9 章 · 最优价值：每格往前看一步挑最大，箭头就是最优策略</h1>
+<p class="sub">配套讲义：<a href="../lessons/09-optimal.html">第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot;</a>。左：随机策略的价值（第 8 章，图 3.2）；右：最优价值 v*（图 3.5 中）；γ = 0.9。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 470"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<p class="note">看点：① 右边每一格都比左边大：最优策略处处不输；② 每帧挑一格，四个方向各算 0 + 0.9 × 邻居 v*（撞墙 −1 + 0.9 × 自己），最大的那个画成箭头；③ 全部画完：A' 那一列一路往上指回 A，"绕回 A 刷 +10"；④ 下面小面板：低电时三个动作代进最优方程，充电最大（15.254 = v*(低电)）。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv'),VR=grid5eval(0.9,false),VS=grid5eval(0.9,true);let done=[],cur=null,k=0;
+const CS=50;
+function grid(x0,y0,V,title,arrows){
+  const lo=Math.min(...VR),hi=Math.max(...VS);txt(title,{x:x0+125,y:y0-10,'text-anchor':'middle',class:'m'},sv);
+  for(let s=0;s<25;s++){const r=Math.floor(s/5),c=s%5,x=x0+c*CS,y=y0+r*CS;
+    el('rect',{x,y,width:CS-3,height:CS-3,rx:5,fill:heat(V[s],lo,hi),stroke:s===cur&&arrows?'var(--warm)':'var(--line)','stroke-width':s===cur&&arrows?3:1},sv);
+    txt(fmt(V[s]),{x:x+CS/2-1,y:y+(arrows&&done.includes(s)?18:CS/2+3),'text-anchor':'middle',class:'c'},sv);
+    if(arrows&&done.includes(s)){const bb=best(s);const t=txt(bb.length===4?'任意':bb.map(a=>ARW[a]).join(''),{x:x+CS/2-1,y:y+38,'text-anchor':'middle',class:'ar'},sv);t.style.fill='var(--warm)'}}
+}
+function qs(s){const r=Math.floor(s/5),c=s%5;return[0,1,2,3].map(a=>{const[nr,nc,rw]=grid5step(r,c,a);return rw+0.9*VS[nr*5+nc]})}
+function best(s){const q=qs(s),m=Math.max(...q);return[0,1,2,3].filter(a=>q[a]>m-1e-6)}
+function draw(){
+  clear(sv);txt(cur===null?'随机策略 vs 最优':`第 ${Math.floor(cur/5)+1} 行第 ${cur%5+1} 列往前看一步：` + qs(cur).map((q,a)=>ARW[a]+fmt(q)).join('  '),{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);
+  grid(40,60,VR,'随机策略 v_π（第 8 章）',false);grid(380,60,VS,'最优 v*（箭头 = 最优动作）',true);
+  const y=345;txt('扫地机器人，低电时代进最优方程（v*(高) = 16.949，v*(低) = 15.254）：',{x:40,y},sv);
+  const rows=[['搜索','0.7 × (2 + 0.9 × 15.254) + 0.3 × (−3 + 0.9 × 16.949)',14.686],['等待','1 + 0.9 × 15.254',14.729],['充电','0 + 0.9 × 16.949',15.254]];
+  rows.forEach(([a,e,v],i)=>{const t=txt(`${a}：${e} = ${v}`,{x:60,y:y+28+i*26},sv);if(i===2){t.style.fill='var(--accent)';t.style.fontWeight=500}});
+  txt('最大的是充电 → 低电时充电；它正好等于 v*(低电)',{x:60,y:y+110,class:'m'},sv);
+}
+function reset(){done=[];cur=null;k=0;draw()}
+function next(){if(k>=26)return false;if(k<25){cur=k;done.push(k)}else cur=null;k++;draw();return true}
+setupPlayer({captureSeed:1,reset,next},600);
+</script></body></html>

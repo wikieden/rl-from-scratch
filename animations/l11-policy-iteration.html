@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>策略迭代</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:13px}svg text.ar{font-size:15px}</style></head>
+<body><main>
+<h1>第 11 章 · 策略迭代：评估 ↔ 改进来回走，箭头一步步变成最优</h1>
+<p class="sub">配套讲义：<a href="../lessons/11-policy-iteration.html">第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估</a>。4×4 网格（例 4.1），从随机策略出发。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 360"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="m">自己拖：评估几轮就改进一次</label><input type="range" id="m" min="1" max="30" step="1" value="30"><span id="mv">30</span></div>
+<p class="note">看点：① 左边价值（颜色），右边策略（箭头，并列的方向都画）；② "评估"阶段：按当前策略一轮轮更新价值，箭头不动；③ "改进"阶段：每格往四个邻居看一步，箭头换成"−1 + 邻居价值"最大的方向；④ 改进完箭头不再变，就停下：这时满足最优方程。滑块调到 1 就是下一章的价值迭代。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');let M=30,v,pi,phase,evals,rounds,stopped,k;
+function uniform(){return Array.from({length:16},()=>[0.25,0.25,0.25,0.25])}
+function evalSweep(){return v.map((_,s)=>{if(s===0||s===15)return 0;let x=0;for(let a=0;a<4;a++){const[ns,rw]=grid4step(s,a);x+=pi[s][a]*(rw+v[ns])}return x})}
+function greedy(){return v.map((_,s)=>{const q=[0,1,2,3].map(a=>{const[ns,rw]=grid4step(s,a);return rw+v[ns]}),m=Math.max(...q),top=q.map(x=>x>m-1e-6?1:0),n=top.reduce((a,b)=>a+b);return top.map(t=>t/n)})}
+function draw(msg){
+  clear(sv);txt(msg,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const CS=66,lo=Math.min(...v);
+  [[30,'价值'],[370,'策略']].forEach(([x0,lab],side)=>{txt(lab,{x:x0+130,y:52,'text-anchor':'middle',class:'m'},sv);
+    for(let s=0;s<16;s++){const r=Math.floor(s/4),c=s%4,x=x0+c*CS,y=62+r*CS,term=s===0||s===15;
+      el('rect',{x,y,width:CS-4,height:CS-4,rx:6,fill:term?'var(--line)':side?'var(--card)':heat(-v[s],0,-lo||1),stroke:'var(--line)'},sv);
+      if(term)txt('终点',{x:x+CS/2-2,y:y+CS/2+4,'text-anchor':'middle',class:'c'},sv);
+      else if(!side)txt(fmt(v[s]),{x:x+CS/2-2,y:y+CS/2+4,'text-anchor':'middle',class:'c'},sv);
+      else{const t=txt(pi[s].map((p,a)=>p>0?ARW[a]:'').join(''),{x:x+CS/2-2,y:y+CS/2+5,'text-anchor':'middle',class:'ar'},sv);t.style.fill='var(--warm)'}}});
+}
+function reset(){v=Array(16).fill(0);pi=uniform();phase='eval';evals=0;rounds=0;stopped=false;k=0;draw('起点：随机策略，价值全 0')}
+function next(){if(stopped||k>80)return false;k++;
+  if(phase==='eval'){v=evalSweep();evals++;if(evals>=M){phase='improve'}draw(`第 ${rounds+1} 轮 · 评估：按当前策略更新价值（第 ${evals} 次）`);return true}
+  const np=greedy();rounds++;const same=JSON.stringify(np)===JSON.stringify(pi);pi=np;evals=0;phase='eval';
+  if(same){stopped=true;draw(`第 ${rounds} 轮 · 改进后策略没变 → 停：满足最优方程`);return true}
+  draw(`第 ${rounds} 轮 · 改进：每格挑"−1 + 邻居价值"最大的方向`);return true}
+$('m').oninput=e=>{M=+e.target.value;$('mv').textContent=M;ANIM.stop();reset()};
+if(CAPTURE)M=6;
+setupPlayer({captureSeed:1,reset,next},700);
+</script></body></html>
