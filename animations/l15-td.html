@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>时序差分</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 15 章 · 时序差分 TD(0)：走一步就更新，好消息从右往左传</h1>
+<p class="sub">配套讲义：<a href="../lessons/15-td.html">第 15 章 · 时序差分 TD：走一步就更新，拿&quot;下一步的估计&quot;当目标</a>。随机游走 A–E，初值 0.5，γ = 1。开头两帧是讲义第二步的手算。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 520"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="a">自己拖：TD 的步长 α</label><input type="range" id="a" min="0.02" max="0.5" step="0.02" value="0.1"><span id="av">0.10</span></div>
+<p class="note">看点：① 小球每走一步，立刻更新它离开的那格：δ = R + V(下一格) − V(这一格)，V += α × δ；② 手算：E 走出右边 0.5 → 0.55；接着 D → E，D 跟着涨到 0.505；③ 下面两条曲线是 60 次实验平均的 RMS 误差：TD（α 可调）和常数 α MC（α = 0.02）；④ α 大学得快但抖，α 小稳但慢。</p>
+</main>
+<script src="anim.js"></script><script src="rl-walk.js"></script>
+<script>
+const sv=$('sv');let A=0.1,V,ep,pos,hi,msg,k,curves;
+function td(V,s,r,ns,a){const d=r+(ns<0?0:V[ns])-V[s];V[s]+=a*d;return d}
+function runCurves(){const n=100,runs=60,tdc=Array(n).fill(0),mcc=Array(n).fill(0);seed(99);
+  for(let r=0;r<runs;r++){let Vt=Array(5).fill(.5),Vm=Array(5).fill(.5);
+    for(let e=0;e<n;e++){const E=walkEpisode();E.forEach(([s,rw,ns])=>td(Vt,s,rw,ns,A));let g=E[E.length-1][1];const seen={};E.forEach(([s])=>{if(!seen[s]){seen[s]=1;Vm[s]+=0.02*(g-Vm[s])}});
+      tdc[e]+=rmsErr(Vt)/runs;mcc[e]+=rmsErr(Vm)/runs}}return[tdc,mcc]}
+function draw(){clear(sv);txt(msg,{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);walkRow(V,70,pos,hi);
+  const x0=100,y0=500,w=520,h=110,ym=v=>y0-v/0.25*h;el('line',{x1:x0,y1:y0,x2:x0+w,y2:y0,stroke:'var(--line)'},sv);el('line',{x1:x0,y1:y0,x2:x0,y2:y0-h,stroke:'var(--line)'},sv);
+  txt('RMS 误差（60 次实验平均）随局数',{x:x0,y:y0-h-6,class:'m'},sv);[0,0.1,0.2].forEach(v=>txt(v.toFixed(1),{x:x0-6,y:ym(v)+4,'text-anchor':'end',class:'m'},sv));
+  [[curves[0],'var(--accent)',`TD α=${A.toFixed(2)}`],[curves[1],'var(--warm)','MC α=0.02']].forEach(([c,col,lab],j)=>{let d='';c.forEach((v,i)=>d+=(i?' L':'M')+(x0+i/99*w).toFixed(1)+','+ym(v).toFixed(1));el('path',{d,fill:'none',stroke:col,'stroke-width':2},sv);const t=txt(`${lab}：${c[99].toFixed(3)}`,{x:x0+w,y:y0-h+14+j*18,'text-anchor':'end'},sv);t.style.fill=col})}
+function reset(sd){seed(sd);V=Array(5).fill(0.5);ep=null;pos=4;hi=[4];k=0;msg='手算 ①：小球在 E';curves=runCurves();seed(sd);draw()}
+function next(){if(k>=60)return false;k++;
+  if(k===1){const d=td(V,4,1,-1,A);pos=-1;hi=[4];msg=`① E 走出右边：δ = 1 + 0 − 0.5 = ${d.toFixed(2)}，V(E) → ${V[4].toFixed(3)}`;draw();return true}
+  if(k===2){const d=td(V,3,0,4,A);pos=4;hi=[3];msg=`② D → E：δ = 0 + ${V[4].toFixed(2)} − 0.5 = ${d.toFixed(3)}，V(D) → ${V[3].toFixed(3)}`;draw();return true}
+  if(!ep||ep.i>=ep.length){ep=walkEpisode();ep.i=0}
+  const[s,r,ns]=ep[ep.i++];const d=td(V,s,r,ns,A);pos=ns;hi=[s];msg=`${WN[s]} → ${ns<0?(r?'右出 +1':'左出 0'):WN[ns]}：δ = ${d>=0?'+':''}${d.toFixed(3)}，V(${WN[s]}) = ${V[s].toFixed(3)}`;draw();return true}
+$('a').oninput=e=>{A=+e.target.value;$('av').textContent=A.toFixed(2);ANIM.stop();reset(3)};
+setupPlayer({captureSeed:3,reset,next},700);
+</script></body></html>

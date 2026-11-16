@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>蒙特卡洛</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 14 章 · 蒙特卡洛：一局走完，第一次经过的格子记下回报</h1>
+<p class="sub">配套讲义：<a href="../lessons/14-monte-carlo.html">第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值</a>。随机游走 A–E，初值全是 0.5，first-visit，步长 1/N（真平均），γ = 1。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 380"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="n">自己拖：直接跳到玩完第几局</label><input type="range" id="n" min="0" max="1000" step="10" value="0"><span id="nv">0</span></div>
+<p class="note">看点：① 小球一步步随机游走，走的时候估计不动（MC 要等一局结束）；② 一局结束时，这局第一次经过的格子描橙框，各记下回报 0 或 1；③ 下面柱子是当前估计，虚线是真实值 1/6 … 5/6；局数越多越贴近；④ 右上角 RMS 误差。</p>
+</main>
+<script src="anim.js"></script><script src="rl-walk.js"></script>
+<script>
+const sv=$('sv');let V,N,ep,pos,hi,G,eps,k;
+function update(e){const ret={};let g=0;for(let i=e.length-1;i>=0;i--){g=e[i][1]+g;ret[e[i][0]]=g}for(const s in ret){N[s]++;V[s]+=(ret[s]-V[s])/N[s]}return ret}
+function draw(msg){clear(sv);txt(msg,{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);txt(`已玩 ${eps} 局 · RMS 误差 ${rmsErr(V).toFixed(4)}`,{x:660,y:50,'text-anchor':'end',class:'m'},sv);walkRow(V,80,pos,hi)}
+function reset(sd){seed(sd);V=Array(5).fill(0.5);N=Array(5).fill(0);ep=null;pos=2;hi=null;eps=0;k=0;draw('从 C 出发')}
+function next(){if(k>=70)return false;k++;
+  if(eps>=6){for(let i=0;i<(eps<50?10:100);i++){update(walkEpisode());eps++}pos=null;hi=null;draw('快进：每帧玩很多局');return true}
+  if(!ep){ep=walkEpisode();pos=2;G=0;ep.i=0;hi=null}
+  if(ep.i<ep.length){const[s,r,ns]=ep[ep.i++];pos=ns;draw(ns<0?(r?'走出右边，奖励 +1：这局结束':'走出左边，奖励 0：这局结束'):`${WN[s]} → ${WN[ns]}（还没结束，估计不动）`);return true}
+  const ret=update(ep);hi=Object.keys(ret).map(Number);eps++;ep=null;pos=2;
+  draw('更新：'+hi.map(s=>`${WN[s]} 记 ${ret[s]}`).join('，'));return true}
+$('n').oninput=e=>{ANIM.stop();const n=+e.target.value;reset(7);for(let i=0;i<n;i++)update(walkEpisode());eps=n;$('nv').textContent=n;pos=null;draw(`玩了 ${n} 局`)};
+setupPlayer({captureSeed:7,reset,next},450);
+</script></body></html>

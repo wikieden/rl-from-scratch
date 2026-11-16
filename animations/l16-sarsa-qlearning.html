@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SARSA 与 Q-learning</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 16 章 · SARSA 与 Q-learning：悬崖边一个绕远路，一个贴边走</h1>
+<p class="sub">配套讲义：<a href="../lessons/16-sarsa-qlearning.html">第 16 章 · SARSA 与 Q-learning：用 TD 学 q，学会怎么做</a>。书上例 6.6：4×12，每步 −1，掉下悬崖 −100 回起点；α = 0.5，γ = 1。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 500"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="e">自己拖：ε（训练时乱走的概率）</label><input type="range" id="e" min="0" max="0.3" step="0.02" value="0.1"><span id="ev">0.10</span></div>
+<p class="note">看点：① 开头一帧是讲义第三步的手算：同一步经历，SARSA 目标 −1 + (−5) = −6，Q-learning 目标 −1 + max = −5；② 之后两个算法同时训练，每帧若干局；蓝线是当前的贪心路线：SARSA 抬到上面，Q-learning 贴着悬崖；③ 右边是每局奖励的滑动平均，SARSA 在上（约 −25 vs −50）；④ ε 拖到 0，两条路线都会变成贴边那条。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv'),RW=4,CL=12;let EPS=0.1,ag,k;
+function step(r,c,a){let nr=clamp(r+MOVES[a][0],0,3),nc=clamp(c+MOVES[a][1],0,11);if(nr===3&&nc>=1&&nc<=10)return[3,0,-100,false];return[nr,nc,-1,nr===3&&nc===11]}
+function choose(Q,r,c){if(rnd()<EPS)return Math.floor(rnd()*4);const q=Q[r][c],m=Math.max(...q),t=[0,1,2,3].filter(a=>q[a]===m);return t[Math.floor(rnd()*t.length)]}
+function mk(kind){return{kind,Q:Array.from({length:4},()=>Array.from({length:12},()=>[0,0,0,0])),hist:[]}}
+function episode(A){const Q=A.Q;let r=3,c=0,a=choose(Q,r,c),tot=0;for(let t=0;t<2000;t++){const[nr,nc,rw,done]=step(r,c,a);tot+=rw;const na=choose(Q,nr,nc);
+  const tgt=rw+(done?0:(A.kind==='sarsa'?Q[nr][nc][na]:Math.max(...Q[nr][nc])));Q[r][c][a]+=0.5*(tgt-Q[r][c][a]);r=nr;c=nc;a=na;if(done)break}A.hist.push(tot)}
+function path(Q){let r=3,c=0,p=[[r,c]];for(let i=0;i<60;i++){const q=Q[r][c],a=q.indexOf(Math.max(...q));[r,c]=step(r,c,a);p.push([r,c]);if(r===3&&c===11)break;if(r===3&&c===0&&i>0)break}return p}
+function grid(A,y0,lab){const CS=34,x0=20;txt(lab,{x:x0,y:y0-8,class:'big'},sv);
+  for(let r=0;r<RW;r++)for(let c=0;c<CL;c++){const cliff=r===3&&c>=1&&c<=10;el('rect',{x:x0+c*CS,y:y0+r*CS,width:CS-2,height:CS-2,rx:3,fill:cliff?'var(--bad)':'var(--card)',opacity:cliff?.35:1},sv)}
+  txt('S',{x:x0+CS/2,y:y0+3*CS+22,'text-anchor':'middle'},sv);txt('G',{x:x0+11*CS+CS/2,y:y0+3*CS+22,'text-anchor':'middle'},sv);
+  if(A.hist.length){const p=path(A.Q);el('path',{d:p.map(([r,c],i)=>(i?'L':'M')+(x0+c*CS+CS/2-1)+','+(y0+r*CS+CS/2-1)).join(' '),fill:'none',stroke:'var(--accent)','stroke-width':3},sv)}}
+function curve(){const x0=450,y0=440,w=210,h=330,lo=-120,hi=0,ym=v=>y0-(clamp(v,lo,hi)-lo)/(hi-lo)*h;
+  el('line',{x1:x0,y1:y0,x2:x0+w,y2:y0,stroke:'var(--line)'},sv);el('line',{x1:x0,y1:y0,x2:x0,y2:y0-h,stroke:'var(--line)'},sv);
+  [-100,-50,0].forEach(v=>txt(String(v),{x:x0-4,y:ym(v)+4,'text-anchor':'end',class:'m'},sv));txt('每局奖励（近 20 局平均）',{x:x0,y:y0-h-8,class:'m'},sv);
+  ag.forEach((A,j)=>{const n=A.hist.length,col=j?'var(--warm)':'var(--teal)';let d='';for(let i=0;i<n;i++){const s=A.hist.slice(Math.max(0,i-19),i+1);d+=(i?' L':'M')+(x0+i/500*w).toFixed(1)+','+ym(s.reduce((a,b)=>a+b)/s.length).toFixed(1)}
+    if(d)el('path',{d,fill:'none',stroke:col,'stroke-width':2},sv);if(n){const s=A.hist.slice(-20);const t=txt(`${j?'Q-learning':'SARSA'} ${(s.reduce((a,b)=>a+b)/s.length).toFixed(0)}`,{x:x0+w,y:y0+20+j*18,'text-anchor':'end'},sv);t.style.fill=col}})}
+function demo(){txt('手算一步：在 (3,0) 往上走，奖励 −1，到 (2,0)；(2,0) 的 Q = [↑ −5, ↓ −12, → −4, ← −6]',{x:340,y:60,'text-anchor':'middle'},sv);
+  txt('ε-greedy 这次掷到"乱走"，下一步实际选了 ↑',{x:340,y:100,'text-anchor':'middle',class:'m'},sv);
+  const a=txt('SARSA 目标 = −1 + Q((2,0), ↑) = −1 + (−5) = −6',{x:340,y:150,'text-anchor':'middle',class:'big'},sv);a.style.fill='var(--teal)';
+  const b=txt('Q-learning 目标 = −1 + max = −1 + (−4) = −5',{x:340,y:190,'text-anchor':'middle',class:'big'},sv);b.style.fill='var(--warm)';
+  txt('SARSA 用真正要做的下一步；Q-learning 用下一格最好的',{x:340,y:240,'text-anchor':'middle',class:'m'},sv)}
+function draw(){clear(sv);if(k===0){txt('同一步经历，两个目标',{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);demo();return}
+  txt(`训练了 ${ag[0].hist.length} 局`,{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);grid(ag[0],60,'SARSA（on-policy）');grid(ag[1],270,'Q-learning（off-policy）');curve()}
+function reset(sd){seed(sd);ag=[mk('sarsa'),mk('q')];k=0;draw()}
+function next(){if(ag[0].hist.length>=500)return false;k++;const m=k<=5?2:k<=15?10:25;for(let i=0;i<m&&ag[0].hist.length<500;i++){episode(ag[0]);episode(ag[1])}draw();return true}
+$('e').oninput=e=>{EPS=+e.target.value;$('ev').textContent=EPS.toFixed(2);ANIM.stop();reset(5)};
+setupPlayer({captureSeed:5,reset,next},700);
+</script></body></html>

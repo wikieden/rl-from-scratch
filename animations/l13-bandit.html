@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>探索与利用</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 13 章 · 探索与利用：三台老虎机，贪心 vs ε-greedy</h1>
+<p class="sub">配套讲义：<a href="../lessons/13-bandit.html">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy</a>。真实平均 1.0、1.5、0.5（2 号最好，智能体看不见），每次奖励 = 真实平均 + 噪声（标准差 1）。估计从 0 开始。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 420"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 换个随机种子从头开始</button></div>
+<div class="row ctl"><label for="e">自己拖：下排的 ε</label><input type="range" id="e" min="0" max="0.5" step="0.05" value="0.1"><span id="ev">0.10</span></div>
+<p class="note">看点：① 虚线是真实平均，实柱是估计 Q(a)，柱下数字是拉了几次；② 每帧两排各拉一次，被拉的那台描橙框，估计按"旧 + (奖励 − 旧)/n"更新；③ 贪心那排常常一直拉同一台，没试过的机器估计停在 0；④ ε-greedy 那排每台都被试过，2 号慢慢胜出；右边是"选到 2 号的比例"。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv'),MU=[1.0,1.5,0.5];let eps=0.1,rows,k;
+function mk(e){return{e,Q:[0,0,0],N:[0,0,0],last:null,best:0,t:0}}
+function pull(R){const a=rnd()<R.e?Math.floor(rnd()*3):R.Q.indexOf(Math.max(...R.Q));const r=MU[a]+gauss();R.N[a]++;R.Q[a]+=(r-R.Q[a])/R.N[a];R.last=a;R.t++;if(a===1)R.best++}
+function row(R,y,lab){txt(lab,{x:20,y:y+10,class:'big'},sv);const base=y+110,sc=50;
+  el('line',{x1:150,y1:base,x2:520,y2:base,stroke:'var(--line)'},sv);
+  for(let a=0;a<3;a++){const x=170+a*120,q=R.Q[a];
+    el('rect',{x,y:q>=0?base-q*sc:base,width:70,height:Math.abs(q)*sc,fill:a===1?'var(--teal)':'var(--accent)',opacity:.75,stroke:R.last===a?'var(--warm)':'none','stroke-width':3},sv);
+    el('line',{x1:x-8,y1:base-MU[a]*sc,x2:x+78,y2:base-MU[a]*sc,stroke:'var(--warm)','stroke-dasharray':'5 4'},sv);
+    txt(`${a+1} 号 Q=${q.toFixed(2)}`,{x:x+35,y:base+18,'text-anchor':'middle',class:'m'},sv);txt(`拉了 ${R.N[a]} 次`,{x:x+35,y:base+34,'text-anchor':'middle',class:'m'},sv)}
+  const p=R.t?R.best/R.t:0;el('rect',{x:560,y:base-100*p,width:40,height:100*p,fill:'var(--teal)'},sv);el('rect',{x:560,y:base-100,width:40,height:100,fill:'none',stroke:'var(--line)'},sv);
+  txt(`选到 2 号 ${(p*100).toFixed(0)}%`,{x:580,y:base+18,'text-anchor':'middle',class:'m'},sv)}
+function draw(){clear(sv);txt(`拉了 ${rows[0].t} 次`,{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);row(rows[0],40,'贪心 ε = 0');row(rows[1],230,`ε-greedy ε = ${rows[1].e.toFixed(2)}`)}
+function reset(sd){seed(sd);rows=[mk(0),mk(eps)];k=0;draw()}
+function next(){if(k>=45)return false;k++;const m=k<=20?1:10;for(let i=0;i<m;i++){pull(rows[0]);pull(rows[1])}draw();return true}
+$('e').oninput=e=>{eps=+e.target.value;$('ev').textContent=eps.toFixed(2);ANIM.stop();reset(Date.now())};
+setupPlayer({captureSeed:11,reset,next},500);
+</script></body></html>
