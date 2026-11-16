@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>baseline 与 reward-to-go</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 21 章 · baseline：减掉"平常水平"，梯度样本一下子集中了</h1>
+<p class="sub">配套讲义：<a href="../lessons/21-baseline.html">第 21 章 · baseline 与 reward-to-go：给策略梯度降噪</a>。两台机器平均奖励 10 和 11，π = [0.5, 0.5]；每个点是一个单样本梯度（θ₁ 那一维），真实梯度是 0.25。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 430"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="b">自己拖：下排的 baseline b</label><input type="range" id="b" min="0" max="12" step="0.5" value="10.5"><span id="bv">10.5</span></div>
+<p class="note">看点：① 上排不减 baseline：抽到哪台都大幅推高，点散在 −6 到 +6；② 下排减 b = 10.5：差机器被压低、好机器被推高，点挤在 ±0.5 附近；③ 两排的竖线是到目前为止的平均，都靠向真实梯度 0.25（虚线）：减 b 不改方向；④ 右下角：一局奖励 [1, 0, 2, 0] 的 reward-to-go = [3, 2, 2, 0]。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv');let B=10.5,P0,P1,k;
+function sample(b){const a=rnd()<0.5?1:0,G=(a?11:10)+gauss();return(G-b)*((a?1:0)-0.5)}
+function row(pts,y,lab){const x0=60,w=560,xm=v=>x0+(clamp(v,-7,7)+7)/14*w;txt(lab,{x:x0,y:y-30,class:'big'},sv);
+  el('line',{x1:x0,y1:y,x2:x0+w,y2:y,stroke:'var(--line)'},sv);[-6,-3,0,3,6].forEach(v=>txt(String(v),{x:xm(v),y:y+48,'text-anchor':'middle',class:'m'},sv));
+  el('line',{x1:xm(0.25),y1:y-24,x2:xm(0.25),y2:y+28,stroke:'var(--warm)','stroke-dasharray':'4 3'},sv);
+  pts.forEach((v,i)=>el('circle',{cx:xm(v),cy:y-14+((i*37)%28),r:2.5,fill:'var(--accent)',opacity:.45},sv));
+  const m=pts.length?pts.reduce((a,b)=>a+b)/pts.length:0,vr=pts.length?pts.reduce((a,b)=>a+(b-m)**2,0)/pts.length:0;
+  el('line',{x1:xm(m),y1:y-26,x2:xm(m),y2:y+30,stroke:'var(--purple)','stroke-width':3},sv);
+  txt(`${pts.length} 个样本：平均 ${m.toFixed(3)}，方差 ${vr.toFixed(2)}`,{x:x0+w,y:y-30,'text-anchor':'end',class:'m'},sv)}
+function draw(){clear(sv);txt('同样的抽样，乘子不同',{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);row(P0,100,'不减：乘子 = G');row(P1,230,`减 b = ${B}：乘子 = G − b`);
+  const x=380,y=330;txt('reward-to-go：每一步只乘它之后的奖励',{x:60,y,class:'m'},sv);const r=[1,0,2,0],g=[3,2,2,0];
+  r.forEach((v,i)=>{el('rect',{x:60+i*60,y:y+12,width:52,height:30,rx:5,fill:'var(--card)',stroke:'var(--line)'},sv);txt(`r=${v}`,{x:86+i*60,y:y+32,'text-anchor':'middle'},sv);
+    el('rect',{x:60+i*60,y:y+50,width:52,height:30,rx:5,fill:'var(--accent-bg)',stroke:'var(--accent)'},sv);txt(String(g[i]),{x:86+i*60,y:y+70,'text-anchor':'middle'},sv)});
+  txt('整局总回报每一步都是 3；reward-to-go 让最后一步乘 0',{x:310,y:y+70,class:'m'},sv)}
+function reset(sd){seed(sd);P0=[];P1=[];k=0;draw()}
+function next(){if(k>=40)return false;k++;const m=k<=10?3:40;for(let i=0;i<m;i++){const s=rnd();seed(Math.floor(s*1e9));const a=sample(0);seed(Math.floor(s*1e9));const b=sample(B);P0.push(a);P1.push(b);seed(Math.floor(s*1e9)+7)}draw();return true}
+$('b').oninput=e=>{B=+e.target.value;$('bv').textContent=B;ANIM.stop();reset(6)};
+setupPlayer({captureSeed:6,reset,next},500);
+</script></body></html>

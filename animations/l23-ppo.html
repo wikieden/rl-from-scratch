@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>从 TRPO 到 PPO</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 23 章 · PPO：比率改过头，目标就变平</h1>
+<p class="sub">配套讲义：<a href="../lessons/23-ppo.html">第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多</a>。横轴是比率 r = π_新 / π_旧；虚线 r·A，实线 L^CLIP = min(r·A, clip(r, 1−ε, 1+ε)·A)（PPO 论文图 1）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 380"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="e">自己拖：ε</label><input type="range" id="e" min="0.05" max="0.5" step="0.05" value="0.2"><span id="ev">0.20</span></div>
+<p class="note">看点：① 左图 A = +2（好动作）：点从 r = 1 沿梯度往右走，到 1 + ε 实线变平、梯度 0，就停了；② 右图 A = −1（坏动作）：点往左走，到 1 − ε 停；③ 最后演示 A = +2 但 r 已经掉到 0.5（改错了方向）：这里实线有斜率，点被拉回来；④ ε 越小平台越早出现，一批数据能改的越少。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv');let E=0.2,p1,p2,p3,k;
+const L=(r,a)=>Math.min(r*a,clamp(r,1-E,1+E)*a),dL=(r,a)=>{const h=1e-4;return a>0?(L(r+h,a)-L(r,a))/h:(L(r,a)-L(r-h,a))/h}; // 单侧斜率：往要走的方向看
+function plot(x0,a,pts,title){const w=280,y0=300,h=220,xm=r=>x0+r/2*w,lo=a>0?0:-2,hi=a>0?4:0,ym=v=>y0-(v-lo)/(hi-lo)*h;
+  txt(title,{x:x0+w/2,y:60,'text-anchor':'middle',class:'big'},sv);el('line',{x1:x0,y1:y0,x2:x0+w,y2:y0,stroke:'var(--line)'},sv);el('line',{x1:x0,y1:y0,x2:x0,y2:y0-h,stroke:'var(--line)'},sv);
+  [0,1-E,1,1+E,2].forEach(r=>txt(+r.toFixed(2)+'',{x:xm(r),y:y0+16,'text-anchor':'middle',class:'m'},sv));txt('r',{x:x0+w+10,y:y0+4,class:'m'},sv);
+  let d1='',d2='';for(let i=0;i<=100;i++){const r=i/50;d1+=(i?' L':'M')+xm(r).toFixed(1)+','+ym(r*a).toFixed(1);d2+=(i?' L':'M')+xm(r).toFixed(1)+','+ym(L(r,a)).toFixed(1)}
+  el('path',{d:d1,fill:'none',stroke:'var(--muted)','stroke-dasharray':'5 4'},sv);el('path',{d:d2,fill:'none',stroke:'var(--accent)','stroke-width':3},sv);
+  [1-E,1+E].forEach(r=>el('line',{x1:xm(r),y1:y0,x2:xm(r),y2:y0-h,stroke:'var(--line)','stroke-dasharray':'2 3'},sv));
+  pts.forEach(([r,c])=>{el('circle',{cx:xm(r),cy:ym(L(r,a)),r:7,fill:c},sv);txt(`r = ${r.toFixed(2)}，L = ${L(r,a).toFixed(2)}，dL/dr = ${(Math.abs(dL(r,a))<1e-6?0:dL(r,a)).toFixed(1)}${c==='var(--purple)'?(r>=1-1e-9?'（被拉回来了）':'（有斜率，往回拉）'):''}`,{x:x0+w/2,y:y0+40+(c==='var(--purple)'?20:0),'text-anchor':'middle',class:'m'},sv)})}
+function draw(){clear(sv);txt(k<16?'从 r = 1 出发，沿着 dL/dr 走（梯度上升）':'改错方向的情况：A = +2，r = 0.5',{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const left=[[p1,'var(--warm)']];if(p3!==null)left.push([p3,'var(--purple)']);plot(40,2,left,'A = +2（好动作）');plot(370,-1,[[p2,'var(--warm)']],'A = −1（坏动作）')}
+function reset(){p1=1;p2=1;p3=null;k=0;draw()}
+function next(){if(k>=26)return false;k++;if(k<16){p1=Math.min(p1+0.05,1+E);p2=Math.max(p2-0.05,1-E)}else{if(p3===null)p3=0.5;else p3=Math.min(p3+0.1,1)}draw();return true}
+$('e').oninput=e=>{E=+e.target.value;$('ev').textContent=E.toFixed(2);ANIM.stop();reset()};
+setupPlayer({captureSeed:1,reset,next},450);
+</script></body></html>

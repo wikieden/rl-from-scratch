@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>从 PPO 到 GRPO</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.s{font-size:12px}</style></head>
+<body><main>
+<h1>第 24 章 · GRPO：同一道题答几遍，组内互相比</h1>
+<p class="sub">配套讲义：<a href="../lessons/24-wrap-up.html">第 24 章 · 收尾：全书地图、PPO 到 GRPO、接下来做什么</a>。一道题生成 4 个回答，答对 1 分、答错 0 分；优势 = (分数 − 组平均) / 组标准差。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 420"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button><button id="map">全书地图</button></div>
+<p class="note">看点：① 4 个回答的分数，虚线是组平均；② 每个回答的优势画成箭头：比平均好就推高（向上），差就压低（向下）；③ 依次播放 [1, 0, 0, 1]、[1, 0, 0, 0]、[1, 1, 1, 1]：难题里唯一答对的被大力推高，全对时箭头全为 0、这道题没有学习信号；④ 点"全书地图"看 24 章怎么连起来，点一个方块高亮它依赖的章节。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv'),GR=[[1,0,0,1],[1,0,0,0],[1,1,1,1]];let k,mapMode=false,selB=null;
+const BL=[['1–4','问题、回报、期望',[]],['5–9','MDP、价值、Bellman',[0]],['10–12','动态规划',[1]],['13–16','MC、TD、Q-learning',[1,2]],['17–19','函数近似、DQN',[3]],['20–21','策略梯度、baseline',[1,3]],['22','Actor-Critic、GAE',[3,5]],['23','PPO',[6]],['24','GRPO、LLM',[7,5]]];
+function group(r){const m=r.reduce((a,b)=>a+b)/4,sd=Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/4),A=r.map(x=>(x-m)/(sd+1e-8));
+  txt(`奖励 [${r.join(', ')}]：平均 ${m.toFixed(2)}，标准差 ${sd.toFixed(3)}`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const base=260,sc=150;el('line',{x1:60,y1:base-m*sc,x2:620,y2:base-m*sc,stroke:'var(--warm)','stroke-dasharray':'6 4','stroke-width':2},sv);txt('组平均',{x:625,y:base-m*sc+4,class:'m'},sv);
+  r.forEach((x,i)=>{const cx=130+i*140;el('rect',{x:cx-40,y:base-x*sc,width:80,height:x*sc+0.01,fill:x?'var(--teal)':'var(--line)',opacity:.6},sv);
+    txt(`回答 ${i+1}：${x?'对':'错'}`,{x:cx,y:base+22,'text-anchor':'middle'},sv);
+    const a=A[i],y1=110;if(Math.abs(a)>1e-6)el('line',{x1:cx,y1:y1,x2:cx,y2:y1-a*40,stroke:a>0?'var(--good)':'var(--bad)','stroke-width':5,'marker-end':`url(#${a>0?'up':'dn'})`},sv);
+    const t=txt(`Â = ${a.toFixed(2)}`,{x:cx,y:base+44,'text-anchor':'middle',class:'big'},sv);t.style.fill=a>0?'var(--good)':a<0?'var(--bad)':'var(--muted)'});
+  if(r.every(x=>x===r[0]))txt('全对：没有对比，优势全是 0，这道题等于白做（DAPO 会把它过滤掉）',{x:340,y:350,'text-anchor':'middle'},sv)}
+function defs(){const d=el('defs',{},sv);[['up','var(--good)'],['dn','var(--bad)']].forEach(([id,c])=>{const m=el('marker',{id,viewBox:'0 0 10 10',refX:5,refY:5,markerWidth:4,markerHeight:4,orient:'auto'},d);el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m)})}
+function bmap(){txt('全书地图（点方块看它依赖哪几章）',{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const pos=BL.map((_,i)=>[40+(i%3)*215,60+Math.floor(i/3)*115]);const dep=selB===null?[]:BL[selB][2];
+  BL.forEach(([ch,lab,dp],i)=>dp.forEach(j=>el('line',{x1:pos[j][0]+90,y1:pos[j][1]+35,x2:pos[i][0]+90,y2:pos[i][1]+35,stroke:selB===i?'var(--warm)':'var(--line)','stroke-width':selB===i?2.5:1},sv)));
+  BL.forEach(([ch,lab],i)=>{const[x,y]=pos[i],on=i===selB,d=dep.includes(i);const b=el('rect',{x,y,width:180,height:70,rx:10,fill:on?'var(--accent-bg)':d?'var(--card)':'var(--bg)',stroke:on?'var(--accent)':d?'var(--warm)':'var(--line)','stroke-width':on||d?2.5:1},sv);
+    b.style.cursor='pointer';b.onclick=()=>{selB=i;draw()};const t1=txt(`第 ${ch} 章`,{x:x+90,y:y+30,'text-anchor':'middle',class:'big'},sv),t2=txt(lab,{x:x+90,y:y+52,'text-anchor':'middle',class:'s'},sv);t1.style.pointerEvents=t2.style.pointerEvents='none'})}
+function draw(){clear(sv);defs();if(mapMode){bmap();return}group(GR[Math.min(Math.floor(k/3),2)])}
+function reset(){k=0;mapMode=false;selB=null;$('map').classList.remove('on');draw()}
+function next(){if(k>=11)return false;k++;if(k>=9){mapMode=true;selB=k-1}draw();return true}
+$('map').onclick=()=>{ANIM.stop();mapMode=!mapMode;$('map').classList.toggle('on',mapMode);draw()};
+setupPlayer({captureSeed:1,reset,next},1100);
+</script></body></html>
