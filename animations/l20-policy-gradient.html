@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>策略梯度</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 20 章 · REINFORCE：按回报把刚才的动作推一把</h1>
+<p class="sub">配套讲义：<a href="../lessons/20-policy-gradient.html">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略</a>。两台老虎机，真实平均 1.0 和 2.0（1 号更好），策略 = softmax(θ)，θ 从 [0, 0] 开始。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="a">自己拖：步长 α</label><input type="range" id="a" min="0.02" max="0.3" step="0.02" value="0.1"><span id="av">0.10</span></div>
+<p class="note">看点：① 上面是两台机器的概率条，下面是偏好分数 θ₀、θ₁；② 第 1 帧是讲义第四步的手算：抽到 1 号、G = 2 → θ = [−0.1, 0.1]，π(1 号) ≈ 0.55；③ 之后每帧抽一次，箭头是 α × G × ∇log π = α × G × (one-hot − π)：两台奖励都是正的，抽到谁都推高谁，只是好的推得更多；④ 右边曲线是 π(1 号)，抖着往上走。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv'),MU=[1,2];let A=0.1,th,last,hist,k;
+function pi(t){const m=Math.max(...t),e=t.map(x=>Math.exp(x-m)),s=e[0]+e[1];return e.map(x=>x/s)}
+function draw(){clear(sv);const p=pi(th);txt(last?`抽到 ${last.a} 号，G = ${last.G.toFixed(2)}：θ += ${A} × ${last.G.toFixed(2)} × [${last.g.map(x=>x.toFixed(2)).join(', ')}]`:'起点：θ = [0, 0]，两台各 0.5',{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  [0,1].forEach(i=>{const y=60+i*60;txt(`${i} 号`,{x:30,y:y+24,class:'big'},sv);el('rect',{x:80,y,width:300,height:36,fill:'var(--card)',stroke:'var(--line)'},sv);
+    el('rect',{x:80,y,width:300*p[i],height:36,fill:i?'var(--teal)':'var(--purple)',opacity:.8,stroke:last&&last.a===i?'var(--warm)':'none','stroke-width':3},sv);txt(`π = ${p[i].toFixed(3)}`,{x:390,y:y+24},sv)});
+  const base=290,sc=60;el('line',{x1:60,y1:base,x2:420,y2:base,stroke:'var(--line)'},sv);txt('偏好分数 θ',{x:60,y:base-110,class:'m'},sv);
+  [0,1].forEach(i=>{const x=130+i*160,v=th[i];el('rect',{x,y:v>0?base-v*sc:base,width:60,height:Math.min(Math.abs(v)*sc,100),fill:i?'var(--teal)':'var(--purple)',opacity:.6},sv);txt(`θ${i?'₁':'₀'} = ${v.toFixed(2)}`,{x:x+30,y:base+20,'text-anchor':'middle'},sv);
+    if(last){const d=A*last.G*last.g[i],y1=base-v*sc;el('line',{x1:x+70,y1:y1+d*sc*3,x2:x+70,y2:y1,stroke:d>0?'var(--good)':'var(--bad)','stroke-width':3},sv)}});
+  const x0=470,y0=330,w=190,h=240;el('line',{x1:x0,y1:y0,x2:x0+w,y2:y0,stroke:'var(--line)'},sv);el('line',{x1:x0,y1:y0,x2:x0,y2:y0-h,stroke:'var(--line)'},sv);
+  [0.5,1].forEach(v=>txt(String(v),{x:x0-4,y:y0-v*h+4,'text-anchor':'end',class:'m'},sv));txt('π(1 号) 随步数',{x:x0,y:y0-h-8,class:'m'},sv);
+  let d='';hist.forEach((v,i)=>d+=(i?' L':'M')+(x0+i/300*w).toFixed(1)+','+(y0-v*h).toFixed(1));el('path',{d,fill:'none',stroke:'var(--teal)','stroke-width':2},sv);
+  txt(`第 ${hist.length-1} 步`,{x:x0+w,y:y0+18,'text-anchor':'end',class:'m'},sv)}
+function stepOnce(force){const p=pi(th),a=force?force[0]:(rnd()<p[1]?1:0),G=force?force[1]:MU[a]+gauss(),g=[-p[0],-p[1]];g[a]+=1;th=th.map((t,i)=>t+A*G*g[i]);last={a,G,g};hist.push(pi(th)[1])}
+function reset(sd){seed(sd);th=[0,0];last=null;hist=[0.5];k=0;draw()}
+function next(){if(hist.length>300)return false;k++;if(k===1)stepOnce([1,2]);else{const m=k<=15?1:15;for(let i=0;i<m;i++)stepOnce()}draw();return true}
+$('a').oninput=e=>{A=+e.target.value;$('av').textContent=A.toFixed(2);ANIM.stop();reset(4)};
+setupPlayer({captureSeed:4,reset,next},600);
+</script></body></html>

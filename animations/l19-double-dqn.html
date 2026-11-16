@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>过估计与 Double DQN</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 19 章 · 过估计：max 总挑到噪声最往上偏的那个</h1>
+<p class="sub">配套讲义：<a href="../lessons/19-double-dqn.html">第 19 章 · 过估计与 Double DQN：max 会挑到&quot;运气好&quot;的那个</a>。每个动作真值都是 0；估计 = 试几次（带标准差 1 的噪声）取平均。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="n">动作个数</label><input type="range" id="n" min="2" max="20" step="1" value="10"><span id="nv">10</span><label for="m">每个动作试几次</label><input type="range" id="m" min="1" max="20" step="1" value="5"><span id="mv">5</span></div>
+<p class="note">看点：① 十根柱子是 Q₁ 的估计，每帧重新抽一次噪声，虚线是真值 0；② 红框是 Q₁ 挑出的最大那根，右边红点记下它的值，平均约 0.69（同一组既挑又打分）；③ 绿点是用另一组独立估计 Q₂ 给同一个动作打分，平均贴着 0；④ 动作越多 max 偏得越高；每个动作试得越多噪声越小、偏差也越小。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv');let NA=10,NSAMP=5,Q1,Q2,sing,doub,k;
+function est(){return Array.from({length:NA},()=>{let s=0;for(let i=0;i<NSAMP;i++)s+=gauss();return s/NSAMP})}
+function draw(){clear(sv);const ms=sing.length?sing.reduce((a,b)=>a+b)/sing.length:0,md=doub.length?doub.reduce((a,b)=>a+b)/doub.length:0;
+  txt(`重复了 ${sing.length} 次：单估计 max 平均 ${ms.toFixed(3)}，双估计平均 ${md.toFixed(3)}`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const x0=40,y0=200,sc=70,bw=Math.min(36,380/NA);el('line',{x1:x0,y1:y0,x2:x0+NA*(bw+4),y2:y0,stroke:'var(--warm)','stroke-dasharray':'5 4','stroke-width':2},sv);
+  if(Q1){const a=Q1.indexOf(Math.max(...Q1));Q1.forEach((q,i)=>{const x=x0+i*(bw+4);el('rect',{x,y:q>0?y0-q*sc:y0,width:bw,height:Math.abs(q)*sc,fill:'var(--accent)',opacity:.7,stroke:i===a?'var(--bad)':'none','stroke-width':3},sv)});
+    txt(`Q₁ 挑中动作 ${a+1}：Q₁ = ${Q1[a].toFixed(2)}，Q₂ 给它打分 = ${Q2[a].toFixed(2)}`,{x:x0,y:330},sv)}
+  txt('真值 0',{x:x0+NA*(bw+4)+6,y:y0+4,class:'m'},sv);
+  const px=520,pw=130,ym=v=>y0-v*sc;el('line',{x1:px,y1:y0,x2:px+pw,y2:y0,stroke:'var(--warm)','stroke-dasharray':'5 4'},sv);
+  sing.slice(-80).forEach((v,i)=>el('circle',{cx:px+20+(i%8)*3,cy:ym(v),r:2.5,fill:'var(--bad)',opacity:.5},sv));
+  doub.slice(-80).forEach((v,i)=>el('circle',{cx:px+90+(i%8)*3,cy:ym(v),r:2.5,fill:'var(--good)',opacity:.5},sv));
+  [[ms,px+30,'var(--bad)','单估计'],[md,px+100,'var(--good)','双估计']].forEach(([m,x,c,l])=>{el('line',{x1:x-20,y1:ym(m),x2:x+20,y2:ym(m),stroke:c,'stroke-width':3},sv);const t=txt(l,{x,y:y0+110,'text-anchor':'middle'},sv);t.style.fill=c});
+}
+function reset(sd){seed(sd);Q1=null;Q2=null;sing=[];doub=[];k=0;draw()}
+function next(){if(k>=50)return false;k++;const m=k<=15?1:40;for(let i=0;i<m;i++){Q1=est();Q2=est();const a=Q1.indexOf(Math.max(...Q1));sing.push(Q1[a]);doub.push(Q2[a])}draw();return true}
+$('n').oninput=e=>{NA=+e.target.value;$('nv').textContent=NA;ANIM.stop();reset(1)};$('m').oninput=e=>{NSAMP=+e.target.value;$('mv').textContent=NSAMP;ANIM.stop();reset(1)};
+setupPlayer({captureSeed:1,reset,next},450);
+</script></body></html>

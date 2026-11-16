@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DQN</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.s{font-size:11px}</style></head>
+<body><main>
+<h1>第 18 章 · DQN：经验回放随机抽一批；目标网络隔一阵才对齐</h1>
+<p class="sub">配套讲义：<a href="../lessons/18-dqn.html">第 18 章 · DQN：神经网络 + 经验回放 + 目标网络</a>。走廊 6 格，从 0 出发，走到第 5 格 +1 结束，γ = 0.9，ε = 0.3。为了看得清，"网络"在动画里换成一张可学的表（机制相同：主网络被梯度更新，目标网络只在对齐时复制）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 480"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="c">自己拖：每隔几步对齐一次目标网络</label><input type="range" id="c" min="1" max="60" step="1" value="20"><span id="cv">20</span></div>
+<p class="note">看点：① 智能体按 ε-greedy 走，每一步的 (s, a, r, s') 变成一张卡片塞进回放缓冲区；② 每帧从缓冲区随机抽 4 张（橙框），用<b>目标网络</b>算 y = r + 0.9 × max Q⁻(s')，用主网络算 Q(s, a)，往 y 挪一点；③ 主网络的柱子每帧都在变，目标网络只在"对齐"时整体跳过去；④ 下方曲线是每格"往右"的主网络 Q，爬向 0.656、0.729、0.81、0.9、1.0。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv'),N=6,G=0.9;let C=20,Q,T,buf,s,steps,batch,synced,k,hist;
+function env(s,a){const ns=a===0?Math.max(s-1,0):s+1;return ns===N-1?[ns,1,true]:[ns,0,false]}
+function bars(M,x0,y0,lab,flash){txt(lab,{x:x0,y:y0-8,class:'m'},sv);for(let i=0;i<N-1;i++){const x=x0+i*52;el('rect',{x,y:y0,width:46,height:90,rx:4,fill:flash?'var(--accent-bg)':'var(--card)',stroke:'var(--line)'},sv);
+  [0,1].forEach(a=>{const h=clamp(M[i][a],0,1)*80;el('rect',{x:x+4+a*20,y:y0+86-h,width:17,height:h,fill:a?'var(--teal)':'var(--purple)',opacity:.85},sv)});txt(String(i),{x:x+23,y:y0+104,'text-anchor':'middle',class:'s'},sv)}}
+function draw(){clear(sv);txt(`第 ${steps} 步 · 缓冲区 ${buf.length} 张`+(synced?' · 对齐！Q⁻ ← Q':''),{x:340,y:22,'text-anchor':'middle',class:'cap'},sv);
+  for(let i=0;i<N;i++){el('rect',{x:20+i*46,y:40,width:42,height:36,rx:5,fill:i===N-1?'var(--accent-bg)':'var(--card)',stroke:'var(--line)'},sv);txt(i===N-1?'+1':String(i),{x:41+i*46,y:63,'text-anchor':'middle'},sv)}
+  el('circle',{cx:41+s*46,cy:92,r:7,fill:'var(--warm)'},sv);
+  txt('回放缓冲区（最近 24 张）',{x:330,y:38,class:'m'},sv);const show=buf.slice(-24);
+  show.forEach((e,i)=>{const x=330+(i%6)*56,y=46+Math.floor(i/6)*24,hit=batch.includes(buf.length-show.length+i);
+    el('rect',{x,y,width:52,height:20,rx:3,fill:'var(--card)',stroke:hit?'var(--warm)':'var(--line)','stroke-width':hit?2.5:1},sv);txt(`${e[0]}${e[1]?'→':'←'}${e[2]?'+1':''}`,{x:x+26,y:y+14,'text-anchor':'middle',class:'s'},sv)});
+  bars(Q,20,170,'主网络 Q(s, ·)：紫 = 左，绿 = 右（每帧被更新）',false);bars(T,370,170,'目标网络 Q⁻(s, ·)：只在对齐时变',synced);
+  if(batch.length){const e=buf[batch[0]],y=e[2]+(e[4]?0:G*Math.max(...T[e[3]]));txt(`抽到 (${e[0]}, ${e[1]?'右':'左'}, ${e[2]}, ${e[3]})：y = ${e[2]} + ${e[4]?'0（结束）':'0.9 × '+Math.max(...T[e[3]]).toFixed(2)} = ${y.toFixed(2)}，Q = ${Q[e[0]][e[1]].toFixed(2)}`,{x:340,y:310,'text-anchor':'middle'},sv)}
+  const x0=60,y0=460,w=560,h=120;el('line',{x1:x0,y1:y0,x2:x0+w,y2:y0,stroke:'var(--line)'},sv);el('line',{x1:x0,y1:y0,x2:x0,y2:y0-h,stroke:'var(--line)'},sv);
+  for(let i=0;i<N-1;i++){let d='';hist.forEach((q,j)=>d+=(j?' L':'M')+(x0+j/(hist.length-1||1)*w).toFixed(1)+','+(y0-q[i]*h).toFixed(1));el('path',{d,fill:'none',stroke:'var(--accent)',opacity:.4+i*.15,'stroke-width':1.8},sv);
+    const tgt=Math.pow(G,N-2-i);el('line',{x1:x0+w-20,y1:y0-tgt*h,x2:x0+w,y2:y0-tgt*h,stroke:'var(--warm)','stroke-width':2},sv)}
+  txt('每格"往右"的 Q（橙色短线 = 理论值 0.9^(4−s)）',{x:x0,y:y0-h-8,class:'m'},sv)}
+function stepOnce(){const a=rnd()<0.3?Math.floor(rnd()*2):(Q[s][1]>=Q[s][0]?1:0);const[ns,r,done]=env(s,a);buf.push([s,a,r,ns,done]);if(buf.length>500)buf.shift();s=done?0:ns;steps++;
+  batch=[];for(let i=0;i<4;i++){const j=Math.floor(rnd()*buf.length);batch.push(j);const e=buf[j],y=e[2]+(e[4]?0:G*Math.max(...T[e[3]]));Q[e[0]][e[1]]+=0.3*(y-Q[e[0]][e[1]])}
+  synced=steps%C===0;if(synced)T=Q.map(r=>r.slice());hist.push(Q.map(r=>r[1]))}
+function reset(sd){seed(sd);Q=Array.from({length:N},()=>[0,0]);T=Q.map(r=>r.slice());buf=[];s=0;steps=0;batch=[];synced=false;k=0;hist=[Q.map(r=>r[1])];draw()}
+function next(){if(k>=70)return false;k++;const m=k<=20?1:15;for(let i=0;i<m;i++)stepOnce();draw();return true}
+$('c').oninput=e=>{C=+e.target.value;$('cv').textContent=C;ANIM.stop();reset(2)};
+setupPlayer({captureSeed:2,reset,next},450);
+</script></body></html>
