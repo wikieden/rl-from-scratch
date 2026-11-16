@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>智能体与环境</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.v{font-size:12px}</style></head>
+<body><main>
+<h1>第 1 章 · 智能体与环境 agent &amp; environment：看状态，做动作，拿奖励</h1>
+<p class="sub">配套讲义：<a href="../lessons/01-agent-environment.html">第 1 章 · 智能体与环境 agent &amp; environment</a>。第 1 轮用讲义的例子；第 2 轮（S₁ 之后）是编的，只为演示循环。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row"><label for="t">自己拖：轨迹走到第几步 t</label><input type="range" id="t" min="0" max="2" step="1" value="1"><span id="tv">1</span></div>
+<p class="note">看点：① 智能体 agent（小狗）以外的一切都是环境 environment；② 每一步：看到状态 S_t → 做动作 A_t → 环境给回奖励 R_{t+1} 和新状态 S_{t+1}；③ 奖励是做完动作之后才拿到的，所以第 0 步的奖励记作 R₁，不是 R₀；④ 一步步串起来就是轨迹 trajectory：S₀, A₀, R₁, S₁, A₁, R₂, …。滑块：看前 t 步的轨迹，每一步是同色的一组（S_t, A_t, R_{t+1}）。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv');
+const SUB=['₀','₁','₂','₃','₄'];
+const R=[{S:'主人举手',A:'坐下',R:1},{S:'主人放下手',A:'乱跑',R:0},{S:'主人又举手',A:'坐下',R:1},{S:'主人放下手',A:'趴下',R:0}];
+const ST=[{cap:'智能体（小狗）和环境（主人、零食、房间）',s:0},{cap:'t = 0：小狗看到状态 S₀ = 主人举手',s:1},{cap:'小狗做动作 A₀ = 坐下',s:2},
+  {cap:'环境给回奖励 R₁ = 1（一块零食）和新状态 S₁ = 主人放下手',s:3},{cap:'t = 1：看到 S₁，再做 A₁ = 乱跑，拿到 R₂ = 0（编的）',s:4},
+  {cap:'串起来就是一条轨迹：S₀, A₀, R₁, S₁, A₁, R₂, …',s:5}];
+const FR=[];ST.forEach((_,i)=>{FR.push(i);FR.push(i)});
+let k=0,custom=null;
+const COL=['var(--teal)','var(--purple)','var(--amber)','var(--warm)'];
+function defs(){const d=el('defs',{},sv);['var(--accent)','var(--warm)','var(--teal)'].forEach((c,i)=>{const m=el('marker',{id:'m'+i,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},d);el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m)})}
+function boxes(){
+  el('rect',{x:60,y:70,width:180,height:120,rx:12,fill:'var(--accent-bg)',stroke:'var(--accent)'},sv);
+  txt('智能体 agent',{x:150,y:110,'text-anchor':'middle',class:'big'},sv);txt('小狗：学习、做决定的一方',{x:150,y:140,'text-anchor':'middle',class:'m'},sv);
+  el('rect',{x:440,y:70,width:180,height:120,rx:12,fill:'none',stroke:'var(--muted)'},sv);
+  txt('环境 environment',{x:530,y:110,'text-anchor':'middle',class:'big'},sv);txt('小狗以外的一切：',{x:530,y:138,'text-anchor':'middle',class:'m'},sv);txt('主人、零食、房间',{x:530,y:158,'text-anchor':'middle',class:'m'},sv)}
+function arrow(x1,y1,x2,y2,i,lab,ly){el('path',{d:`M${x1},${y1} C${(x1+x2)/2},${ly<130?y1-40:y1+40} ${(x1+x2)/2},${ly<130?y2-40:y2+40} ${x2},${y2}`,fill:'none',stroke:['var(--accent)','var(--warm)','var(--teal)'][i],'stroke-width':2.5,'marker-end':`url(#m${i})`},sv);
+  const t=txt(lab,{x:340,y:ly,'text-anchor':'middle',class:'big'},sv);t.style.fill=['var(--accent)','var(--warm)','var(--teal)'][i]}
+function loop(t,s){
+  if(s>=1)arrow(440,170,240,170,2,`状态 S${SUB[t]} = ${R[t].S}`,228);
+  if(s>=2)arrow(240,90,440,90,0,`动作 A${SUB[t]} = ${R[t].A}`,52);
+  if(s>=3){arrow(440,150,240,150,1,`奖励 R${SUB[t+1]} = ${R[t].R}　+　新状态 S${SUB[t+1]} = ${R[t+1].S}`,256)}
+}
+function traj(T,y,hiLast){const items=[];for(let t=0;t<=T;t++){items.push(['S'+SUB[t],R[t].S,t]);items.push(['A'+SUB[t],R[t].A,t]);items.push(['R'+SUB[t+1],String(R[t].R),t])}
+  items.push(['S'+SUB[T+1],R[T+1]?R[T+1].S:'',T+1]);
+  const w=Math.min(68,600/items.length),x0=340-items.length*w/2;
+  items.forEach(([n,v,t],i)=>{const x=x0+i*w,c=COL[t%4];el('rect',{x,y,width:w-4,height:44,rx:5,fill:c,opacity:.2,stroke:c},sv);
+    txt(n,{x:x+w/2-2,y:y+19,'text-anchor':'middle',class:'big'},sv);if(w>50)txt(v,{x:x+w/2-2,y:y+37,'text-anchor':'middle',class:'v'},sv)});
+  txt('同色的一组 = 一步：(S_t, A_t, R_{t+1})，奖励的下标比动作大 1',{x:340,y:y+66,'text-anchor':'middle',class:'m'},sv)}
+function draw(){
+  clear(sv);defs();
+  if(custom!==null){const t=custom;txt(`前 ${t+1} 步的轨迹（t = 0 到 ${t}）`,{x:340,y:30,'text-anchor':'middle',class:'cap'},sv);boxes();loop(t,3);traj(t,290);return}
+  const f=ST[FR[k]];txt(f.cap,{x:340,y:30,'text-anchor':'middle',class:'cap'},sv);boxes();
+  if(f.s<=3)loop(0,f.s);else if(f.s===4){loop(1,3);traj(1,290)}else{traj(1,230);
+    txt('没人告诉小狗"正确答案是坐下"：它只能靠反复试、看奖励多少，慢慢学会',{x:340,y:340,'text-anchor':'middle',class:'m'},sv);
+    txt('这是强化学习和"有标准答案"的监督学习最大的区别',{x:340,y:364,'text-anchor':'middle',class:'m'},sv)}
+  if(f.s===3)txt('奖励是做完动作之后才拿到的：第 0 步的奖励叫 R₁，不叫 R₀',{x:340,y:320,'text-anchor':'middle',class:'m'},sv);
+}
+function reset(){k=0;custom=null;draw()}
+function next(){if(custom!==null){custom=null;draw();return true}if(k>=FR.length-1)return false;k++;draw();return true}
+$('t').oninput=e=>{ANIM.stop();custom=+e.target.value;$('tv').textContent=custom;draw()};
+setupPlayer({captureSeed:1,reset,next},1600);
+</script></body></html>

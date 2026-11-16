@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>折扣</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.v{font-size:11px}</style></head>
+<body><main>
+<h1>第 3 章 · 折扣 γ：远处的奖励打折；倒着推回报</h1>
+<p class="sub">配套讲义：<a href="../lessons/03-discount.html">第 3 章 · 折扣 discount γ：远处的奖励打个折</a>。上半部分：每步都 +1（第三步）；下半部分：奖励 1, 0, 1 倒着推（第四步）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 420"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="g">自己拖：折扣率 γ</label><input type="range" id="g" min="0" max="0.99" step="0.01" value="0.9"><span id="gv">0.90</span></div>
+<p class="note">看点：① 第 k 个奖励乘 γ^k，柱子越往右越矮；② 累计值一路涨，但永远停在 1/(1−γ) 下面（γ = 0.9 时是 10）；③ γ 越小柱子掉得越快，"看得越近"；④ 下面：G₃ = 0 → G₂ = 1 → G₁ = 0.9 → G₀ = 1.81，每一步只做一次"奖励 + γ × 后一个"。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv'),N=20,RW=[1,0,1],SUB=['₀','₁','₂','₃'];
+let g=0.9,k=0;
+function upper(n){
+  const lim=1/(1-g);let cum=0;
+  txt(`每步都 +1，γ = ${g.toFixed(2)}：第 k 个奖励打折成 γ^k`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  const x0=50,w=19,base=200,h=130;
+  el('line',{x1:x0,y1:base,x2:x0+N*w+6,y2:base,stroke:'var(--line)'},sv);
+  for(let i=0;i<N;i++){const v=Math.pow(g,i),on=i<n;if(on)cum+=v;
+    el('rect',{x:x0+i*w+2,y:base-v*h,width:w-4,height:v*h,rx:2,fill:on?'var(--accent)':'var(--line)',opacity:on?0.9:0.35},sv);
+    if(i<6||i%5===4)txt(String(i),{x:x0+i*w+w/2,y:base+14,'text-anchor':'middle',class:'v'},sv)}
+  txt('k',{x:x0+N*w+14,y:base+14,class:'v'},sv);
+  const bx=500;txt('累计（打折后加起来）',{x:bx+70,y:60,'text-anchor':'middle',class:'m'},sv);
+  const sc=g>0.95?140/lim:12;const lh=Math.min(140,lim*sc);
+  el('rect',{x:bx+40,y:base-Math.min(140,cum*sc),width:60,height:Math.min(140,cum*sc),fill:'var(--teal)',opacity:.8},sv);
+  el('line',{x1:bx+25,y1:base-lh,x2:bx+115,y2:base-lh,stroke:'var(--warm)','stroke-dasharray':'5 4','stroke-width':2},sv);
+  const t1=txt(`1/(1−γ) = ${lim.toFixed(2)}`,{x:bx+70,y:base-lh-8,'text-anchor':'middle'},sv);t1.style.fill='var(--warm)';
+  txt(`前 ${n} 项 = ${cum.toFixed(3)}`,{x:bx+70,y:base+18,'text-anchor':'middle'},sv);
+}
+function lower(stage){
+  const y=250;txt('奖励 1, 0, 1（γ = 0.9）：从最后往前推 G_t = R_{t+1} + γ G_{t+1}',{x:340,y,'text-anchor':'middle',class:'cap'},sv);
+  const G=[0,0,0,0];for(let t=2;t>=0;t--)G[t]=RW[t]+0.9*G[t+1];
+  for(let i=0;i<3;i++){const x=150+i*160;el('rect',{x:x+30,y:y+18,width:70,height:34,rx:6,fill:'var(--card)',stroke:'var(--line)'},sv);
+    txt(`R${SUB[i+1]} = ${RW[i]}`,{x:x+65,y:y+40,'text-anchor':'middle'},sv)}
+  for(let t=3;t>=0;t--){const x=150+t*160,shown=3-t<=stage;
+    el('rect',{x:x-35,y:y+80,width:70,height:44,rx:8,fill:shown?'var(--accent-bg)':'none',stroke:shown?'var(--accent)':'var(--line)'},sv);
+    txt('G'+SUB[t],{x,y:y+97,'text-anchor':'middle',class:'m'},sv);txt(shown?(+G[t].toFixed(2)).toString():'?',{x,y:y+117,'text-anchor':'middle',class:'big'},sv);
+    if(t<3&&shown){el('path',{d:`M${x+125},${y+102} L${x+40},${y+102}`,stroke:'var(--accent)','stroke-width':2,'marker-end':'url(#ar)'},sv);
+      txt(`${RW[t]} + 0.9 × ${(+G[t+1].toFixed(2))}`,{x:x+82,y:y+150,'text-anchor':'middle',class:'m'},sv)}}
+  if(stage===0)txt('先定 G₃ = 0：结束以后没有奖励',{x:340,y:y+150,'text-anchor':'middle',class:'m'},sv);
+}
+function defs(){const d=el('defs',{},sv),m=el('marker',{id:'ar',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},d);el('path',{d:'M0,0 L10,5 L0,10 z',fill:'var(--accent)'},m)}
+function draw(){clear(sv);defs();const n=Math.min(N,k<14?k+1:N);upper(n);lower(Math.max(-1,k-13))}
+function reset(){k=0;draw()}
+function next(){if(k>=17)return false;k++;draw();return true}
+$('g').oninput=e=>{g=+e.target.value;$('gv').textContent=g.toFixed(2);draw()};
+setupPlayer({captureSeed:1,reset,next},700);
+</script></body></html>

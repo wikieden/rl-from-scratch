@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>奖励与回报</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}</style></head>
+<body><main>
+<h1>第 2 章 · 奖励与回报：G_t 从 R_{t+1} 加到最后</h1>
+<p class="sub">配套讲义：<a href="../lessons/02-return.html">第 2 章 · 奖励与回报 reward &amp; return：把一路的奖励加起来</a>。上半部分是小狗 4 步的奖励（讲义第二步），最后一帧是迷宫每步 −1（第四步）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 330"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="t">自己拖：看 G_t 的 t</label><input type="range" id="t" min="0" max="4" step="1" value="0"><span id="tv">0</span></div>
+<p class="note">看点：① G_t 只加第 t 步<b>之后</b>的奖励，起点是 R_{t+1}，已经拿到手的不算；② 最后一步之后没有奖励，G_4 = 0；③ 迷宫每走一步 −1，5 步出去 G₀ = −5，8 步出去 −8：每步 −1 就是在说"越快越好"。</p>
+</main>
+<script src="anim.js"></script>
+<script>
+const sv=$('sv'),R=[1,0,1,0],SUB=['₀','₁','₂','₃','₄','₅'];
+let k=0,custom=null;
+function rewards(t){
+  txt('小狗 4 步拿到的奖励',{x:340,y:62,'text-anchor':'middle',class:'m'},sv);
+  R.forEach((r,i)=>{const x=150+i*100,on=t!==null&&i>=t;
+    el('rect',{x:x-38,y:76,width:76,height:64,rx:10,fill:on?'var(--accent-bg)':'var(--card)',stroke:on?'var(--accent)':'var(--line)','stroke-width':on?2:1},sv);
+    txt('R'+SUB[i+1],{x,y:100,'text-anchor':'middle',class:'m'},sv);
+    txt(String(r),{x,y:128,'text-anchor':'middle',class:'big'},sv)});
+  if(t!==null&&t<4){el('path',{d:`M${112+t*100},150 L${588},150`,stroke:'var(--accent)','stroke-width':2.5,fill:'none'},sv);}
+}
+function eq(t){
+  const parts=R.slice(t).map((r,i)=>'R'+SUB[t+i+1]);const vals=R.slice(t);
+  const G=vals.reduce((a,b)=>a+b,0);
+  const s=t<4?`G${SUB[t]} = ${parts.join(' + ')} = ${vals.join(' + ')} = ${G}`:`G${SUB[4]} = 0（后面没有奖励了）`;
+  txt(s,{x:340,y:190,'text-anchor':'middle',class:'big'},sv);
+  if(t>0&&t<4)txt(`R${SUB[1]}${t>1?' … R'+SUB[t]:''} 已经拿到手，不算进 G${SUB[t]}`,{x:340,y:216,'text-anchor':'middle',class:'m'},sv);
+  const all=[0,1,2,3,4].map(i=>R.slice(i).reduce((a,b)=>a+b,0));
+  all.forEach((g,i)=>{const x=150+i*95,on=i===t;
+    el('rect',{x:x-34,y:240,width:68,height:46,rx:8,fill:on?'var(--accent-bg)':'none',stroke:on?'var(--accent)':'var(--line)'},sv);
+    txt('G'+SUB[i],{x,y:258,'text-anchor':'middle',class:'m'},sv);txt(i<=t||custom!==null?String(g):'?',{x,y:279,'text-anchor':'middle',class:'big'},sv)});
+}
+function maze(){
+  txt('迷宫：每走一步奖励 −1，走出去这一局就结束',{x:340,y:30,'text-anchor':'middle',class:'cap'},sv);
+  [[5,'5 步走出去'],[8,'8 步走出去']].forEach(([n,lab],j)=>{const y=80+j*110;
+    txt(lab,{x:60,y:y+28,class:'big'},sv);
+    for(let i=0;i<n;i++){el('rect',{x:170+i*48,y,width:42,height:42,rx:6,fill:'var(--card)',stroke:'var(--warm)'},sv);txt('−1',{x:191+i*48,y:y+27,'text-anchor':'middle'},sv)}
+    const t=txt(`G₀ = −${n}`,{x:170+n*48+20,y:y+28,class:'big'},sv);t.style.fill=j?'var(--bad)':'var(--good)'});
+  txt('−5 比 −8 大：不用告诉它怎么走，"每步 −1"本身就在说"越快出去越好"',{x:340,y:300,'text-anchor':'middle',class:'m'},sv);
+}
+const ST=[0,0,1,1,2,2,3,3,4,4,5,5,5];
+function draw(){clear(sv);
+  if(custom!==null){txt(`G${SUB[custom]}：从 R${SUB[custom+1]} 开始加到最后`,{x:340,y:30,'text-anchor':'middle',class:'cap'},sv);rewards(custom);eq(custom);return}
+  const s=ST[k];if(s===5){maze();return}
+  txt(s===0?'G₀ = 从第 0 步往后的奖励总和':`G${SUB[s]}：起点往右挪一格`,{x:340,y:30,'text-anchor':'middle',class:'cap'},sv);
+  rewards(s);eq(s);
+}
+function reset(){k=0;custom=null;draw()}
+function next(){if(custom!==null){custom=null;draw();return true}if(k>=ST.length-1)return false;k++;draw();return true}
+$('t').oninput=e=>{ANIM.stop();custom=+e.target.value;$('tv').textContent=custom;draw()};
+setupPlayer({captureSeed:1,reset,next},1300);
+</script></body></html>
