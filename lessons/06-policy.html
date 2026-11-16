@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 6 章 · 策略 policy π(a|s)：智能体的&quot;行事手册&quot; · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="6-policy-as">第 6 章 · 策略 policy π(a|s)：智能体的"行事手册"</h1>
+<blockquote>
+<p>本章回答：智能体是怎么选动作的？"策略"写出来长什么样？为什么策略常常是随机的？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/05-mdp.html">第 5 章 马尔可夫决策过程</a> · 下一章：<a href="../lessons/07-value.html">第 7 章 价值函数</a><br />
+对应原文：Sutton &amp; Barto §3.5 开头（L4234–L4250）；CS 285 第 4 讲（<code>lec-04.txt</code> L105–L166 算法的三个部分）<br />
+本章缩写：π：希腊字母 pi（读"派"），policy（策略）的首字母；<span class="arithmatex">\(\pi(a \mid s)\)</span> 读"在状态 s 下选动作 a 的概率"；<span class="arithmatex">\(\mathbb{E}_\pi\)</span>：下标 π 表示"按策略 π 行事时"的期望。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：策略 = 每种情况下，各个动作选几成（2026-11-13）</h3>
+<p>第 5 章讲的是<strong>环境</strong>怎么回应。现在轮到<strong>智能体</strong>这边：它怎么选动作？</p>
+<p><strong>类比：员工手册。</strong> "客户投诉时：70% 的情况先道歉，30% 的情况直接转给经理。"手册按<strong>情况</strong>列出<strong>怎么做</strong>。</p>
+<p>智能体的手册叫<strong>策略 policy</strong>，记作 π（L4241–L4244）：</p>
+<div class="arithmatex">\[\pi(a \mid s) = \text{在状态 } s \text{ 时选动作 } a \text{ 的概率}\]</div>
+<p><strong>扫地机器人的一份策略</strong>（讲义编的）：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>搜索</th>
+<th>等待</th>
+<th>充电</th>
+<th>加起来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>高电</td>
+<td>0.9</td>
+<td>0.1</td>
+<td>—</td>
+<td>1</td>
+</tr>
+<tr>
+<td>低电</td>
+<td>0.2</td>
+<td>0.3</td>
+<td>0.5</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>读法：<span class="arithmatex">\(\pi(\text{搜索} \mid \text{高电}) = 0.9\)</span>，"高电时 90% 去搜索"。</p>
+<p><strong>和第 5 章的 p 长得像</strong>：竖线右边是已知情况，左边是要选的东西；<strong>每一行加起来都是 1</strong>。区别在于：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>p（第 5 章）</th>
+<th>π（本章）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>是谁的</td>
+<td>环境的</td>
+<td>智能体的</td>
+</tr>
+<tr>
+<td>能不能改</td>
+<td>不能（第 1 章第三步：改不了的是环境）</td>
+<td><strong>能</strong>，学习就是在改它</td>
+</tr>
+<tr>
+<td>回答什么</td>
+<td>做了 a 以后会怎样</td>
+<td>在 s 时该做什么</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：策略 <span class="arithmatex">\(\pi(a \mid s)\)</span> 是智能体的行事手册：每个状态下各动作的概率；强化学习就是在不断改这本手册。</p>
+<h3 id="2026-11-13_1">第二步：按策略选动作：掷一个"加权骰子"（2026-11-13）</h3>
+<p><strong>问题</strong>：低电时，机器人具体怎么按 0.2 / 0.3 / 0.5 选？</p>
+<p><strong>做法</strong>：掷一个"加权骰子"，搜索占 2 成面积、等待 3 成、充电 5 成，落在哪就做哪个。用代码掷了 1000 次（附录）：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>概率</th>
+<th>1000 次里选中</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>搜索</td>
+<td>0.2</td>
+<td>193</td>
+</tr>
+<tr>
+<td>等待</td>
+<td>0.3</td>
+<td>280</td>
+</tr>
+<tr>
+<td>充电</td>
+<td>0.5</td>
+<td>527</td>
+</tr>
+</tbody>
+</table>
+<p>和概率差不多，次数越多越准（第 4 章第三步）。</p>
+<p><strong>两种策略</strong>：</p>
+<ul>
+<li><strong>随机策略 stochastic policy</strong>：像上面这样，按概率选；</li>
+<li><strong>确定性策略 deterministic policy</strong>：每个状态只选一个动作，概率是 1，其余是 0。例："高电必搜索，低电必充电。"确定性策略是随机策略的特例。</li>
+</ul>
+<p><strong>为什么要随机</strong>：</p>
+<ol>
+<li><strong>要试</strong>（第 1 章第二步）：总选同一个动作，就永远不知道别的动作好不好；</li>
+<li><strong>对手会猜</strong>：石头剪刀布，固定出石头必输；随机出才不会被看穿；</li>
+<li><strong>好学</strong>：概率可以一点点调（0.5 → 0.52），后面第 20 章的策略梯度就是这样一点点调出来的。</li>
+</ol>
+<p><strong>一句话</strong>：随机策略按概率掷骰子选动作；确定性策略每个状态只选一个；随机让智能体能试、不被猜、好调。</p>
+<h3 id="2026-11-13_2">第三步：在策略下，下一步平均能拿多少奖励（2026-11-13）</h3>
+<p><strong>问题</strong>：机器人现在高电，按上面的策略走一步，<strong>平均</strong>能拿多少奖励？</p>
+<p><strong>两层随机</strong>：先是<strong>智能体</strong>掷骰子选动作（π），再是<strong>环境</strong>掷骰子给结果（p）。第 5 章第四步已经把环境那一层算好了，就是 <span class="arithmatex">\(r(s, a)\)</span>：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>动作</th>
+<th>选它的概率 π</th>
+<th>选了以后平均奖励 r(s, a)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>高电</td>
+<td>搜索</td>
+<td>0.9</td>
+<td>2</td>
+</tr>
+<tr>
+<td>高电</td>
+<td>等待</td>
+<td>0.1</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>再按 π 加权一次（第 4 章：期望 = 值 × 概率再相加）：</p>
+<div class="arithmatex">\[\mathbb{E}_\pi[R_{t+1} \mid S_t = \text{高电}] = \sum_a \pi(a \mid s)\, r(s, a) = 0.9 \times 2 + 0.1 \times 1 = 1.9\]</div>
+<p>低电时（<span class="arithmatex">\(r(\text{低电}, \text{搜索}) = 0.5\)</span>，等待 1，充电 0）：</p>
+<div class="arithmatex">\[0.2 \times 0.5 + 0.3 \times 1 + 0.5 \times 0 = 0.1 + 0.3 + 0 = 0.4\]</div>
+<p><strong><span class="arithmatex">\(\mathbb{E}_\pi\)</span> 的下标 π</strong> 就是在提醒：这个期望是"<strong>按策略 π 行事</strong>"时的平均，换一份策略，结果就变了。</p>
+<p><strong>这只是一步</strong>：1.9 和 0.4 只是"下一步"拿多少。低电时充电当下拿 0，但充满电以后能继续搜索拿 2。要把<strong>以后所有步</strong>都算进来，就是第 7 章的"价值"。</p>
+<p><strong>一句话</strong>：一步的平均奖励 = 先按 π 选动作、再按 p 给结果，两层加权；<span class="arithmatex">\(\mathbb{E}_\pi\)</span> 表示"按 π 行事时的平均"。</p>
+<h3 id="2026-11-13_3">第四步：强化学习算法的三个部分（2026-11-13）</h3>
+<p>现在有了四样东西：状态、动作、奖励、策略。CS 285 第 4 讲（<code>lec-04.txt</code> L105–L110）把所有强化学习算法都画成同一个循环：</p>
+<pre><code>① 生成样本：按现在的策略 π 去环境里跑，收集轨迹
+        ↓
+② 评估：算一算现在的策略好不好（拟合模型 / 估计回报）
+        ↓
+③ 改进：根据评估结果改策略 π
+        ↓（回到 ①）
+</code></pre>
+<p><strong>类比：学做菜。</strong> ① 按现在的菜谱做一道菜；② 尝一尝，打个分；③ 改菜谱（盐少放一点）；再做一道。</p>
+<p>后面的章节就是在讲 ② 和 ③ 各有哪些做法：</p>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>② 怎么评估</th>
+<th>③ 怎么改进</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7–9</td>
+<td>价值函数 v、q</td>
+<td>挑价值最高的动作</td>
+</tr>
+<tr>
+<td>10–12</td>
+<td>知道 p 时直接算（动态规划）</td>
+<td>贪心改进</td>
+</tr>
+<tr>
+<td>14–16</td>
+<td>不知道 p，靠试出来的回报</td>
+<td>ε-greedy</td>
+</tr>
+<tr>
+<td>17–19</td>
+<td>用神经网络估 q（DQN）</td>
+<td>挑 q 最大的</td>
+</tr>
+<tr>
+<td>20–23</td>
+<td>估回报或优势</td>
+<td>沿梯度直接调 π 的参数</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：所有 RL 算法都是"跑样本 → 评估 → 改策略"转圈；后面各章只是 ② ③ 的做法不同。</p>
+<h3 id="_2">动画演示：按策略掷加权骰子；两层随机算出一步的平均奖励</h3>
+<p><img alt="策略" src="../animations/l06-policy.gif" /></p>
+<p>可交互版：<a href="../animations/l06-policy.html">animations/l06-policy.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>上面是低电时的策略条：搜索 / 等待 / 充电各占一段，宽度就是概率；</li>
+<li>每帧掷一次，指针落在哪段就选哪个动作，右边计数慢慢接近 2 : 3 : 5（第二步）；</li>
+<li>下面是两层加权：π × r(s, a) 一项项乘出来再加（第三步）；</li>
+<li>滑块调 π(搜索 | 高电)，看一步的平均奖励怎么变。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：另一份策略：高电时搜索 0.5、等待 0.5。算高电时一步的平均奖励 <span class="arithmatex">\(\mathbb{E}_\pi[R_{t+1} \mid \text{高电}]\)</span>。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：把"高电必搜索、低电必充电"写成 <span class="arithmatex">\(\pi(a \mid s)\)</span> 的表格（每格填概率）。它是随机策略还是确定性策略？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：p 和 π 都写成"竖线"形式，哪一个是智能体能改的？学习过程改的是哪一个？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>策略是手册：每个状态各动作选几成，每行加起来是一；<br />
+随机策略掷骰子，确定策略只一招；<br />
+一步平均：先 π 后 p，两层加权；<br />
+跑样本、评估、改策略，所有算法都在转这个圈。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R10（策略 <span class="arithmatex">\(\pi(a \mid s)\)</span> 的读法；随机 vs 确定性；<span class="arithmatex">\(\mathbb{E}_\pi[R_{t+1} \mid s] = \sum_a \pi(a \mid s) r(s, a)\)</span>）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §3.5 开头</td>
+<td>L4234–L4250</td>
+<td>策略的定义；习题 3.11 就是第三步的公式</td>
+</tr>
+<tr>
+<td>★ CS 285 第 4 讲</td>
+<td><code>lec-04.txt</code> L105–L166（The anatomy of a reinforcement learning algorithm）</td>
+<td>三个部分的循环图（第四步）</td>
+</tr>
+<tr>
+<td>CS 285 第 4 讲</td>
+<td><code>lec-04.txt</code> L195–L207（Types of RL algorithms）</td>
+<td>按"② ③ 怎么做"给算法分类：value-based、policy gradient、actor-critic、model-based</td>
+</tr>
+<tr>
+<td>Spinning Up "Key Concepts"</td>
+<td><code>spinningup/docs/spinningup/rl_intro.rst</code> 的 Policies 一节</td>
+<td>深度 RL 里策略写成神经网络 <span class="arithmatex">\(\pi_\theta\)</span>（第 20 章用）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>策略是条件分布</strong>：<span class="arithmatex">\(\sum_a \pi(a \mid s) = 1\)</span>，<span class="arithmatex">\(\pi(a \mid s) \ge 0\)</span>。</li>
+<li><strong>两层期望</strong>（第 4 章全期望公式）：<span class="arithmatex">\(\mathbb{E}_\pi[R_{t+1} \mid S_t = s] = \sum_a \pi(a \mid s) \sum_{s', r} r\,p(s', r \mid s, a)\)</span>；先按 π 分组，再按 p 平均。</li>
+<li><strong>确定性策略</strong>：写成 <span class="arithmatex">\(a = \mu(s)\)</span> 或 <span class="arithmatex">\(\pi(s)\)</span>，相当于 π 在一个动作上概率为 1。</li>
+<li><strong>参数化策略</strong>（预告第 20 章）：<span class="arithmatex">\(\pi_\theta(a \mid s) = \text{softmax}(\theta)\)</span>，用 Transformer 讲义第 6 章的 softmax 把一组分数变成概率。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\pi(a \mid s) = \Pr\{A_t = a \mid S_t = s\}\)</span></td>
+<td>策略</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\sum_a \pi(a \mid s) = 1\)</span></td>
+<td>每行加起来是 1</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\mathbb{E}_\pi[R_{t+1} \mid S_t = s] = \sum_a \pi(a \mid s)\,r(s, a)\)</span></td>
+<td>一步的平均奖励（习题 3.11）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch06_policy.py</code>，策略在 <code>rl_envs.py</code> 的 <code>ROBOT_PI</code>，测试 <code>tests/test_ch05_09.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch06_policy.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch06_policy.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>策略表</td>
+<td><code>ROBOT_PI = {0: {0: 0.9, 1: 0.1}, 1: {0: 0.2, 1: 0.3, 2: 0.5}}</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>掷 1000 次</td>
+<td><code>sample_action(pi, 1, rng)</code></td>
+<td>搜索 193、等待 280、充电 527</td>
+</tr>
+<tr>
+<td>一步平均奖励</td>
+<td><code>expected_immediate_reward(P, pi, s)</code></td>
+<td>高电 1.9，低电 0.4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">acts = list(pi[s])
+a = acts[rng.choice(len(acts), p=[pi[s][a] for a in acts])]   # 加权骰子
+sum(pi[s][a] * expected_reward(P, s, a) for a in pi[s])        # 先 π 后 p
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>rng.choice(n, p=...)</code> 就是"加权骰子"。神经网络策略（第 20 章）里同样的事写成 <code>torch.distributions.Categorical(probs).sample()</code>。</p><nav class="pager"><a href="05-mdp.html">← 第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a)</a><a href="07-value.html">第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a) →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

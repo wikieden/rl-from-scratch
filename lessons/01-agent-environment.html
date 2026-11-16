@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 1 章 · 智能体与环境 agent &amp; environment · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="1-agent-environment">第 1 章 · 智能体与环境 agent &amp; environment</h1><p><a class="btn" href="../animations/01-score-vs-pathwise.html">▶ 打开本章可交互动画</a></p>
+<blockquote>
+<p>本章回答：强化学习到底在"学"什么？谁在学、跟谁打交道？它和"有标准答案"的学习有什么不同？<br />
+讲解日期：2026-10-26（第二步、附录 2026-11-13 补）· 上一章：— · 下一章：<a href="../lessons/02-return.html">第 2 章 奖励与回报</a><br />
+对应原文：Sutton &amp; Barto §3.1 The Agent–Environment Interface（<code>materials/text/books/sutton-barto-RLbook2020.txt</code> L3539–L3580、L3698–L3700），§1.1 强化学习 vs 监督学习（L974–L985）<br />
+本章缩写：RL = Reinforcement Learning（强化 / 学习）；MDP = Markov Decision Process（马尔可夫 / 决策 / 过程，第 5 章细讲）；S&amp;B = Sutton &amp; Barto（教材两位作者的姓）；<span class="arithmatex">\(S_t\)</span> / <span class="arithmatex">\(A_t\)</span> / <span class="arithmatex">\(R_t\)</span>：S = State（状态）、A = Action（动作）、R = Reward（奖励），下标 t = time step（第几步）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-10-26">第一步：训练小狗：看情况、做动作、拿零食（2026-10-26）</h3>
+<p>你教小狗坐下：</p>
+<ol>
+<li>小狗<strong>看到</strong>眼前的情况（你举起手、手里有零食）；</li>
+<li>小狗<strong>做</strong>一个动作（坐下 / 乱跑）；</li>
+<li>你<strong>给反馈</strong>：坐下就给零食，乱跑就什么都没有；</li>
+<li>情况<strong>变了</strong>（零食吃掉了、你换了个手势），回到第 1 步。</li>
+</ol>
+<p>没人告诉小狗"正确答案是坐下"，它只能靠反复试、看零食多少，慢慢学会。</p>
+<p><strong>换成书里的名字</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类比</th>
+<th>术语</th>
+<th>符号</th>
+<th>怎么读</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>小狗（学习、做决定的一方）</td>
+<td>智能体 agent</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>小狗以外的一切（你、零食、房间）</td>
+<td>环境 environment</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>小狗看到的情况</td>
+<td>状态 state</td>
+<td><span class="arithmatex">\(S_t\)</span></td>
+<td>"S 下标 t"：第 t 步的状态</td>
+</tr>
+<tr>
+<td>小狗做的动作</td>
+<td>动作 action</td>
+<td><span class="arithmatex">\(A_t\)</span></td>
+<td>"A 下标 t"：第 t 步的动作</td>
+</tr>
+<tr>
+<td>零食（一个数，越多越好）</td>
+<td>奖励 reward</td>
+<td><span class="arithmatex">\(R_{t+1}\)</span></td>
+<td>"R 下标 t 加 1"：做完第 t 步动作后拿到的奖励</td>
+</tr>
+</tbody>
+</table>
+<p><span class="arithmatex">\(t\)</span> 是第几步（0、1、2、3……），像钟表一格一格走。</p>
+<p>原文 L3542–L3543：学习、做决定的一方叫 agent，"everything outside the agent" 都叫 environment。</p>
+<p><strong>每一步的循环</strong>：看到 <span class="arithmatex">\(S_t\)</span> → 做 <span class="arithmatex">\(A_t\)</span> → 环境给回 <span class="arithmatex">\(R_{t+1}\)</span> 和新状态 <span class="arithmatex">\(S_{t+1}\)</span>。一步步串起来就是一条<strong>轨迹 trajectory</strong>（式 3.1，L3579）：</p>
+<div class="arithmatex">\[S_0,\ A_0,\ R_1,\ S_1,\ A_1,\ R_2,\ S_2,\ A_2,\ R_3,\ \dots\]</div>
+<p><strong>注意下标</strong>：奖励是做完动作<strong>之后</strong>才拿到的，所以第 0 步动作换来的奖励记作 <span class="arithmatex">\(R_1\)</span>，不是 <span class="arithmatex">\(R_0\)</span>。书的脚注 4（L3605–L3608）说：写成 <span class="arithmatex">\(R_{t+1}\)</span> 是为了强调"下一个奖励和下一个状态是一起决定的"；也有书写成 <span class="arithmatex">\(R_t\)</span>，两种写法都常见，读论文时留意一下。</p>
+<p><strong>小狗第一轮</strong>：<span class="arithmatex">\(S_0\)</span> = 主人举手，<span class="arithmatex">\(A_0\)</span> = 坐下，<span class="arithmatex">\(R_1 = 1\)</span>（一块零食），<span class="arithmatex">\(S_1\)</span> = 主人放下手。</p>
+<p><strong>一句话</strong>：智能体看状态、做动作，环境回一个奖励和新状态；串起来就是轨迹，奖励的下标比动作大 1。</p>
+<h3 id="2026-11-13">第二步：和"有标准答案"的学习比：没人告诉你正确动作（2026-11-13）</h3>
+<p><strong>监督学习 supervised learning</strong> 是你在 Transformer 那本讲义里见过的学法：每道题都配好<strong>标准答案</strong>（标签 label），模型做错了，直接告诉它"应该是这个"。比如翻译模型，每句英文都配着正确的德文。</p>
+<p><strong>强化学习</strong> 不一样：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>监督学习</th>
+<th>强化学习</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>给的反馈</td>
+<td>正确答案是什么</td>
+<td>刚才做得好不好（一个分数）</td>
+</tr>
+<tr>
+<td>类比</td>
+<td>老师批改时写出正确答案</td>
+<td>教练只说"这球打得 7 分"</td>
+</tr>
+<tr>
+<td>反馈什么时候来</td>
+<td>马上，每道题都有</td>
+<td>可能很晚（下棋要等到终局）</td>
+</tr>
+<tr>
+<td>数据从哪来</td>
+<td>别人准备好的题库</td>
+<td>自己动手试出来的</td>
+</tr>
+</tbody>
+</table>
+<p>原文 L975–L985 的意思是：监督学习靠"知识丰富的外部老师"给出带标签的例子；但在需要互动的问题里，很难事先准备好又对、又覆盖所有情况的正确示范，智能体<strong>必须从自己的经验里学</strong>。</p>
+<p>所以强化学习有两个特有的难处，后面各有几章专门讲：</p>
+<ol>
+<li><strong>要自己去试</strong>：不试就不知道别的动作好不好（第 13 章"探索与利用"）；</li>
+<li><strong>奖励来得晚</strong>：赢了一盘棋，是哪一步下得好？（第 2–3 章回报、第 22 章优势函数）</li>
+</ol>
+<p><strong>一句话</strong>：监督学习告诉你"正确答案"，强化学习只告诉你"得了几分"，正确的做法要自己试出来。</p>
+<h3 id="2026-11-13_1">第三步：智能体和环境的边界：改不了的都算环境（2026-11-13）</h3>
+<p><strong>问题</strong>：机器人的手臂、电机算智能体还是环境？直觉上"机器人的身体就是它自己"，但书里不这么分。</p>
+<p>原文 L3698–L3700 的规则：<strong>凡是智能体不能随心所欲改变的东西，都算在它外面，属于环境</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>东西</th>
+<th>算哪边</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>机器人的"大脑"（做决定的程序）</td>
+<td>智能体</td>
+<td>它能自己决定输出什么</td>
+</tr>
+<tr>
+<td>机器人的电机、手臂、摄像头</td>
+<td>环境</td>
+<td>电机不是想转多快就转多快，有物理限制</td>
+</tr>
+<tr>
+<td>小狗的肌肉、腿</td>
+<td>环境</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>奖励怎么算</td>
+<td>环境</td>
+<td>智能体不能自己给自己发零食</td>
+</tr>
+</tbody>
+</table>
+<p><strong>类比：开车。</strong> 你（智能体）能决定踩多深的油门；但车怎么加速、路滑不滑、红绿灯什么时候变，都不由你说了算，全是环境。</p>
+<p>最后一行很重要：<strong>奖励永远在环境那边</strong>。如果智能体能随便改自己的奖励，它就会直接把奖励改成最大，什么都不学了。</p>
+<p><strong>一句话</strong>：边界不是按"身体"划，而是按"能不能随意改"划；改不了的（包括奖励）都是环境。</p>
+<h3 id="_2">动画演示：看状态、做动作、拿奖励，串成轨迹</h3>
+<p><img alt="智能体与环境" src="../animations/l01-agent-environment.gif" /></p>
+<p>可交互版：<a href="../animations/l01-agent-environment.html">animations/l01-agent-environment.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>左边智能体（小狗），右边环境（主人、零食、房间）；</li>
+<li>t = 0：环境给状态 <span class="arithmatex">\(S_0\)</span> → 小狗做动作 <span class="arithmatex">\(A_0\)</span> → 环境给回 <span class="arithmatex">\(R_1\)</span> 和 <span class="arithmatex">\(S_1\)</span>；</li>
+<li>奖励的下标比动作大 1：第 0 步的奖励叫 <span class="arithmatex">\(R_1\)</span>；</li>
+<li>串起来就是轨迹 <span class="arithmatex">\(S_0, A_0, R_1, S_1, A_1, R_2, \dots\)</span>（第 2 轮是编的）；滑块：看前 t 步的轨迹，同色的一组是一步。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：玩"超级马里奥"时，智能体、环境、状态、动作、奖励分别是什么？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：小狗的轨迹是 <span class="arithmatex">\(S_0\)</span> = 举手，<span class="arithmatex">\(A_0\)</span> = 坐下，<span class="arithmatex">\(R_1\)</span> = 1，<span class="arithmatex">\(S_1\)</span> = 放手，<span class="arithmatex">\(A_1\)</span> = 乱跑，<span class="arithmatex">\(R_2\)</span> = 0。如果有人把它写成 "<span class="arithmatex">\(S_0, A_0, R_0, S_1, A_1, R_1\)</span>"，按本书的写法，哪里写错了？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：扫地机器人的电池电量，算智能体还是环境？按第三步的规则说出理由。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>看状态，做动作，拿奖励，再看新状态；<br />
+奖励下标大一号；<br />
+监督学习给答案，强化学习只给分；改不了的都是环境。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R01（交互循环与轨迹记号；为什么第一个奖励是 <span class="arithmatex">\(R_1\)</span>）</li>
+<li>R02（强化学习和监督学习的区别；智能体与环境的边界）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。<br />
+- 教材文本版：<code>materials/text/books/sutton-barto-RLbook2020.txt</code>（下面的 L 行号都指这个文件）；<br />
+- CS 285 slides 文本版：<code>materials/text/cs285-slides/lec-NN.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §3.1</td>
+<td>L3539–L3580（交互循环、式 3.1）、L3698–L3712（边界规则）</td>
+<td>本章原文</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §1.1</td>
+<td>L974–L1000</td>
+<td>强化学习 vs 监督学习 vs 无监督学习</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §3.1 例 3.1–3.2</td>
+<td>L3736–L3779（生物反应器、抓放机器人）</td>
+<td>同一套框架怎么套到不同问题上：状态、动作、奖励各是什么</td>
+</tr>
+<tr>
+<td>CS 285 第 4 讲 RL Basics</td>
+<td><code>lec-04.txt</code> L1–L35</td>
+<td>课程版的定义：observation、state、action、policy，接第 5 章 MDP</td>
+</tr>
+<tr>
+<td>王树森《深度强化学习》slides</td>
+<td><code>chinese/wangshusen-DRL/Slides/1_Basics_1.pdf</code></td>
+<td>中文的术语对照</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<p>本章还没有用到计算，只有记号：</p>
+<ul>
+<li>下标 <span class="arithmatex">\(t\)</span> 是离散的时间步 0, 1, 2, …（书只讨论离散时间，脚注 2，L3601–L3602）；</li>
+<li>轨迹是一串交替出现的 S、A、R，奖励下标比同一步的动作大 1。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(S_t \to A_t \to (R_{t+1}, S_{t+1})\)</span></td>
+<td>一步交互</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(S_0, A_0, R_1, S_1, A_1, R_2, \dots\)</span></td>
+<td>轨迹（式 3.1）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的例子用代码走一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch01_agent_environment.py</code>，测试 <code>tests/test_ch01_04.py</code>。Mac 上直接能跑：<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch01_agent_environment.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch01_agent_environment.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>环境</td>
+<td><code>class DogEnv</code> 的 <code>step(action)</code> 返回 <code>(奖励, 新状态)</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>轨迹</td>
+<td><code>rollout(env, ["坐下", "乱跑"])</code></td>
+<td><code>S0=主人举手, A0=坐下, R1=1, S1=主人放下手, A1=乱跑, R2=0, S2=主人举手</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>代码里才看得到的</strong>：<code>step()</code> 这个函数名就是后面所有 RL 代码库（Gymnasium、CS 285 作业）的标准接口：智能体把动作交给 <code>env.step(a)</code>，环境回给它奖励和新状态。第 2 个动作"乱跑"之后 <code>R2 = 0</code>，下标正好比动作大 1。</p><nav class="pager"><span></span><a href="02-return.html">第 2 章 · 奖励与回报 reward &amp; return：把一路的奖励加起来 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

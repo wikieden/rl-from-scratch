@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="23-trpo-ppo">第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多</h1>
+<blockquote>
+<p>本章回答：策略梯度每批数据只能走一步，太浪费；想多走几步，"数据是旧策略采的"怎么办？为什么要限制每次改动的幅度？PPO 的 clip 到底在剪什么？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/22-actor-critic-gae.html">第 22 章 Actor-Critic、优势函数与 GAE</a> · 下一章：<a href="../lessons/24-wrap-up.html">第 24 章 收尾</a><br />
+对应原文：CS 285 第 9 讲（<code>lec-09.txt</code> L25–L117：The problem with policy gradients、Importance sampling、Clipped importance weights → PPO）、第 10 讲（<code>lec-10.txt</code> L38–L176：policy gradient as policy iteration、KL 约束、TRPO、"PPO with clipping is a heuristic approximation to PPO with KL"）；TRPO 论文（<code>papers/trpo-1502.05477.txt</code> L406–L412）；PPO 论文（<code>papers/ppo-1707.06347.txt</code> L142–L182，式 7，图 1）<br />
+本章缩写：IS = Importance Sampling（重要性 / 采样）；r(θ)：probability ratio（概率比率）<span class="arithmatex">\(\pi_\theta / \pi_{\theta_{old}}\)</span>，不是奖励；old：旧策略（采数据时的那份）；TRPO = Trust Region Policy Optimization（信任 / 区域 / 策略 / 优化）；PPO = Proximal Policy Optimization（近端 / 策略 / 优化，proximal 是"挨得近"）；KL = Kullback–Leibler divergence（两位统计学家的姓 / 散度：衡量两个概率分布差多远）；clip：剪裁（把数限制在一个范围内）；ε：这里是剪裁范围（常取 0.2），不是第 13 章的探索概率。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：问题：一批数据只能走一步（2026-11-13）</h3>
+<p><strong>第 22 章的循环</strong>：跑一批轨迹 → 算优势 → 演员走<strong>一步</strong>梯度 → 扔掉这批数据 → 重新跑。</p>
+<p><strong>为什么只能走一步</strong>（<code>lec-09.txt</code> L25–L38）：策略梯度 <span class="arithmatex">\(\mathbb{E}_{\pi_\theta}[\hat A\,\nabla\log\pi_\theta]\)</span> 里的期望，是"<strong>按当前策略</strong> <span class="arithmatex">\(\pi_\theta\)</span> 采样"的平均。走完一步，θ 变了，手上这批数据就<strong>不再是当前策略采的</strong>，严格说不能再用。</p>
+<p><strong>代价</strong>：在模拟器里跑一批轨迹可能要几分钟，用来只走一小步梯度；L33–L38："high variance means we usually want bigger batches … and smaller learning rates … this quickly becomes intractable"。</p>
+<p><strong>我们想要的</strong>（L39–L49）：采一批数据，在上面<strong>走好几步</strong>梯度，把数据榨干。要解决两个问题：</p>
+<ol>
+<li>数据是旧策略采的，怎么"修正"成新策略的期望？（第二步）</li>
+<li>走太多步，新策略离旧策略太远，修正就不准了，怎么办？（第三、四步）</li>
+</ol>
+<p><strong>一句话</strong>：策略梯度的期望要求数据来自当前策略，所以一批数据只能走一步，很浪费；想多走几步要先解决"数据过期"。</p>
+<h3 id="2026-11-13_1">第二步：重要性采样：用旧策略的数据，估新策略的平均（2026-11-13）</h3>
+<p><strong>问题</strong>：样本是按概率 <span class="arithmatex">\(p_{\text{旧}}\)</span> 抽的，想估的是按 <span class="arithmatex">\(p_{\text{新}}\)</span> 的平均。</p>
+<p><strong>重要性采样 importance sampling</strong>（<code>lec-09.txt</code> L51–L53）：每个样本乘一个权重 <span class="arithmatex">\(\frac{p_{\text{新}}(x)}{p_{\text{旧}}(x)}\)</span>：</p>
+<div class="arithmatex">\[\mathbb{E}_{x\sim p_{\text{新}}}[f(x)] = \mathbb{E}_{x\sim p_{\text{旧}}}\Big[\frac{p_{\text{新}}(x)}{p_{\text{旧}}(x)}\,f(x)\Big]\]</div>
+<p><strong>为什么对</strong>：右边写开是 <span class="arithmatex">\(\sum_x p_{\text{旧}}(x)\frac{p_{\text{新}}(x)}{p_{\text{旧}}(x)}f(x) = \sum_x p_{\text{新}}(x)f(x)\)</span>，<span class="arithmatex">\(p_{\text{旧}}\)</span> 正好约掉。</p>
+<p><strong>类比：民调加权。</strong> 你调查了 100 人，男女各 50；但真实人口是女 80%、男 20%。直接平均会让男性的意见占比太大。做法是给每个女性受访者乘 0.8/0.5 = 1.6、每个男性乘 0.2/0.5 = 0.4，加权以后就是"按真实人口"的平均。</p>
+<p><strong>用数字验证</strong>：两个动作，奖励 1 和 0。旧策略各选 0.5（数据就是这样采的），新策略选 0.8 和 0.2。手上的两个样本：选了动作 1（奖励 1）、选了动作 2（奖励 0）。</p>
+<div class="arithmatex">\[\frac12\Big[1 \times \frac{0.8}{0.5} + 0 \times \frac{0.2}{0.5}\Big] = \frac12[1.6 + 0] = 0.8\]</div>
+<p>新策略的真实平均奖励 = 0.8 × 1 + 0.2 × 0 = 0.8 ✓。用旧数据估出了新策略的平均。</p>
+<p><strong>用在策略梯度上</strong>（<code>lec-09.txt</code> L54–L72）：每个时刻乘一个<strong>概率比率</strong>：</p>
+<div class="arithmatex">\[r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{old}}(a_t \mid s_t)}\]</div>
+<p>目标变成"<strong>替代目标 surrogate objective</strong>"：</p>
+<div class="arithmatex">\[L(\theta) = \mathbb{E}_{\text{旧数据}}\big[\,r_t(\theta)\,\hat A_t\,\big]\]</div>
+<p>在 θ = θ_old 时 r = 1，它的梯度正好等于普通的策略梯度（第 20 章的"方便恒等式"）；θ 离开 θ_old 以后，还能用这批旧数据接着优化它。</p>
+<p><strong>一句话</strong>：重要性采样给每个样本乘 <span class="arithmatex">\(p_{\text{新}}/p_{\text{旧}}\)</span>，就能用旧数据估新期望；策略梯度里这个比率叫 <span class="arithmatex">\(r_t(\theta)\)</span>，目标变成 <span class="arithmatex">\(\mathbb{E}[r_t\hat A_t]\)</span>。</p>
+<h3 id="kl2026-11-13">第三步：别改太多：信任区域与 KL（2026-11-13）</h3>
+<p><strong>问题</strong>：<span class="arithmatex">\(L(\theta) = \mathbb{E}[r_t\hat A_t]\)</span> 可以一直优化下去吗？</p>
+<p>不行，有两个原因：</p>
+<ol>
+<li><strong>比率会变得极端</strong>（<code>lec-09.txt</code> L75–L83）：新策略某个动作的概率涨到旧策略的 10 倍，权重就是 10；少数几个样本的权重巨大，估计的方差就爆了（"once the weights are too far from 1.0, the estimator is no longer useful"）；</li>
+<li><strong>状态分布也变了</strong>（<code>lec-10.txt</code> L47–L81）：策略一变，智能体会走到<strong>不同的状态</strong>去，旧数据里根本没有这些状态。CS 285 第 10 讲证明了：只要新旧策略"<strong>差得不多</strong>"，忽略状态分布的变化就是可以的（L80–L81："it's 'OK' to ignore the state distribution if we do not change the policy 'too much'"）。</li>
+</ol>
+<p><strong>所以要限制每次改动的幅度</strong>。怎么衡量"两个策略差多少"？用 <strong>KL 散度</strong>（<code>lec-10.txt</code> L85–L92）：</p>
+<div class="arithmatex">\[D_{KL}(\pi_{old}\,\|\,\pi_\theta) = \sum_a \pi_{old}(a)\,\log\frac{\pi_{old}(a)}{\pi_\theta(a)}\]</div>
+<ul>
+<li>两个分布完全一样时是 0，差得越多越大；</li>
+<li>它是"按旧策略平均的 log 比率"，用旧数据就能估。</li>
+</ul>
+<p><strong>TRPO</strong>（TRPO 论文 L406–L412；<code>lec-10.txt</code> L156–L163）：在"<strong>KL 不超过一个小数 δ</strong>"的约束下，最大化替代目标：</p>
+<div class="arithmatex">\[\max_\theta\ \mathbb{E}[r_t(\theta)\hat A_t]\qquad\text{约束：}\ \mathbb{E}[D_{KL}(\pi_{old}\,\|\,\pi_\theta)] \le \delta\]</div>
+<p>这个"允许活动的小范围"就叫<strong>信任区域 trust region</strong>：在旧策略附近，替代目标是可信的；跑出这个范围就不可信了。</p>
+<p><strong>类比：开车用导航。</strong> 导航（替代目标）只在你附近一小段路上可靠，你按它开一小段，重新定位，再开一小段；而不是看一眼导航就闭着眼开 100 公里。</p>
+<p>TRPO 要解一个带约束的优化，用到二阶导数和共轭梯度（L161–L163），实现起来复杂。</p>
+<p><strong>一句话</strong>：比率太极端、状态分布会变，所以每次只能在旧策略附近改；TRPO 用 KL ≤ δ 划出信任区域，但实现复杂。</p>
+<h3 id="ppo-1-1-2026-11-13">第四步：PPO：把比率剪在 [1 − ε, 1 + ε] 里（2026-11-13）</h3>
+<p><strong>PPO 的想法</strong>（<code>lec-09.txt</code> L84–L117；PPO 论文式 7，L142–L153）：不解约束优化，直接在目标里<strong>把比率剪掉</strong>，让它"改多了也没好处"：</p>
+<div class="arithmatex">\[L^{\text{CLIP}}(\theta) = \mathbb{E}_t\Big[\min\big(\,r_t(\theta)\hat A_t,\ \ \text{clip}(r_t(\theta),\ 1-\varepsilon,\ 1+\varepsilon)\,\hat A_t\,\big)\Big]\]</div>
+<ul>
+<li><span class="arithmatex">\(\text{clip}(r, 1-\varepsilon, 1+\varepsilon)\)</span>：r 小于 1 − ε 就当成 1 − ε，大于 1 + ε 就当成 1 + ε；ε 常取 0.2（<code>lec-09.txt</code> L94 说"try 0.1"也行）；</li>
+<li>min：在"不剪"和"剪了"两个里取<strong>更小</strong>（更保守）的那个。</li>
+</ul>
+<p><strong>分两种情况读</strong>（PPO 论文 L146–L155，图 1）：</p>
+<p><strong>① 优势 A &gt; 0（好动作，想让它更可能）</strong>：r 往大调。但涨过 1 + ε 以后，剪裁让目标<strong>不再增加</strong>，梯度变成 0：好动作的概率最多涨到旧的 1.2 倍，这一批数据就不再推它了。</p>
+<p><strong>② 优势 A &lt; 0（坏动作，想让它更不可能）</strong>：r 往小调。低于 1 − ε 以后目标不再变化，梯度为 0：最多压到旧的 0.8 倍。</p>
+<p><strong>用数字算</strong>（ε = 0.2）：</p>
+<table>
+<thead>
+<tr>
+<th>r</th>
+<th>A</th>
+<th>不剪 r·A</th>
+<th>剪了 clip(r)·A</th>
+<th>min</th>
+<th>对 r 的梯度</th>
+<th>读法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1</td>
+<td>+2</td>
+<td>2.2</td>
+<td>2.2</td>
+<td>2.2</td>
+<td>+2</td>
+<td>还在范围内，继续推</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>+2</td>
+<td>3.0</td>
+<td>1.2 × 2 = 2.4</td>
+<td>2.4</td>
+<td><strong>0</strong></td>
+<td>涨过头了，停</td>
+</tr>
+<tr>
+<td>0.9</td>
+<td>−1</td>
+<td>−0.9</td>
+<td>−0.9</td>
+<td>−0.9</td>
+<td>−1</td>
+<td>还在范围内，继续压</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>−1</td>
+<td>−0.5</td>
+<td>0.8 × (−1) = −0.8</td>
+<td>−0.8</td>
+<td><strong>0</strong></td>
+<td>压过头了，停</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>+2</td>
+<td>1.0</td>
+<td>0.8 × 2 = 1.6</td>
+<td>1.0</td>
+<td>+2</td>
+<td>好动作被压低了：<strong>不剪</strong>，赶紧推回来</td>
+</tr>
+</tbody>
+</table>
+<p>最后一行很关键：min 保证剪裁<strong>只在"改得对、但改过头"时起作用</strong>；如果改错了方向（好动作的概率反而降了），目标照样有梯度，会把它拉回来（PPO 论文 L150："we only ignore the change in probability ratio when it would make the objective improve"）。</p>
+<p><strong>PPO 的完整流程</strong>（第 22 章第四步 + 本章）：</p>
+<pre><code>循环：
+  1. 用 π_old 跑一批轨迹
+  2. 训练评委，按 GAE 算优势 Â，归一化
+  3. 在这批数据上做 K 个 epoch（比如 10 轮）的小批量梯度上升，目标是 L^CLIP
+  4. π_old ← π_θ
+</code></pre>
+<p><strong><code>lec-10.txt</code> L171</strong>："PPO with clipping is a heuristic approximation to PPO with KL"：剪裁是对 KL 约束的一个简单近似。它简单、稳、好调，成了 2017 年以后最常用的强化学习算法：机器人运控（Isaac Gym 里的腿足机器人）、LLM 的 RLHF（InstructGPT）都用它。</p>
+<p><strong>一句话</strong>：PPO 把比率剪在 [0.8, 1.2]，改得对但改过头时梯度为 0，改错方向时照样拉回；一批数据可以放心跑好几个 epoch。</p>
+<h3 id="ppo-r-a-0-a-0">动画演示：PPO 目标随比率 r 的形状：A &gt; 0 和 A &lt; 0 两张图</h3>
+<p><img alt="从 TRPO 到 PPO" src="../animations/l23-ppo.gif" /></p>
+<p>可交互版：<a href="../animations/l23-ppo.html">animations/l23-ppo.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>左图 A = +2，右图 A = −1；横轴是比率 r，虚线是不剪的 r·A，实线是 <span class="arithmatex">\(L^{\text{CLIP}}\)</span>（PPO 论文图 1）；</li>
+<li>一个点从 r = 1 出发，沿梯度方向移动：左图往右走到 1.2 就停（平了），右图往左走到 0.8 就停（第四步表格前四行）；</li>
+<li>再演示表格最后一行：A &gt; 0 但 r = 0.5，实线有斜率，点被拉回来；</li>
+<li>滑块调 ε：ε 越小，平台越早出现，每批数据能改的越少。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：旧策略选动作 a 的概率是 0.4，新策略是 0.6。比率 r 是多少？ε = 0.2 时，如果 A = +1，<span class="arithmatex">\(L^{\text{CLIP}}\)</span> 这一项是多少？对 r 还有没有梯度？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：用重要性采样的思路解释：为什么旧策略采的数据，乘上 <span class="arithmatex">\(\pi_{\text{新}}/\pi_{\text{旧}}\)</span> 就能用来估新策略？比率离 1 太远时有什么问题？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：第四步表格最后一行（r = 0.5，A = +2）为什么不剪？如果这里也剪掉会发生什么？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>一批数据只走一步太浪费，想多走几步要先解决数据过期；<br />
+重要性采样：乘 新/旧，旧数据估新平均；比率叫 r；<br />
+比率别太极端、策略别跑太远：信任区域，KL 不超过 δ；<br />
+PPO 剪比率：好的最多涨到 1.2 倍，坏的最多压到 0.8 倍；改对过头停，改错照拉。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R40（重要性采样 <span class="arithmatex">\(\mathbb{E}_{\text{新}}[f] = \mathbb{E}_{\text{旧}}[\frac{p_{\text{新}}}{p_{\text{旧}}}f]\)</span>；比率 <span class="arithmatex">\(r_t(\theta)\)</span>；为什么每次只能改一点）</li>
+<li>R41（PPO 式 7：<span class="arithmatex">\(\min(r\hat A, \text{clip}(r, 1\pm\varepsilon)\hat A)\)</span>；A &gt; 0 / A &lt; 0 两种情况；什么时候梯度为 0）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ CS 285 第 9 讲</td>
+<td><code>cs285-slides/lec-09.txt</code> L25–L117</td>
+<td>一批数据只走一步的问题、重要性采样、剪裁 → PPO</td>
+</tr>
+<tr>
+<td>★ PPO 论文</td>
+<td><code>papers/ppo-1707.06347.txt</code> L142–L182（式 7，图 1、图 2）</td>
+<td>剪裁目标的原文和图；§5 Algorithm 1 是完整流程</td>
+</tr>
+<tr>
+<td>CS 285 第 10 讲</td>
+<td><code>cs285-slides/lec-10.txt</code> L38–L176</td>
+<td>策略梯度 = 策略迭代、为什么可以忽略状态分布变化、KL、自然梯度、TRPO</td>
+</tr>
+<tr>
+<td>TRPO 论文</td>
+<td><code>papers/trpo-1502.05477.txt</code> L406–L412、L461</td>
+<td>信任区域约束的原文</td>
+</tr>
+<tr>
+<td>★ The 37 Implementation Details of PPO</td>
+<td><code>blog/ppo-37-implementation-details.html</code></td>
+<td>复现 PPO 必读：优势归一化、value clipping、学习率退火、正交初始化……</td>
+</tr>
+<tr>
+<td>CleanRL <code>ppo.py</code></td>
+<td><code>cleanrl/cleanrl/ppo.py</code></td>
+<td>单文件 PPO：<code>pg_loss1</code>、<code>pg_loss2</code>、<code>torch.max</code> 那几行就是本章的式 7（写成最小化的负号版）</td>
+</tr>
+<tr>
+<td>Hands-on-RL 第 11–12 章</td>
+<td><code>chinese/Hands-on-RL/第11章-TRPO算法.ipynb</code>、<code>第12章-PPO算法.ipynb</code></td>
+<td>中文：TRPO 和 PPO 的代码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>重要性采样恒等式</strong>：<span class="arithmatex">\(\mathbb{E}_{x\sim q}[\frac{p(x)}{q(x)}f(x)] = \mathbb{E}_{x\sim p}[f(x)]\)</span>，要求 <span class="arithmatex">\(q(x) &gt; 0\)</span> 的地方覆盖 <span class="arithmatex">\(p(x) &gt; 0\)</span> 的地方。</li>
+<li><strong>替代目标的梯度</strong>：<span class="arithmatex">\(\nabla_\theta r_t(\theta)\big|_{\theta = \theta_{old}} = \frac{\nabla\pi_\theta}{\pi_{\theta_{old}}} = \nabla\log\pi_\theta\)</span>，所以在 θ_old 处 <span class="arithmatex">\(\nabla L = \mathbb{E}[\hat A\nabla\log\pi]\)</span>：第一步和普通策略梯度一样。</li>
+<li><strong>KL 散度</strong>：<span class="arithmatex">\(D_{KL}(p\|q) = \sum p\log\frac pq \ge 0\)</span>，等号当且仅当 p = q；不对称（<span class="arithmatex">\(D_{KL}(p\|q) \ne D_{KL}(q\|p)\)</span>）。</li>
+<li><strong>策略改进下界</strong>（TRPO 的理论核心）：<span class="arithmatex">\(J(\pi') \ge J(\pi) + \mathbb{E}[r\hat A] - C\cdot\max D_{KL}(\pi\|\pi')\)</span>；KL 小时替代目标的提升就是真实提升（<code>lec-10.txt</code> L58–L81）。</li>
+<li><strong>剪裁目标是悲观下界</strong>：<span class="arithmatex">\(L^{\text{CLIP}} \le L^{\text{CPI}} = \mathbb{E}[r\hat A]\)</span>，在 r = 1 附近两者一阶相同（PPO 论文 L151–L152："to first order around θold"）。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\mathbb{E}_{p}[f] = \mathbb{E}_{q}[\frac pq f]\)</span></td>
+<td>重要性采样</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{old}}(a_t \mid s_t)}\)</span></td>
+<td>概率比率</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(L^{\text{CPI}}(\theta) = \mathbb{E}[r_t(\theta)\hat A_t]\)</span></td>
+<td>替代目标</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\max\ L^{\text{CPI}}\)</span> s.t. <span class="arithmatex">\(\mathbb{E}[D_{KL}(\pi_{old}\|\pi_\theta)] \le \delta\)</span></td>
+<td>TRPO</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(L^{\text{CLIP}} = \mathbb{E}[\min(r_t\hat A_t,\ \text{clip}(r_t, 1-\varepsilon, 1+\varepsilon)\hat A_t)]\)</span></td>
+<td>PPO（式 7）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch23_ppo.py</code>，测试 <code>tests/test_ch17_24.py</code>（检查表格五行的值和梯度）。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch23_ppo.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch23_ppo.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>重要性采样例子</td>
+<td><code>importance_weighted_mean([1, 0], [0.8, 0.2], [0.5, 0.5])</code></td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>表格五行</td>
+<td><code>ppo_term(ratio, adv)</code>、<code>grad_wrt_ratio(ratio, adv)</code></td>
+<td>+2.20/+2、+2.40/0、−0.90/−1、−0.80/0、+1.00/+2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">r = torch.tensor(1.5, requires_grad=True)
+L = torch.minimum(r * adv, torch.clamp(r, 1 - eps, 1 + eps) * adv)
+L.backward(); r.grad        # 0.0：被剪掉的部分没有梯度
+</code></pre>
+<p><strong>代码里才看得到的</strong>：</p>
+<ol>
+<li><code>torch.clamp</code> 在被剪住的区域梯度是 0，这正是"改过头就停"在代码里的实现方式，不需要额外写判断；</li>
+<li>实际代码里比率用 <code>exp(new_logprob − old_logprob)</code> 算（log 相减再取 e 次方），比直接相除数值更稳；<code>old_logprob</code> 必须在采样时存下来并 <code>detach()</code>，否则梯度会穿到旧策略里去。</li>
+</ol><nav class="pager"><a href="22-actor-critic-gae.html">← 第 22 章 · Actor-Critic、优势函数与 GAE：演员演，评委打分</a><a href="24-wrap-up.html">第 24 章 · 收尾：全书地图、PPO 到 GRPO、接下来做什么 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

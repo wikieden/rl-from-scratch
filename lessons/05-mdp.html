@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a) · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="5-mdp-ps-r-s-a">第 5 章 · 马尔可夫决策过程 MDP：环境的"说明书" p(s', r | s, a)</h1>
+<blockquote>
+<p>本章回答：环境怎么回应智能体的动作？能不能用一张表把环境完全写下来？"马尔可夫"是什么意思？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/04-expectation.html">第 4 章 概率与期望</a> · 下一章：<a href="../lessons/06-policy.html">第 6 章 策略</a><br />
+对应原文：Sutton &amp; Barto §3.1 后半（L3581–L3660，式 3.2–3.6）、例 3.3 回收机器人（L3780–L3925）；CS 285 第 4 讲（<code>lec-04.txt</code> L15–L47）<br />
+本章缩写：MDP = Markov Decision Process（马尔可夫 / 决策 / 过程；Markov 是俄国数学家马尔可夫的名字）；<span class="arithmatex">\(p(s', r \mid s, a)\)</span>：s' 读"s 撇"，表示下一个状态（next state）；POMDP = Partially Observable MDP（部分 / 可观测的 MDP）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：扫地机器人：两个状态、三个动作（2026-11-13）</h3>
+<p>书里的例 3.3（L3780–L3800）是一个捡易拉罐的机器人。我们叫它<strong>扫地机器人</strong>，数字是讲义自己定的：</p>
+<ul>
+<li><strong>状态</strong>只有两种：电池<strong>高电</strong>、<strong>低电</strong>；</li>
+<li><strong>动作</strong>：<strong>搜索</strong>（到处找罐子）、<strong>等待</strong>（原地等人送罐子来）、<strong>充电</strong>（回去充电，只有低电时才可以选；高电时充电没意义，书里干脆不给这个选项）。</li>
+</ul>
+<p><strong>环境怎么回应</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>现在</th>
+<th>动作</th>
+<th>结果</th>
+<th>概率</th>
+<th>奖励</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>高电</td>
+<td>搜索</td>
+<td>还是高电</td>
+<td>0.8（书里叫 α）</td>
+<td>+2</td>
+</tr>
+<tr>
+<td>高电</td>
+<td>搜索</td>
+<td>变成低电</td>
+<td>0.2</td>
+<td>+2</td>
+</tr>
+<tr>
+<td>高电</td>
+<td>等待</td>
+<td>还是高电</td>
+<td>1</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>低电</td>
+<td>搜索</td>
+<td>还是低电</td>
+<td>0.7（书里叫 β）</td>
+<td>+2</td>
+</tr>
+<tr>
+<td>低电</td>
+<td>搜索</td>
+<td><strong>没电了</strong>，被人抬回去充满 → 高电</td>
+<td>0.3</td>
+<td><strong>−3</strong></td>
+</tr>
+<tr>
+<td>低电</td>
+<td>等待</td>
+<td>还是低电</td>
+<td>1</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>低电</td>
+<td>充电</td>
+<td>变成高电</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>看懂这张表</strong>：同一个"现在 + 动作"，结果可能不止一种（搜索时电可能掉、可能不掉），每种结果有自己的概率和奖励。这就是环境的<strong>随机性</strong>。</p>
+<p><strong>一句话</strong>：环境 = 一张表：在什么状态、做什么动作，会以多大概率到哪个新状态、拿多少奖励。</p>
+<h3 id="ps-r-mid-s-a2026-11-13">第二步：把这张表写成一个函数 <span class="arithmatex">\(p(s', r \mid s, a)\)</span>（2026-11-13）</h3>
+<p>书里把上面那张表写成一个函数（式 3.2，L3589–L3590）：</p>
+<div class="arithmatex">\[p(s', r \mid s, a) = \Pr\{S_t = s',\ R_t = r \mid S_{t-1} = s,\ A_{t-1} = a\}\]</div>
+<p><strong>一个个符号读</strong>：</p>
+<ul>
+<li><span class="arithmatex">\(s, a\)</span>（竖线右边）：<strong>已知的</strong>：上一步的状态和动作；</li>
+<li><span class="arithmatex">\(s', r\)</span>（竖线左边）：<strong>要猜的</strong>：下一个状态 s'（读"s 撇"）和这次的奖励 r；</li>
+<li>整个式子：在"状态 s、做了动作 a"的条件下，"到 s'、拿 r"的概率（第 4 章第四步的条件概率）。</li>
+</ul>
+<p><strong>对照表格读几个值</strong>：</p>
+<ul>
+<li><span class="arithmatex">\(p(\text{高电}, +2 \mid \text{高电}, \text{搜索}) = 0.8\)</span></li>
+<li><span class="arithmatex">\(p(\text{低电}, +2 \mid \text{高电}, \text{搜索}) = 0.2\)</span></li>
+<li><span class="arithmatex">\(p(\text{高电}, -3 \mid \text{低电}, \text{搜索}) = 0.3\)</span></li>
+</ul>
+<p><strong>铁律</strong>（式 3.3，L3615–L3617）：固定一组 <span class="arithmatex">\((s, a)\)</span>，所有可能的 <span class="arithmatex">\((s', r)\)</span> 概率加起来 = 1。"高电 + 搜索"：0.8 + 0.2 = 1 ✓；"低电 + 搜索"：0.7 + 0.3 = 1 ✓。</p>
+<p>这个 p 叫做 MDP 的<strong>动力学 dynamics</strong>（L3594）：它把环境怎么运转<strong>完全</strong>写清楚了。</p>
+<p><strong>一句话</strong>：<span class="arithmatex">\(p(s', r \mid s, a)\)</span> 就是那张表：已知 s 和 a，到 s'、拿 r 的概率；每组 (s, a) 加起来是 1。</p>
+<h3 id="2026-11-13_1">第三步：马尔可夫性质：只看现在，不用翻历史（2026-11-13）</h3>
+<p><strong>问题</strong>：机器人现在低电。它下一步会怎样，要不要知道它<strong>昨天</strong>做了什么？</p>
+<p><strong>马尔可夫性质 Markov property</strong>（L3621–L3628）：下一步的概率<strong>只取决于现在的状态和动作</strong>，跟更早的历史无关。</p>
+<p><strong>类比：下棋。</strong> 你接手一盘下到一半的棋，只看<strong>现在棋盘上的局面</strong>就能决定下一步怎么走，不需要知道前面每一步是怎么下出来的：棋盘已经把有用的历史都"记"在里面了。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>是马尔可夫的状态</th>
+<th>不是</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>下棋</td>
+<td>整个棋盘</td>
+<td>只看自己的棋子</td>
+</tr>
+<tr>
+<td>开车</td>
+<td>位置 + 速度</td>
+<td>只有位置（不知道在往哪开）</td>
+</tr>
+<tr>
+<td>机器人</td>
+<td>电量（在我们的简化例子里够了）</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>原文 L3624–L3627 说得很准：这其实是对<strong>状态</strong>的要求，状态必须包含"过去对未来有影响的一切信息"。如果状态信息不全（开车只知道位置），就要把它补全，或者当成"部分可观测"的问题（CS 285 第 4 讲 L37 的 POMDP，本书后面不展开）。</p>
+<p><strong>有了马尔可夫性质，p 才够用</strong>：只要知道现在的 (s, a)，p 就能告诉你下一步的一切；不需要一张"按历史查"的大表。</p>
+<p><strong>一句话</strong>：马尔可夫 = 现在的状态已经说明了一切，未来只看现在，不翻历史。</p>
+<h3 id="p-2026-11-13">第四步：从 p 算出两个常用的量（2026-11-13）</h3>
+<p>p 有四个参数，有时用起来嫌啰嗦。书里从它派生出两个简化版：</p>
+<p><strong>① 只关心到哪：状态转移概率</strong>（式 3.4，L3633–L3640）：把所有奖励的情况加起来：</p>
+<div class="arithmatex">\[p(s' \mid s, a) = \sum_{r} p(s', r \mid s, a)\]</div>
+<p>例："低电 + 搜索"到高电只有一种奖励（−3），所以 <span class="arithmatex">\(p(\text{高电} \mid \text{低电}, \text{搜索}) = 0.3\)</span>。</p>
+<p><strong>② 只关心拿多少：期望奖励</strong>（式 3.5，L3643–L3649）：按概率加权平均奖励（第 4 章的期望）：</p>
+<div class="arithmatex">\[r(s, a) = \mathbb{E}[R_t \mid S_{t-1} = s, A_{t-1} = a] = \sum_{r} r \sum_{s'} p(s', r \mid s, a)\]</div>
+<p>算两个：</p>
+<div class="arithmatex">\[r(\text{高电}, \text{搜索}) = 0.8 \times 2 + 0.2 \times 2 = 2$$
+$$r(\text{低电}, \text{搜索}) = 0.7 \times 2 + 0.3 \times (-3) = 1.4 - 0.9 = 0.5\]</div>
+<p><strong>看出门道了吗</strong>：高电时搜索平均拿 2；低电时搜索平均只拿 0.5，因为有 30% 的概率没电、被罚 −3。这就是机器人要学会的权衡：低电时还值不值得冒险搜索？（第 9 章给出答案。）</p>
+<p><strong>一句话</strong>：把奖励加掉得到 <span class="arithmatex">\(p(s' \mid s, a)\)</span>；按概率平均奖励得到 <span class="arithmatex">\(r(s, a)\)</span>。</p>
+<h3 id="_2">动画演示：机器人状态图：箭头上写着概率和奖励</h3>
+<p><img alt="马尔可夫决策过程" src="../animations/l05-mdp.gif" /></p>
+<p>可交互版：<a href="../animations/l05-mdp.html">animations/l05-mdp.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>两个大圆是状态（高电、低电），小黑点是"状态 + 动作"；</li>
+<li>每条箭头标着"概率，奖励"：从同一个小黑点出发的箭头，概率加起来是 1（第二步）；</li>
+<li>播放时机器人按表格随机走，下面记下轨迹和奖励；</li>
+<li>滑块调 β（低电搜索后还是低电的概率），看 <span class="arithmatex">\(r(\text{低电}, \text{搜索})\)</span> 怎么变（第四步）。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：按第一步的表，写出 <span class="arithmatex">\(p(\text{低电}, +2 \mid \text{低电}, \text{搜索})\)</span> 和 <span class="arithmatex">\(p(\text{高电}, +1 \mid \text{高电}, \text{等待})\)</span> 各是多少。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：算 <span class="arithmatex">\(r(\text{低电}, \text{等待})\)</span> 和 <span class="arithmatex">\(r(\text{低电}, \text{充电})\)</span>。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：一个机器人走迷宫，状态只给"我在第几行"，不给"在第几列"。这个状态满足马尔可夫性质吗？为什么？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>环境是张表：哪个状态做哪个动作，以多大概率到哪、拿多少；<br />
+竖线右边已知，左边要猜，每组加起来等于一；<br />
+马尔可夫：现在说明一切，不翻历史；<br />
+加掉奖励得转移，平均奖励得 r(s, a)。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R08（动力学 <span class="arithmatex">\(p(s', r \mid s, a)\)</span> 的读法；每组 (s, a) 概率和为 1）</li>
+<li>R09（马尔可夫性质；从 p 派生 <span class="arithmatex">\(p(s' \mid s, a)\)</span> 和 <span class="arithmatex">\(r(s, a)\)</span>）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §3.1 后半</td>
+<td>L3581–L3649（式 3.2–3.5）</td>
+<td>动力学 p、马尔可夫性质、派生量</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto 例 3.3</td>
+<td>L3780–L3925</td>
+<td>回收机器人原题：书里用 α、β、<span class="arithmatex">\(r_{search}\)</span>、<span class="arithmatex">\(r_{wait}\)</span> 这些字母；习题 3.4 让你把它写成 <span class="arithmatex">\(p(s', r \mid s, a)\)</span> 的表</td>
+</tr>
+<tr>
+<td>CS 285 第 4 讲</td>
+<td><code>lec-04.txt</code> L15–L47</td>
+<td>Markov chain → MDP → POMDP，课程版的定义（Levine 把转移写成 <span class="arithmatex">\(p(s_{t+1} \mid s_t, a_t)\)</span>，记号略不同）</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §17.3</td>
+<td>书第 17 章</td>
+<td>状态不满足马尔可夫时怎么办（想深入再读）</td>
+</tr>
+<tr>
+<td>王树森 slides</td>
+<td><code>chinese/wangshusen-DRL/Slides/1_Basics_1.pdf</code></td>
+<td>中文：状态转移、随机性来自哪</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>联合概率求边缘</strong>：<span class="arithmatex">\(p(s' \mid s, a) = \sum_r p(s', r \mid s, a)\)</span>：把不关心的那个变量的所有取值加起来（marginalize，边缘化）。</li>
+<li><strong>期望奖励</strong>：<span class="arithmatex">\(r(s, a) = \sum_{s', r} r\,p(s', r \mid s, a)\)</span>，就是第 4 章"值 × 概率再相加"。</li>
+<li><strong>马尔可夫性质</strong>：<span class="arithmatex">\(\Pr(S_{t+1}, R_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \dots) = \Pr(S_{t+1}, R_{t+1} \mid S_t, A_t)\)</span>：条件里多写历史，概率不变。</li>
+<li><strong>CS 285 的写法</strong>：MDP 常写成五元组 <span class="arithmatex">\((\mathcal S, \mathcal A, p, r, \gamma)\)</span>：状态集合、动作集合、转移、奖励、折扣。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(p(s', r \mid s, a) = \Pr\{S_t = s', R_t = r \mid S_{t-1} = s, A_{t-1} = a\}\)</span></td>
+<td>动力学（式 3.2）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\sum_{s'}\sum_r p(s', r \mid s, a) = 1\)</span></td>
+<td>每组加起来是 1（式 3.3）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(p(s' \mid s, a) = \sum_r p(s', r \mid s, a)\)</span></td>
+<td>状态转移概率（式 3.4）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(r(s, a) = \sum_r r \sum_{s'} p(s', r \mid s, a)\)</span></td>
+<td>期望奖励（式 3.5）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch05_mdp.py</code>（环境定义在 <code>rl_envs.py</code> 的 <code>robot_mdp()</code>），测试 <code>tests/test_ch05_09.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch05_mdp.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch05_mdp.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>那张表</td>
+<td><code>P[s][a] = [(概率, 下一个状态, 奖励, 是否结束), ...]</code></td>
+<td>打印 5 组</td>
+</tr>
+<tr>
+<td>每组加起来是 1</td>
+<td><code>check_sums(P)</code></td>
+<td>全是 1.0</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(p(\text{高电} \mid \text{低电}, \text{搜索})\)</span></td>
+<td><code>transition_prob(P, 1, 0, 0)</code></td>
+<td>0.30000000000000004</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(r(\text{低电}, \text{搜索})\)</span></td>
+<td><code>expected_reward(P, 1, 0)</code></td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>代码里才看得到的</strong>：</p>
+<ol>
+<li><code>P[s][a]</code> 这种"字典套列表"的写法，和 Gymnasium 里 FrozenLake、Taxi 等环境的 <code>env.unwrapped.P</code> 完全一样，以后可以直接拿来跑第 10–12 章的算法；</li>
+<li><code>1 − 0.7</code> 在电脑里算出来是 <code>0.30000000000000004</code>：小数在电脑里存不精确，比较概率时要用"差不多相等"（测试里的 <code>pytest.approx</code>），别用 <code>==</code>。</li>
+</ol><nav class="pager"><a href="04-expectation.html">← 第 4 章 · 概率与期望 expectation：按概率的加权平均</a><a href="06-policy.html">第 6 章 · 策略 policy π(a|s)：智能体的&quot;行事手册&quot; →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

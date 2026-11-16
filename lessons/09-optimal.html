@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot; · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="9-bellman">第 9 章 · 最优价值与 Bellman 最优方程：把"平均"换成"挑最好的"</h1>
+<blockquote>
+<p>本章回答：什么叫"最好的策略"？最好的策略下价值是多少？知道最优价值以后，怎么直接读出该做什么？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/08-bellman.html">第 8 章 Bellman 期望方程</a> · 下一章：<a href="../lessons/10-policy-eval.html">第 10 章 策略评估</a><br />
+对应原文：Sutton &amp; Barto §3.6（L4772–L5146，式 3.15–3.20，例 3.8 图 3.5）；CS 285 第 4 讲 L200（value-based 方法估的就是最优策略的价值）<br />
+本章缩写：<span class="arithmatex">\(v_*\)</span>、<span class="arithmatex">\(q_*\)</span>、<span class="arithmatex">\(\pi_*\)</span>：星号读"star"（星），表示 optimal（最优）；max = maximum（最大值）；argmax = argument of the maximum（让函数取最大值的那个自变量，即"哪一个最大"）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：什么叫"一个策略比另一个好"（2026-11-13）</h3>
+<p><strong>问题</strong>：两份策略，怎么比谁好？</p>
+<p>原文 L4778–L4781 的定义：如果策略 π 在<strong>每一个</strong>状态的价值都不比 π' 小，就说 π 不比 π' 差：</p>
+<div class="arithmatex">\[\pi \ge \pi' \iff v_\pi(s) \ge v_{\pi'}(s)\ \text{对所有 } s\]</div>
+<p><strong>类比：两个投资方案。</strong> 方案甲在每种行情下都至少和乙赚得一样多，那甲就不比乙差。</p>
+<p>书里接着说（L4781–L4784）：<strong>一定存在</strong>至少一个策略，比所有别的策略都好或一样好，它叫<strong>最优策略 optimal policy</strong>，记作 <span class="arithmatex">\(\pi_*\)</span>。最优策略可能不止一个，但它们的价值都一样，叫<strong>最优状态价值</strong>：</p>
+<div class="arithmatex">\[v_*(s) = \max_\pi v_\pi(s)\qquad(\text{式 3.15})\]</div>
+<p>读作："在所有可能的策略里，挑在 s 处价值最大的那个，它的价值就是 <span class="arithmatex">\(v_*(s)\)</span>"。同样有<strong>最优动作价值</strong> <span class="arithmatex">\(q_*(s, a) = \max_\pi q_\pi(s, a)\)</span>（式 3.16）：在 s 先做 a、之后一直按最优策略走的平均回报。</p>
+<p><strong>一句话</strong>：π 在每个状态都不输 π'，π 就不比 π' 差；最好的那个叫 <span class="arithmatex">\(\pi_*\)</span>，它的价值叫 <span class="arithmatex">\(v_*\)</span>、<span class="arithmatex">\(q_*\)</span>。</p>
+<h3 id="bellman-2026-11-13">第二步：Bellman 最优方程：把"按 π 平均"换成"挑最好的"（2026-11-13）</h3>
+<p><strong>想一想</strong>：最优的智能体在 s 时会怎么选动作？它不会掷骰子，而是<strong>直接挑 q 最大的那个</strong>。</p>
+<p>所以第 8 章 Bellman 期望方程里"按 π 加权平均"那一层，换成"取最大"：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>第 8 章（期望方程）</th>
+<th>本章（最优方程）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>选动作</td>
+<td><span class="arithmatex">\(\sum_a \pi(a \mid s)\,[\dots]\)</span>：按策略平均</td>
+<td><span class="arithmatex">\(\max_a [\dots]\)</span>：挑最好的</td>
+</tr>
+<tr>
+<td>环境那一层</td>
+<td><span class="arithmatex">\(\sum_{s', r} p\,[r + \gamma v(s')]\)</span></td>
+<td>不变：环境的随机性你管不了</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bellman 最优方程</strong>（式 3.19，L4829–L4860）：</p>
+<div class="arithmatex">\[v_*(s) = \max_a \sum_{s', r} p(s', r \mid s, a)\,\big[\,r + \gamma\, v_*(s')\,\big]\]</div>
+<p>对 q 的版本（式 3.20，L4895）：</p>
+<div class="arithmatex">\[q_*(s, a) = \sum_{s', r} p(s', r \mid s, a)\,\big[\,r + \gamma \max_{a'} q_*(s', a')\,\big]\]</div>
+<p><strong>白话</strong>：最优价值 = 挑一个动作，让"眼前奖励 + γ × 下一步的最优价值"平均起来最大。</p>
+<p><strong>注意环境那层还是平均</strong>：动作你能挑，但环境把你送到哪个 s' 你挑不了，只能按概率平均。</p>
+<p><strong>一句话</strong>：最优方程 = 期望方程把"按 π 平均"换成"取 max"，环境那一层照旧按 p 平均。</p>
+<h3 id="v_2026-11-13">第三步：有了 <span class="arithmatex">\(v_*\)</span>，往前看一步就知道怎么做（2026-11-13）</h3>
+<p><strong>问题</strong>：机器人低电时，到底该搜索、等待还是充电？</p>
+<p>先把机器人的 <span class="arithmatex">\(v_*\)</span> 解出来（第 12 章教算法；这里先用结果）：<span class="arithmatex">\(v_*(\text{高电}) = 16.949\)</span>，<span class="arithmatex">\(v_*(\text{低电}) = 15.254\)</span>。比第 8 章那份策略的价值（15.828、13.869）都高：最优策略当然不比它差。</p>
+<p><strong>往前看一步</strong>：低电时每个动作代进最优方程的方括号：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>算式</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>搜索</td>
+<td><span class="arithmatex">\(0.7 \times (2 + 0.9 \times 15.254) + 0.3 \times (-3 + 0.9 \times 16.949)\)</span></td>
+<td>14.686</td>
+</tr>
+<tr>
+<td>等待</td>
+<td><span class="arithmatex">\(1 + 0.9 \times 15.254\)</span></td>
+<td>14.729</td>
+</tr>
+<tr>
+<td><strong>充电</strong></td>
+<td><span class="arithmatex">\(0 + 0.9 \times 16.949\)</span></td>
+<td><strong>15.254</strong></td>
+</tr>
+</tbody>
+</table>
+<p>充电最大，而且正好等于 <span class="arithmatex">\(v_*(\text{低电})\)</span>：<strong>max 取到的就是它</strong>。同样算高电：搜索 16.949 &gt; 等待 16.254，选搜索。</p>
+<p>所以最优策略是：<strong>高电搜索，低电充电</strong>（一份确定性策略，第 6 章第二步）。</p>
+<p><strong>这叫"对 <span class="arithmatex">\(v_*\)</span> 贪心"</strong>（L4941–L4962）：每个状态只往前看<strong>一步</strong>，挑方括号最大的动作。平时"贪心 greedy"是贬义词（只顾眼前），但 <span class="arithmatex">\(v_*\)</span> 已经把<strong>以后所有的奖励</strong>都算进去了，所以只看一步的贪心，结果在长期看也是最优的。</p>
+<p><strong>有 <span class="arithmatex">\(q_*\)</span> 更省事</strong>（L4963–L4970）：连"往前看一步"都不用，直接挑 <span class="arithmatex">\(q_*(s, a)\)</span> 最大的动作；也<strong>不需要知道环境的 p</strong>。这就是第 16 章 Q-learning 要去学 <span class="arithmatex">\(q_*\)</span> 的原因。</p>
+<p><strong>一句话</strong>：有了 <span class="arithmatex">\(v_*\)</span>，每个状态往前看一步挑最大就是最优动作；有了 <span class="arithmatex">\(q_*\)</span>，直接挑最大，连 p 都不用知道。</p>
+<h3 id="a-2442026-11-13">第四步：网格世界的最优解：A 格 24.4（2026-11-13）</h3>
+<p><strong>例 3.8</strong>（L4971–L4975，图 3.5）：还是第 8 章那张 5×5 网格，现在求最优价值：</p>
+<pre><code>22.0  24.4  22.0  19.4  17.5
+19.8  22.0  19.8  17.8  16.0
+17.8  19.8  17.8  16.0  14.4
+16.0  17.8  16.0  14.4  13.0
+14.4  16.0  14.4  13.0  11.7
+</code></pre>
+<p>和书上图 3.5 中间<strong>一模一样</strong>。和随机策略（第 8 章：A 格 8.8，角落 −2.0）比，每一格都高得多。</p>
+<p><strong>读最优策略</strong>：每一格往四个邻居看一步，挑"0 + 0.9 × 邻居价值"最大的方向（A、B 格不管怎么走都一样）：</p>
+<ul>
+<li>A 格（24.4）：随便走，都 +10 传送到 A'（16.0）：<span class="arithmatex">\(10 + 0.9 \times 16.0 = 24.4\)</span> ✓；</li>
+<li>A' 正上方那一列一直往上走，回到 A 再拿 +10：<strong>最优策略就是"一直绕回 A 刷 +10"</strong>；</li>
+<li>右下角（11.7）：往上（13.0）或往左（13.0）一样好，两个都是最优动作，所以最优策略不止一个（第一步说的）。</li>
+</ul>
+<p><strong>为什么不去刷 B 的 +5</strong>：B' 走回 B 只要 2 步，但每次只拿 5；A 拿 10，从 A' 走回 A 要 4 步。算下来 A 更划算，<span class="arithmatex">\(v_*(A) = 24.4 &gt; v_*(B) = 19.4\)</span>。</p>
+<p><strong>原文的提醒</strong>（L5070–L5083）：直接解最优方程要三个前提：知道 p、算得动、状态满足马尔可夫。真实问题里经常做不到（双陆棋有 <span class="arithmatex">\(10^{20}\)</span> 个状态），所以强化学习通常只能<strong>近似地</strong>解最优方程。后面所有章节都是在讲怎么近似。</p>
+<p><strong>一句话</strong>：网格的最优策略是"绕回 A 刷 +10"，A 格 24.4；直接解最优方程要知道 p 且状态不多，现实中只能近似。</p>
+<h3 id="_2">动画演示：每格往前看一步挑最大，箭头就是最优策略</h3>
+<p><img alt="最优价值" src="../animations/l09-optimal.gif" /></p>
+<p>可交互版：<a href="../animations/l09-optimal.html">animations/l09-optimal.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>左边是随机策略的价值（第 8 章），右边是最优价值 <span class="arithmatex">\(v_*\)</span>（图 3.5 中）；</li>
+<li>每帧挑一格：四个方向各算"奖励 + 0.9 × 邻居 <span class="arithmatex">\(v_*\)</span>"，最大的那个亮起，画成箭头（第三步）；</li>
+<li>全部画完就是最优策略：A' 那一列一路往上指回 A（第四步）；</li>
+<li>下方小面板是机器人：低电时三个动作的值，充电最大。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：机器人高电时，用 <span class="arithmatex">\(v_*\)</span> 算"搜索"和"等待"两个动作的值（高电搜索：0.8 → 高电 +2，0.2 → 低电 +2；等待：+1 留在高电），验证搜索更好。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：第二步的两个方程，哪一层从"平均"换成了"max"？哪一层没换？为什么没换？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：网格里 A 格右边那一格的 <span class="arithmatex">\(v_*\)</span> 是 22.0。它往左走到 A 是最优动作吗？用"0 + 0.9 × 邻居价值"验证。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>每个状态都不输，才算更好；最好的叫 π<em>；<br />
+期望方程按 π 平均，最优方程挑最大，环境那层照旧平均；<br />
+有了 v</em> 看一步，有了 q* 直接挑；<br />
+网格最优绕回 A，二十四点四。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R15（Bellman 最优方程 式 3.19、3.20：哪一层换成 max、哪一层不变）</li>
+<li>R16（对 <span class="arithmatex">\(v_*\)</span> 贪心就是最优；有 <span class="arithmatex">\(q_*\)</span> 不用知道 p；机器人最优策略：高电搜索、低电充电）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §3.6</td>
+<td>L4772–L4970（式 3.15–3.20、贪心即最优）</td>
+<td>本章原文</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto 例 3.8</td>
+<td>L4971 起，图 3.5（对照 PDF p.65）</td>
+<td>网格最优价值和最优策略</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto 例 3.9</td>
+<td>L5013 起</td>
+<td>回收机器人的最优方程（用字母 α、β 写的一般形式）</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §3.6 末尾</td>
+<td>L5070–L5090</td>
+<td>为什么现实中只能近似解（三个前提）</td>
+</tr>
+<tr>
+<td>CS 285 第 4 讲</td>
+<td><code>lec-04.txt</code> L195–L207</td>
+<td>value-based 方法 = 估计最优策略的 Q（第 16–19 章）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>max 让方程变成非线性</strong>：第 8 章是一次方程组，可以直接解；max 不是一次运算，第 9 章的方程组只能迭代求解（第 12 章价值迭代）。</li>
+<li><strong>唯一解</strong>：有限 MDP 的最优方程只有一个解 <span class="arithmatex">\(v_*\)</span>（L4935），和最优策略有几个无关。</li>
+<li><strong>贪心策略</strong>：<span class="arithmatex">\(\pi_*(s) = \arg\max_a \sum_{s', r} p\,[r + \gamma v_*(s')] = \arg\max_a q_*(s, a)\)</span>；argmax 读"让后面那个式子最大的 a"。</li>
+<li><strong><span class="arithmatex">\(v_*\)</span> 与 <span class="arithmatex">\(q_*\)</span> 的关系</strong>：<span class="arithmatex">\(v_*(s) = \max_a q_*(s, a)\)</span>；<span class="arithmatex">\(q_*(s, a) = \mathbb{E}[R_{t+1} + \gamma v_*(S_{t+1}) \mid s, a]\)</span>（式 3.17）。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(v_*(s) = \max_\pi v_\pi(s)\)</span></td>
+<td>最优状态价值（式 3.15）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_*(s, a) = \max_\pi q_\pi(s, a)\)</span></td>
+<td>最优动作价值（式 3.16）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_*(s) = \max_a \sum_{s', r} p\,[r + \gamma v_*(s')]\)</span></td>
+<td>Bellman 最优方程（式 3.19）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_*(s, a) = \sum_{s', r} p\,[r + \gamma \max_{a'} q_*(s', a')]\)</span></td>
+<td>q 的最优方程（式 3.20）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\pi_*(s) = \arg\max_a q_*(s, a)\)</span></td>
+<td>对 <span class="arithmatex">\(q_*\)</span> 贪心就是最优策略</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch09_optimal.py</code>，测试 <code>tests/test_ch05_09.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch09_optimal.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch09_optimal.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>机器人 <span class="arithmatex">\(v_*\)</span></td>
+<td><code>optimal_v(P, 0.9)</code></td>
+<td>16.949、15.254</td>
+</tr>
+<tr>
+<td>往前看一步挑最大</td>
+<td><code>greedy_actions(P, v, 0.9, s)</code></td>
+<td>高电 ['搜索']、低电 ['充电']</td>
+</tr>
+<tr>
+<td>网格 <span class="arithmatex">\(v_*\)</span></td>
+<td><code>optimal_v(gridworld_5x5(), 0.9)</code></td>
+<td>图 3.5 中（A 24.4）</td>
+</tr>
+<tr>
+<td>右下角并列最优</td>
+<td><code>greedy_actions(G, vg, 0.9, 24)</code></td>
+<td>['↑', '←']</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">new = np.array([max(q_from_v(P, v, gamma, s, a) for a in P[s]) for s in P])   # 最优方程右边
+qs = {a: q_from_v(P, v, gamma, s, a) for a in P[s]}                           # 往前看一步
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>optimal_v</code> 里那个 <code>while True</code> 循环，就是"从 0 开始反复套最优方程直到不再变"，这正是第 12 章的价值迭代；挑并列最优动作时用 <code>q &gt; best − eps</code> 而不是 <code>==</code>，因为 16.000000001 和 16.0 在电脑里不相等。</p><nav class="pager"><a href="08-bellman.html">← 第 8 章 · Bellman 期望方程：今天的价值 = 眼前的奖励 + γ × 明天的价值</a><a href="10-policy-eval.html">第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="14-mc">第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值</h1>
+<blockquote>
+<p>本章回答：不知道环境的 p，还能估出 <span class="arithmatex">\(v_\pi\)</span> 吗？"每个状态记一个平均回报"具体怎么做？MC 有什么缺点？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/13-bandit.html">第 13 章 探索与利用</a> · 下一章：<a href="../lessons/15-td.html">第 15 章 时序差分 TD</a><br />
+对应原文：Sutton &amp; Barto 第 5 章开头与 §5.1 Monte Carlo Prediction（L6600–L6867，first-visit 算法框 L6673）、§5.3–5.4 MC 控制（L6920–L7509）、§6.1 常数 α MC（式 6.1，L8628–L8649）；例 6.2 随机游走（L9046 起）<br />
+本章缩写：MC = Monte Carlo（蒙特卡洛：摩纳哥的赌城，借指"靠随机抽样"）；first-visit：第一次访问；every-visit：每次访问；RMS = Root Mean Square（均方根：平方 → 平均 → 开根号，Transformer 讲义第 19 章见过）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：从老虎机到多步：每个状态都记一个"平均回报"（2026-11-13）</h3>
+<p>第 13 章只有一个状态，每次的奖励就是结果。现在回到有很多状态、一局走很多步的问题。</p>
+<p><strong>想法很直接</strong>（L6655–L6660）：状态的价值是"从这里出发的期望回报"（第 7 章），那就<strong>一局一局去玩</strong>，每次经过某个状态，记下<strong>从那里往后实际拿到的回报</strong>，最后把这些回报取平均。</p>
+<p><strong>和第 7 章第二步的区别</strong>：第 7 章是"从指定状态出发跑 2000 次"；这里是<strong>正常地一局局玩</strong>，路上经过哪些状态，就顺便给哪些状态记账。</p>
+<p><strong>和 DP 的区别</strong>（L6610）：MC <strong>只需要经验</strong>：真实走过的状态、动作、奖励序列，<strong>不需要知道 p</strong>。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>DP（第 10–12 章）</th>
+<th>MC（本章）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>要知道 p 吗</td>
+<td>要</td>
+<td><strong>不要</strong></td>
+</tr>
+<tr>
+<td>用什么算</td>
+<td>方程右边按 p 加权</td>
+<td>真实玩出来的回报</td>
+</tr>
+<tr>
+<td>一次更新几个状态</td>
+<td>所有状态（扫一遍）</td>
+<td>这一局经过的状态</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：MC 不需要 p：一局局玩，每经过一个状态就记下它之后的真实回报，取平均就是价值。</p>
+<h3 id="a-b-c-d-e-2026-11-13">第二步：随机游走：A B C D E 五个格子（2026-11-13）</h3>
+<p><strong>例 6.2 随机游走</strong>（L9046–L9080）。后面两章都用它：</p>
+<pre><code>[左终点 0]  A  B  C  D  E  [右终点 +1]
+</code></pre>
+<ul>
+<li>每局从<strong>中间 C</strong> 出发；</li>
+<li>每一步<strong>等概率</strong>往左或往右走一格（这是策略，也是环境的随机性，合在一起叫 Markov reward process，L9072）；</li>
+<li>走出左边：奖励 0，结束；走出右边：奖励 <strong>+1</strong>，结束；其余每步奖励 0；不打折（γ = 1）。</li>
+</ul>
+<p><strong>价值的意思</strong>：回报只可能是 0 或 1，所以 <span class="arithmatex">\(v(s)\)</span> = "从 s 出发最终从<strong>右边</strong>走出去的概率"。书里给出真实值（L9080–L9085）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>A</th>
+<th>B</th>
+<th>C</th>
+<th>D</th>
+<th>E</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>真实价值</td>
+<td>1/6 ≈ 0.167</td>
+<td>2/6 ≈ 0.333</td>
+<td>3/6 = 0.5</td>
+<td>4/6 ≈ 0.667</td>
+<td>5/6 ≈ 0.833</td>
+</tr>
+</tbody>
+</table>
+<p>越靠右，越容易从右边出去。</p>
+<p><strong>玩一局</strong>（代码里随机出来的一局）：</p>
+<pre><code>C → D → E → D → C → D → E → 走出右边，奖励 +1
+</code></pre>
+<p>这一局每一步奖励都是 0，只有最后一步 +1，所以<strong>从任何一步往后的回报都是 1</strong>。</p>
+<p><strong>一句话</strong>：随机游走从 C 出发左右乱走，右边出去 +1；价值 = 从右边出去的概率，A 到 E 是 1/6 到 5/6。</p>
+<h3 id="first-visit-mc2026-11-13">第三步：first-visit MC：每局每个状态只记第一次（2026-11-13）</h3>
+<p><strong>问题</strong>：上面那一局，D 出现了 3 次、C 出现了 2 次。都记吗？</p>
+<p>书里讲了两种（L6661–L6672）：</p>
+<ul>
+<li><strong>first-visit MC</strong>：每局里，每个状态只用<strong>第一次</strong>出现之后的回报；</li>
+<li><strong>every-visit MC</strong>：每次出现都记一笔。</li>
+</ul>
+<p>两种都会收敛到真实价值（L6699–L6700）。本章用 first-visit（算法框 L6673）。</p>
+<p><strong>上面那一局的记账</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>第一次出现在第几步</th>
+<th>之后的回报</th>
+<th>记账</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C</td>
+<td>0</td>
+<td>1</td>
+<td>C 记一笔 1</td>
+</tr>
+<tr>
+<td>D</td>
+<td>1</td>
+<td>1</td>
+<td>D 记一笔 1</td>
+</tr>
+<tr>
+<td>E</td>
+<td>2</td>
+<td>1</td>
+<td>E 记一笔 1</td>
+</tr>
+<tr>
+<td>A、B</td>
+<td>没出现</td>
+<td>—</td>
+<td>不记</td>
+</tr>
+</tbody>
+</table>
+<p>一局只告诉你"C、D、E 这次都赢了"，A、B 这局没信息。</p>
+<p><strong>倒着算回报最方便</strong>（第 3 章第四步）：从最后一步往前，<span class="arithmatex">\(G \leftarrow R + \gamma G\)</span>，每遇到一个状态就把当前的 G 记给它；倒着走到最后留下的，正好是"第一次出现"那时的回报。</p>
+<p><strong>更新平均：增量公式</strong>（第 13 章第四步）：每个状态记一个计数 <span class="arithmatex">\(N(s)\)</span> 和当前平均 <span class="arithmatex">\(V(s)\)</span>：</p>
+<div class="arithmatex">\[N(s) \leftarrow N(s) + 1,\qquad V(s) \leftarrow V(s) + \frac{1}{N(s)}\,\big[\,G - V(s)\,\big]\]</div>
+<p><strong>玩 1000 局以后</strong>（初值全设 0.5）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>A</th>
+<th>B</th>
+<th>C</th>
+<th>D</th>
+<th>E</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MC 估计</td>
+<td>0.153</td>
+<td>0.325</td>
+<td>0.495</td>
+<td>0.673</td>
+<td>0.829</td>
+</tr>
+<tr>
+<td>真实价值</td>
+<td>0.167</td>
+<td>0.333</td>
+<td>0.5</td>
+<td>0.667</td>
+<td>0.833</td>
+</tr>
+</tbody>
+</table>
+<p><strong>RMS 误差</strong>（五个误差平方 → 平均 → 开根号）只有 0.0084。不知道任何概率，只靠玩，就估得很准。</p>
+<p><strong>一句话</strong>：first-visit MC 每局每个状态只记第一次之后的回报，用增量公式更新平均；1000 局后误差不到 0.01。</p>
+<h3 id="mc-mc-2026-11-13">第四步：常数步长 MC，以及 MC 的毛病：要等一局结束（2026-11-13）</h3>
+<p><strong>常数步长版</strong>（式 6.1，L8634–L8649）：把 <span class="arithmatex">\(\frac{1}{N(s)}\)</span> 换成固定的 α（第 13 章第四步）：</p>
+<div class="arithmatex">\[V(S_t) \leftarrow V(S_t) + \alpha\,\big[\,G_t - V(S_t)\,\big]\]</div>
+<p>书里叫 <strong>constant-α MC</strong>。"目标"是这一局实际拿到的回报 <span class="arithmatex">\(G_t\)</span>。下一章会拿它和 TD 比。</p>
+<p><strong>MC 的毛病</strong>：</p>
+<ol>
+<li><strong>要等一局结束</strong>（L8649–L8651）：<span class="arithmatex">\(G_t\)</span> 要等到这局走完才知道，所以只能在一局<strong>结束后</strong>才更新。一局很长（或者永远不结束的持续任务）就很麻烦；</li>
+<li><strong>方差大</strong>：<span class="arithmatex">\(G_t\)</span> 是一整局随机结果的总和，这一局运气好、下一局运气差，估计会抖得厉害，要很多局才能平均准；</li>
+<li><strong>没走到的状态学不到</strong>：这局没经过 A、B，就不更新它们。</li>
+</ol>
+<p><strong>MC 也能用来改进策略</strong>（§5.3–5.4，L6920–L7509）：把第 12 章的 GPI 搬过来：用 MC 估 <span class="arithmatex">\(q_\pi(s, a)\)</span>（每个"状态 + 动作"记平均回报），再对 q 贪心改进；为了保证每个动作都被试到，选动作用第 13 章的 <strong>ε-greedy</strong>（书里叫 ε-soft 策略，L7326 起）。第 16 章的 SARSA 是同样的思路，只是把 MC 换成了 TD。</p>
+<p><strong>一句话</strong>：常数 α MC 用整局回报 <span class="arithmatex">\(G_t\)</span> 当目标；毛病是要等一局结束、方差大；加上 ε-greedy 就能用来找最优策略。</p>
+<h3 id="1656">动画演示：随机游走一局局玩，五个格子的估计慢慢贴到 1/6…5/6</h3>
+<p><img alt="蒙特卡洛" src="../animations/l14-monte-carlo.gif" /></p>
+<p>可交互版：<a href="../animations/l14-monte-carlo.html">animations/l14-monte-carlo.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>上面一行是 A–E 五个格子，小球按随机游走一步步走，走完一局才更新（第四步：要等一局结束）；</li>
+<li>一局结束时，这局<strong>第一次</strong>经过的格子亮起，记下回报 0 或 1（第三步）；</li>
+<li>下面柱状图是当前估计，虚线是真实值 1/6 … 5/6，局数越多越贴近；</li>
+<li>滑块调要玩几局，右上角显示 RMS 误差。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：一局随机游走是 C → B → A → 走出左边。按 first-visit MC，哪些状态记账、各记多少？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：<span class="arithmatex">\(V(C)\)</span> 当前是 0.5、已经记了 4 笔（N = 4），这局 C 之后的回报是 1。用增量公式算新的 <span class="arithmatex">\(V(C)\)</span>。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：为什么 MC 必须等一局结束才能更新？如果任务永远不结束会怎样？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>不要 p 只要经验，一局局玩、记回报、取平均；<br />
+first-visit 每局只记第一次，倒着算回报最方便；<br />
+常数 α：V 往 G 挪一步；<br />
+毛病：要等终局，抖得厉害，没走到的学不到。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R24（MC 预测：用真实回报 <span class="arithmatex">\(G_t\)</span> 的平均估 <span class="arithmatex">\(v_\pi\)</span>；first-visit；常数 α 式 6.1；要等一局结束）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §5.1</td>
+<td>L6651–L6867（first-visit 算法框 L6673，例 5.1 21 点）</td>
+<td>本章原文；21 点例子是 MC 的经典应用</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto 第 5 章开头</td>
+<td>L6600–L6650</td>
+<td>MC 和 DP 的区别：只需要经验</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §5.3–5.4</td>
+<td>L6920–L7509（exploring starts、ε-soft）</td>
+<td>用 MC 找最优策略（第四步末尾）</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §5.5–5.7</td>
+<td>L7510 起</td>
+<td>off-policy MC 与重要性采样（第 23 章 PPO 会用到重要性采样）</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto 例 6.2</td>
+<td>L9046–L9100（例中的学习曲线）</td>
+<td>随机游走：MC vs TD 的对比实验（下一章）</td>
+</tr>
+<tr>
+<td>CS 285 第 5 讲</td>
+<td><code>lec-05.txt</code> 开头</td>
+<td>策略梯度也用"整局回报"当估计：同样有方差大的毛病（第 20–21 章）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>无偏</strong>：<span class="arithmatex">\(G_t\)</span> 是 <span class="arithmatex">\(v_\pi(S_t)\)</span> 的无偏样本（<span class="arithmatex">\(\mathbb{E}[G_t \mid S_t = s] = v_\pi(s)\)</span>），所以 MC 估计的平均会收敛到真值；误差约 <span class="arithmatex">\(\sigma/\sqrt{N}\)</span>（第 4 章大数定律）。</li>
+<li><strong>first-visit 与 every-visit</strong>：first-visit 每个样本独立同分布，是标准的样本平均；every-visit 的样本之间相关，但也收敛（L6699–L6710）。</li>
+<li><strong>MC 不 bootstrap</strong>：MC 的目标 <span class="arithmatex">\(G_t\)</span> 不用到任何别的状态的估计值（"they do not bootstrap"，L8529；bootstrapping 的定义在 L6531）；下一章的 TD 会用到，这就是两者的根本区别。</li>
+<li><strong>随机游走的真实值</strong>：从 s 出发右出的概率满足 <span class="arithmatex">\(v(s) = \frac12 v(s-1) + \frac12 v(s+1)\)</span>，边界 0 和 1，解是一条直线：1/6 … 5/6。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(V(s) \leftarrow V(s) + \frac{1}{N(s)}[G - V(s)]\)</span></td>
+<td>first-visit MC（真平均）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(V(S_t) \leftarrow V(S_t) + \alpha[G_t - V(S_t)]\)</span></td>
+<td>常数 α MC（式 6.1）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G \leftarrow R + \gamma G\)</span>（倒着走）</td>
+<td>一局结束后算每一步的回报</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\text{RMS} = \sqrt{\frac15\sum_s (V(s) - v_\pi(s))^2}\)</span></td>
+<td>衡量估计准不准</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch14_monte_carlo.py</code>（随机游走在 <code>rl_envs.py</code> 的 <code>random_walk_episode</code>），测试 <code>tests/test_ch10_16.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch14_monte_carlo.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch14_monte_carlo.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一局</td>
+<td><code>random_walk_episode(np.random.default_rng(3))</code></td>
+<td>C → D → E → D → C → D → E，奖励 1</td>
+</tr>
+<tr>
+<td>1000 局 first-visit</td>
+<td><code>mc_prediction(1000)</code></td>
+<td>0.153、0.325、0.495、0.673、0.829</td>
+</tr>
+<tr>
+<td>误差</td>
+<td><code>rms(V)</code></td>
+<td>0.0084</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">G, returns = 0.0, {}
+for s, r, _ in reversed(episode):   # 倒着走
+    G = r + gamma * G
+    returns[s] = G                  # 后写的覆盖先写的 → 留下的是第一次出现时的回报
+</code></pre>
+<p><strong>代码里才看得到的</strong>：用字典 <code>returns[s] = G</code> 倒着覆盖，一行就实现了 first-visit：倒着走时最后一次写入 s 的，正是正着数第一次出现的那一步。改成"每次都更新"就是 every-visit。</p><nav class="pager"><a href="13-bandit.html">← 第 13 章 · 探索与利用：多臂老虎机与 ε-greedy</a><a href="15-td.html">第 15 章 · 时序差分 TD：走一步就更新，拿&quot;下一步的估计&quot;当目标 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

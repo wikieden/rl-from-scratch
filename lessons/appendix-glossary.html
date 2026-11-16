@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>附录 · 缩写与术语表 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="_1">附录 · 缩写与术语表</h1>
+<blockquote>
+<p>用途：讲义里遇到缩写或符号，先查这一页。每章开头的"本章缩写"只列这一章用到的。整理日期：2026-11-13。</p>
+</blockquote>
+<h2 id="_2">课程与材料</h2>
+<table>
+<thead>
+<tr>
+<th>缩写</th>
+<th>全称</th>
+<th>意思</th>
+<th>第一次出现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RL</td>
+<td>Reinforcement Learning</td>
+<td>强化 / 学习：靠奖励、自己试出来的学习</td>
+<td><a href="../lessons/01-agent-environment.html">第 1 章</a></td>
+</tr>
+<tr>
+<td>S&amp;B</td>
+<td>Sutton &amp; Barto</td>
+<td>教材《Reinforcement Learning: An Introduction》两位作者的姓；本书引用的行号都指它的文本版</td>
+<td><a href="../lessons/01-agent-environment.html">第 1 章</a></td>
+</tr>
+<tr>
+<td>CS 285</td>
+<td>Computer Science 285</td>
+<td>UC Berkeley 的深度强化学习课（Sergey Levine）</td>
+<td><a href="../lessons/01-agent-environment.html">第 1 章</a></td>
+</tr>
+<tr>
+<td>HW</td>
+<td>Homework</td>
+<td>作业：CS 285 的 HW1–HW5</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>CS336</td>
+<td>Computer Science 336</td>
+<td>Stanford 的 Language Modeling from Scratch 课</td>
+<td><a href="../lessons/24-wrap-up.html">第 24 章</a></td>
+</tr>
+<tr>
+<td>LLM</td>
+<td>Large Language Model</td>
+<td>大 / 语言 / 模型</td>
+<td><a href="../lessons/24-wrap-up.html">第 24 章</a></td>
+</tr>
+<tr>
+<td>RLHF</td>
+<td>Reinforcement Learning from Human Feedback</td>
+<td>从人类反馈中强化学习</td>
+<td><a href="../lessons/24-wrap-up.html">第 24 章</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="19">基本记号（第 1–9 章）</h2>
+<table>
+<thead>
+<tr>
+<th>记号</th>
+<th>全称 / 读法</th>
+<th>意思</th>
+<th>第一次出现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(S_t\)</span> / <span class="arithmatex">\(A_t\)</span> / <span class="arithmatex">\(R_t\)</span></td>
+<td>State / Action / Reward，下标 t = time step</td>
+<td>第 t 步的状态、动作、奖励；奖励下标比动作大 1</td>
+<td><a href="../lessons/01-agent-environment.html">第 1 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_t\)</span></td>
+<td>Gain（书里叫 return 回报）</td>
+<td>从第 t 步往后的（折扣）奖励总和</td>
+<td><a href="../lessons/02-return.html">第 2 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(T\)</span></td>
+<td>Terminal time</td>
+<td>一局结束的那一步</td>
+<td><a href="../lessons/02-return.html">第 2 章</a></td>
+</tr>
+<tr>
+<td>γ</td>
+<td>gamma（伽马），discount rate</td>
+<td>折扣率：往后一步打的折</td>
+<td><a href="../lessons/03-discount.html">第 3 章</a></td>
+</tr>
+<tr>
+<td>Pr</td>
+<td>Probability</td>
+<td>概率</td>
+<td><a href="../lessons/04-expectation.html">第 4 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\mathbb{E}\)</span></td>
+<td>Expectation</td>
+<td>期望：按概率的加权平均；<span class="arithmatex">\(\mathbb{E}_\pi\)</span> 表示"按策略 π 行事时"</td>
+<td><a href="../lessons/04-expectation.html">第 4 章</a></td>
+</tr>
+<tr>
+<td>|</td>
+<td>given（条件）</td>
+<td>竖线右边已知、左边要猜</td>
+<td><a href="../lessons/04-expectation.html">第 4 章</a></td>
+</tr>
+<tr>
+<td>MDP</td>
+<td>Markov Decision Process</td>
+<td>马尔可夫 / 决策 / 过程（Markov 是俄国数学家）</td>
+<td><a href="../lessons/05-mdp.html">第 5 章</a></td>
+</tr>
+<tr>
+<td>POMDP</td>
+<td>Partially Observable MDP</td>
+<td>部分可观测的 MDP：状态信息不全</td>
+<td><a href="../lessons/05-mdp.html">第 5 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(p(s', r \mid s, a)\)</span></td>
+<td>s' 读"s 撇"（next state）</td>
+<td>动力学：在 s 做 a，到 s'、拿 r 的概率</td>
+<td><a href="../lessons/05-mdp.html">第 5 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(r(s, a)\)</span></td>
+<td>expected reward</td>
+<td>在 s 做 a 的期望奖励</td>
+<td><a href="../lessons/05-mdp.html">第 5 章</a></td>
+</tr>
+<tr>
+<td>π、<span class="arithmatex">\(\pi(a \mid s)\)</span></td>
+<td>pi（派），policy</td>
+<td>策略：在 s 选 a 的概率</td>
+<td><a href="../lessons/06-policy.html">第 6 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_\pi\)</span></td>
+<td>value</td>
+<td>状态价值：从 s 出发按 π 走的期望回报</td>
+<td><a href="../lessons/07-value.html">第 7 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_\pi\)</span>、Q</td>
+<td>quality（action-value 动作价值）</td>
+<td>先做 a 再按 π 走的期望回报</td>
+<td><a href="../lessons/07-value.html">第 7 章</a></td>
+</tr>
+<tr>
+<td>Bellman</td>
+<td>Richard Bellman（人名）</td>
+<td>贝尔曼方程：今天的价值 = 眼前奖励 + γ × 明天的价值</td>
+<td><a href="../lessons/08-bellman.html">第 8 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(P_\pi\)</span>、<span class="arithmatex">\(r_\pi\)</span>、I</td>
+<td>— / Identity matrix</td>
+<td>按 π 合并的转移矩阵、奖励向量；单位矩阵</td>
+<td><a href="../lessons/08-bellman.html">第 8 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_*\)</span>、<span class="arithmatex">\(q_*\)</span>、<span class="arithmatex">\(\pi_*\)</span></td>
+<td>star（星），optimal</td>
+<td>最优价值、最优动作价值、最优策略</td>
+<td><a href="../lessons/09-optimal.html">第 9 章</a></td>
+</tr>
+<tr>
+<td>max / argmax</td>
+<td>maximum / argument of the maximum</td>
+<td>最大值 / 让它最大的那个自变量（"哪一个最大"）</td>
+<td><a href="../lessons/09-optimal.html">第 9 章</a></td>
+</tr>
+<tr>
+<td>greedy</td>
+<td>greedy</td>
+<td>贪心：只挑眼前（一步）看起来最好的</td>
+<td><a href="../lessons/09-optimal.html">第 9 章</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="1012">动态规划（第 10–12 章）</h2>
+<table>
+<thead>
+<tr>
+<th>缩写</th>
+<th>全称</th>
+<th>意思</th>
+<th>第一次出现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DP</td>
+<td>Dynamic Programming</td>
+<td>动态 / 规划（programming 是"排计划"）：知道 p 时反复用方程算价值</td>
+<td><a href="../lessons/10-policy-eval.html">第 10 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_k\)</span>、θ、Δ</td>
+<td>第 k 轮；theta（西塔）；delta（德尔塔）</td>
+<td>第 k 轮估计；停止阈值；这一轮最大变化</td>
+<td><a href="../lessons/10-policy-eval.html">第 10 章</a></td>
+</tr>
+<tr>
+<td>in place</td>
+<td>in place</td>
+<td>原地更新：算好一格马上覆盖</td>
+<td><a href="../lessons/10-policy-eval.html">第 10 章</a></td>
+</tr>
+<tr>
+<td>PI</td>
+<td>Policy Iteration</td>
+<td>策略迭代：评估 → 改进 → 评估…</td>
+<td><a href="../lessons/11-policy-iteration.html">第 11 章</a></td>
+</tr>
+<tr>
+<td>π'</td>
+<td>π 撇</td>
+<td>改进后的新策略</td>
+<td><a href="../lessons/11-policy-iteration.html">第 11 章</a></td>
+</tr>
+<tr>
+<td>VI</td>
+<td>Value Iteration</td>
+<td>价值迭代：把最优方程当更新规则</td>
+<td><a href="../lessons/12-value-iteration.html">第 12 章</a></td>
+</tr>
+<tr>
+<td>GPI</td>
+<td>Generalized Policy Iteration</td>
+<td>广义策略迭代：评估和改进你推我拉</td>
+<td><a href="../lessons/12-value-iteration.html">第 12 章</a></td>
+</tr>
+<tr>
+<td>sweep</td>
+<td>sweep</td>
+<td>扫一遍：把所有状态更新一次</td>
+<td><a href="../lessons/12-value-iteration.html">第 12 章</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="1316">边试边学（第 13–16 章）</h2>
+<table>
+<thead>
+<tr>
+<th>缩写</th>
+<th>全称</th>
+<th>意思</th>
+<th>第一次出现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>k-armed bandit</td>
+<td>k 臂老虎机（bandit 原意"强盗"）</td>
+<td>只有一个状态的 RL 问题</td>
+<td><a href="../lessons/13-bandit.html">第 13 章</a></td>
+</tr>
+<tr>
+<td>ε</td>
+<td>epsilon（伊普西龙）</td>
+<td>ε-greedy 里随便试的概率（第 23 章里另指剪裁范围）</td>
+<td><a href="../lessons/13-bandit.html">第 13 章</a></td>
+</tr>
+<tr>
+<td>α</td>
+<td>alpha（阿尔法）</td>
+<td>步长：每次往目标挪多少</td>
+<td><a href="../lessons/13-bandit.html">第 13 章</a></td>
+</tr>
+<tr>
+<td>explore / exploit</td>
+<td>explore / exploit</td>
+<td>探索（试新的）/ 利用（用目前最好的）</td>
+<td><a href="../lessons/13-bandit.html">第 13 章</a></td>
+</tr>
+<tr>
+<td>MC</td>
+<td>Monte Carlo</td>
+<td>蒙特卡洛（摩纳哥赌城）：用真实回报的平均估价值</td>
+<td><a href="../lessons/14-monte-carlo.html">第 14 章</a></td>
+</tr>
+<tr>
+<td>first-visit / every-visit</td>
+<td>—</td>
+<td>每局每个状态只记第一次 / 每次都记</td>
+<td><a href="../lessons/14-monte-carlo.html">第 14 章</a></td>
+</tr>
+<tr>
+<td>RMS</td>
+<td>Root Mean Square</td>
+<td>均方根：平方 → 平均 → 开根号，衡量误差</td>
+<td><a href="../lessons/14-monte-carlo.html">第 14 章</a></td>
+</tr>
+<tr>
+<td>TD</td>
+<td>Temporal Difference</td>
+<td>时间上的差分：走一步就用"下一步的估计"更新</td>
+<td><a href="../lessons/15-td.html">第 15 章</a></td>
+</tr>
+<tr>
+<td>δ</td>
+<td>delta（德尔塔）</td>
+<td>TD 误差：<span class="arithmatex">\(R + \gamma V(S') - V(S)\)</span></td>
+<td><a href="../lessons/15-td.html">第 15 章</a></td>
+</tr>
+<tr>
+<td>bootstrapping</td>
+<td>自举（拽着鞋带把自己提起来）</td>
+<td>用自己的估计更新自己的估计</td>
+<td><a href="../lessons/15-td.html">第 15 章</a></td>
+</tr>
+<tr>
+<td>bias / variance</td>
+<td>偏差 / 方差</td>
+<td>平均偏离真值多少 / 散得多厉害</td>
+<td><a href="../lessons/15-td.html">第 15 章</a></td>
+</tr>
+<tr>
+<td>SARSA</td>
+<td>State, Action, Reward, State, Action</td>
+<td>一次更新用到的五样东西；on-policy TD 控制</td>
+<td><a href="../lessons/16-sarsa-qlearning.html">第 16 章</a></td>
+</tr>
+<tr>
+<td>Q-learning</td>
+<td>—</td>
+<td>用 <span class="arithmatex">\(\max_a Q(S', a)\)</span> 当目标，直接学 <span class="arithmatex">\(q_*\)</span></td>
+<td><a href="../lessons/16-sarsa-qlearning.html">第 16 章</a></td>
+</tr>
+<tr>
+<td>on-policy / off-policy</td>
+<td>同策略 / 异策略</td>
+<td>学的和做的是不是同一份策略</td>
+<td><a href="../lessons/16-sarsa-qlearning.html">第 16 章</a></td>
+</tr>
+<tr>
+<td>GLIE</td>
+<td>Greedy in the Limit with Infinite Exploration</td>
+<td>极限时贪心、每个动作都被试无限次（SARSA 收敛条件）</td>
+<td><a href="../lessons/16-sarsa-qlearning.html">第 16 章</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="dqn-1719">函数近似与 DQN（第 17–19 章）</h2>
+<table>
+<thead>
+<tr>
+<th>缩写</th>
+<th>全称</th>
+<th>意思</th>
+<th>第一次出现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\hat v(s, \mathbf w)\)</span></td>
+<td>v hat（帽子 = 估计的）</td>
+<td>带参数 <span class="arithmatex">\(\mathbf w\)</span> 的近似价值函数</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\mathbf w\)</span></td>
+<td>weights</td>
+<td>权重：函数里可以调的参数</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\mathbf x(s)\)</span></td>
+<td>feature</td>
+<td>特征向量：描述状态的一串数</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td>∇</td>
+<td>nabla（倒三角）</td>
+<td>梯度：对每个参数的导数排成的向量</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td>SGD</td>
+<td>Stochastic Gradient Descent</td>
+<td>随机梯度下降：每次用一个（或一小批）样本算梯度</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td>MSE</td>
+<td>Mean Squared Error</td>
+<td>均方误差：差值平方再平均</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td>η</td>
+<td>eta（伊塔）</td>
+<td>梯度下降的步长（和 α 同义）</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td>semi-gradient</td>
+<td>半梯度</td>
+<td>目标里也有参数，但不对它求导</td>
+<td><a href="../lessons/17-function-approx.html">第 17 章</a></td>
+</tr>
+<tr>
+<td>DQN</td>
+<td>Deep Q-Network</td>
+<td>深度 Q 网络：神经网络 + 经验回放 + 目标网络</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>θ / θ⁻</td>
+<td>theta / theta minus</td>
+<td>Q 网络参数 / 目标网络参数</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>loss</td>
+<td>loss</td>
+<td>损失：要最小化的误差</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>replay buffer</td>
+<td>回放缓冲区</td>
+<td>存经历、随机抽来训练</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>τ</td>
+<td>tau（陶）</td>
+<td>Polyak 软更新的比例（常 0.005）</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>Atari</td>
+<td>雅达利</td>
+<td>1970–80 年代游戏机；DQN 的测试平台</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>one-hot</td>
+<td>独热向量</td>
+<td>只有一位是 1、其余是 0</td>
+<td><a href="../lessons/18-dqn.html">第 18 章</a></td>
+</tr>
+<tr>
+<td>DDQN</td>
+<td>Double Deep Q-Network</td>
+<td>主网络挑动作、目标网络打分</td>
+<td><a href="../lessons/19-double-dqn.html">第 19 章</a></td>
+</tr>
+<tr>
+<td>maximization bias</td>
+<td>最大化偏差</td>
+<td>带噪声的估计取 max 会系统性偏高</td>
+<td><a href="../lessons/19-double-dqn.html">第 19 章</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="2024">策略梯度（第 20–24 章）</h2>
+<table>
+<thead>
+<tr>
+<th>缩写</th>
+<th>全称</th>
+<th>意思</th>
+<th>第一次出现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PG</td>
+<td>Policy Gradient</td>
+<td>策略梯度：直接调策略参数</td>
+<td><a href="../lessons/20-policy-gradient.html">第 20 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\pi_\theta\)</span>、<span class="arithmatex">\(J(\theta)\)</span></td>
+<td>— / objective</td>
+<td>参数为 θ 的策略；它的期望回报（目标函数）</td>
+<td><a href="../lessons/20-policy-gradient.html">第 20 章</a></td>
+</tr>
+<tr>
+<td>log、ln</td>
+<td>logarithm / natural logarithm</td>
+<td>对数："e 的几次方等于 x"，导数是 1/x</td>
+<td><a href="../lessons/20-policy-gradient.html">第 20 章</a></td>
+</tr>
+<tr>
+<td>REINFORCE</td>
+<td>REward Increment = Nonnegative Factor × Offset Reinforcement × Characteristic Eligibility</td>
+<td>最基础的策略梯度算法（Williams 1992）</td>
+<td><a href="../lessons/20-policy-gradient.html">第 20 章</a></td>
+</tr>
+<tr>
+<td>softmax</td>
+<td>soft + max</td>
+<td>把分数变成概率（Transformer 讲义第 3、6 章）</td>
+<td><a href="../lessons/20-policy-gradient.html">第 20 章</a></td>
+</tr>
+<tr>
+<td>b</td>
+<td>baseline</td>
+<td>基准线：从回报里减掉的"平常水平"</td>
+<td><a href="../lessons/21-baseline.html">第 21 章</a></td>
+</tr>
+<tr>
+<td>reward-to-go</td>
+<td>—</td>
+<td>从这一步往后还剩的奖励（就是 <span class="arithmatex">\(G_t\)</span>）</td>
+<td><a href="../lessons/21-baseline.html">第 21 章</a></td>
+</tr>
+<tr>
+<td>actor / critic</td>
+<td>演员 / 评委</td>
+<td>策略 <span class="arithmatex">\(\pi_\theta\)</span> / 价值函数 <span class="arithmatex">\(\hat V_\phi\)</span></td>
+<td><a href="../lessons/22-actor-critic-gae.html">第 22 章</a></td>
+</tr>
+<tr>
+<td>φ</td>
+<td>phi（斐）</td>
+<td>评委网络的参数</td>
+<td><a href="../lessons/22-actor-critic-gae.html">第 22 章</a></td>
+</tr>
+<tr>
+<td>A、<span class="arithmatex">\(A^\pi\)</span></td>
+<td>Advantage</td>
+<td>优势：<span class="arithmatex">\(Q - V\)</span>，比平常好多少</td>
+<td><a href="../lessons/22-actor-critic-gae.html">第 22 章</a></td>
+</tr>
+<tr>
+<td>GAE</td>
+<td>Generalized Advantage Estimation</td>
+<td>广义优势估计：δ 按 <span class="arithmatex">\((\gamma\lambda)^l\)</span> 加权求和</td>
+<td><a href="../lessons/22-actor-critic-gae.html">第 22 章</a></td>
+</tr>
+<tr>
+<td>λ</td>
+<td>lambda（兰姆达）</td>
+<td>GAE 在一步 TD（0）和 MC（1）之间的权衡</td>
+<td><a href="../lessons/22-actor-critic-gae.html">第 22 章</a></td>
+</tr>
+<tr>
+<td>A3C</td>
+<td>Asynchronous Advantage Actor-Critic</td>
+<td>异步优势演员–评委：很多环境副本并行采样</td>
+<td><a href="../lessons/22-actor-critic-gae.html">第 22 章</a></td>
+</tr>
+<tr>
+<td>IS</td>
+<td>Importance Sampling</td>
+<td>重要性采样：乘 <span class="arithmatex">\(p_{\text{新}}/p_{\text{旧}}\)</span> 用旧数据估新期望</td>
+<td><a href="../lessons/23-ppo.html">第 23 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(r_t(\theta)\)</span></td>
+<td>probability ratio</td>
+<td>概率比率 <span class="arithmatex">\(\pi_\theta / \pi_{\theta_{old}}\)</span>（不是奖励）</td>
+<td><a href="../lessons/23-ppo.html">第 23 章</a></td>
+</tr>
+<tr>
+<td>KL</td>
+<td>Kullback–Leibler divergence</td>
+<td>两个概率分布差多远（两位统计学家的姓）</td>
+<td><a href="../lessons/23-ppo.html">第 23 章</a></td>
+</tr>
+<tr>
+<td>TRPO</td>
+<td>Trust Region Policy Optimization</td>
+<td>信任区域策略优化：KL ≤ δ 约束下优化</td>
+<td><a href="../lessons/23-ppo.html">第 23 章</a></td>
+</tr>
+<tr>
+<td>PPO</td>
+<td>Proximal Policy Optimization</td>
+<td>近端策略优化：把比率剪在 [1 − ε, 1 + ε]</td>
+<td><a href="../lessons/23-ppo.html">第 23 章</a></td>
+</tr>
+<tr>
+<td>clip</td>
+<td>clip</td>
+<td>剪裁：把数限制在一个范围内</td>
+<td><a href="../lessons/23-ppo.html">第 23 章</a></td>
+</tr>
+<tr>
+<td>surrogate objective</td>
+<td>替代目标</td>
+<td>用旧数据估的 <span class="arithmatex">\(\mathbb{E}[r_t\hat A_t]\)</span></td>
+<td><a href="../lessons/23-ppo.html">第 23 章</a></td>
+</tr>
+<tr>
+<td>GRPO</td>
+<td>Group Relative Policy Optimization</td>
+<td>组相对策略优化：同题一组回答的平均分当 baseline</td>
+<td><a href="../lessons/24-wrap-up.html">第 24 章</a></td>
+</tr>
+<tr>
+<td>std</td>
+<td>standard deviation</td>
+<td>标准差</td>
+<td><a href="../lessons/24-wrap-up.html">第 24 章</a></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\pi_{ref}\)</span>、β</td>
+<td>reference model、beta</td>
+<td>参考模型（训练前的模型）；KL 正则的强度</td>
+<td><a href="../lessons/24-wrap-up.html">第 24 章</a></td>
+</tr>
+<tr>
+<td>nan</td>
+<td>not a number</td>
+<td>"不是一个数"：0 / 0 之类的结果</td>
+<td><a href="../lessons/24-wrap-up.html">第 24 章</a></td>
+</tr>
+</tbody>
+</table>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

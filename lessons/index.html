@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>从零学强化学习 · 讲义目录 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="_1">从零学强化学习 · 讲义目录</h1>
+<blockquote>
+<p>24 章 · 24 个动画（GIF + 可交互页面）· 42 张复习卡片 · 覆盖 Sutton &amp; Barto 第 2–6、9、13 章与 CS 285 第 4–10、14 讲的主线</p>
+</blockquote>
+<h2 id="_2">这本书讲什么</h2>
+<p>从"小狗看到主人举手、坐下、拿到零食"讲起，一步步走到今天训练机器人和大语言模型用的 PPO、GRPO：回报和折扣、马尔可夫决策过程、价值函数和 Bellman 方程、动态规划、蒙特卡洛和时序差分、Q-learning、DQN、策略梯度、Actor-Critic 与 GAE、TRPO / PPO，最后接到 LLM 训练里的 GRPO。</p>
+<ul>
+<li><strong>适合谁</strong>：想看懂强化学习公式、能去写 CS 285 作业的人。数学只要会加减乘除；概率与期望（第 4 章）、导数和梯度（第 17 章）、log（第 20 章）都在用到的那一章现场补。看过《从零读懂 Transformer》的话，向量、点积、softmax、加权平均可以直接用上。</li>
+<li><strong>读完能做什么</strong>：对照 Sutton &amp; Barto 读懂第 3–6、13 章的公式；动手写 CS 285 HW2（策略梯度、baseline、GAE）和 HW3（DQN、Double DQN）；读 PPO、GRPO 论文的核心公式。</li>
+<li><strong>怎么读</strong>：按章顺序读。每章先看讲解和动画，再自己做练习，最后用复习卡片隔几天考自己。</li>
+</ul>
+<h2 id="_3">讲解的特点</h2>
+<ul>
+<li><strong>一次一小步</strong>：每个概念按"白话类比 → 公式（每个符号说清楚怎么读）→ 小数字亲手算一遍"讲，算例都能在纸上验证，而且全部用代码核对过（测试 22 个，全部通过）。</li>
+<li><strong>几个例子贯穿全书</strong>：训练小狗（第 1 章）、扫地机器人（第 5–9 章，书里的回收机器人）、书上的 5×5 和 4×4 网格世界（第 8–12 章，数字和图 3.2、3.5、4.1 一模一样）、随机游走 A–E（第 14–15、17 章）、悬崖行走（第 16 章）、走廊（第 18 章）、两台老虎机（第 13、20–21 章）。</li>
+<li><strong>每章一个动画</strong>：关键原理做成可交互页面，▶ 播放、→ 单步、↺ 从头开始，有滑块的可以拖动参数看结果怎么变；GIF 版直接嵌在正文里。</li>
+<li><strong>对照原文</strong>：讲到教材和 slides 的地方都标了本地文本的行号（如 S&amp;B L4309–L4344），每章末尾的延伸阅读精确到章节、式号和行号。</li>
+<li><strong>术语不设门槛</strong>：缩写第一次出现就给英文全称并逐词解释（如 TD = Temporal Difference：时间上的 / 差分），全书缩写见 <a href="../lessons/appendix-glossary.html">缩写与术语表</a>。</li>
+<li><strong>每章都有代码对照</strong>：附录最后一节把本章的数字用 NumPy / PyTorch 跑一遍（Mac 上不需要 GPU），配测试核对和讲义一致，顺带讲代码里才看得到的坑（下标差 1、<code>1 − 0.7</code> 不等于 0.3、<code>torch.no_grad()</code>、<code>(1 − done)</code>……）；只算讲过的例子，不提前给练习答案。代码在 <code>solutions/chapter-code/</code>。每章还配了一个 Jupyter notebook（<code>solutions/chapter-code/notebooks/</code>），讲解和代码放在一起，一格一格边读边跑。</li>
+<li><strong>每章收尾有口诀</strong>：几句话记住一章，全部口诀汇总在本页末尾。</li>
+</ul>
+<h2 id="_4">示例动画</h2>
+<table>
+<tr>
+<td width="33%" valign="top"><img src="../animations/l08-bellman.gif" width="100%" alt="第 8 章 · Bellman 期望方程"><br><b>第 8 章 · Bellman 期望方程</b><br>每格的价值 = 四个邻居打折的平均 + 奖励<br><a href="../lessons/08-bellman.html">讲义</a> · <a href="../animations/l08-bellman.html">▶ 交互</a></td>
+<td width="33%" valign="top"><img src="../animations/l16-sarsa-qlearning.gif" width="100%" alt="第 16 章 · SARSA 与 Q-learning"><br><b>第 16 章 · SARSA 与 Q-learning</b><br>悬崖边：一个绕远路，一个贴边走<br><a href="../lessons/16-sarsa-qlearning.html">讲义</a> · <a href="../animations/l16-sarsa-qlearning.html">▶ 交互</a></td>
+<td width="33%" valign="top"><img src="../animations/l23-ppo.gif" width="100%" alt="第 23 章 · PPO"><br><b>第 23 章 · PPO</b><br>比率涨过 1.2 就停：剪裁目标的形状<br><a href="../lessons/23-ppo.html">讲义</a> · <a href="../animations/l23-ppo.html">▶ 交互</a></td>
+</tr>
+</table>
+
+<p>全部动画见 <a href="../animations/index.html">动画目录</a>。</p>
+<h2 id="_5">其他入口</h2>
+<ul>
+<li>复习卡片：<a href="../review.html">../review.md</a>（按间隔规则复习）</li>
+<li>缩写与术语表：<a href="../lessons/appendix-glossary.html">appendix-glossary.md</a></li>
+<li>课程计划：../study-plan.md（本书 = 先修 + CS 285 第 4–10、14 讲的理论部分）</li>
+<li>专题笔记：策略学习全景、运控：PPO / GRPO / SuperMimic</li>
+</ul>
+<h2 id="_6">全书地图</h2>
+<pre><code>第 1–4 章  问题是什么
+  智能体看状态、做动作、拿奖励 → 回报 G = 奖励加起来（γ 打折） → 期望 = 按概率的平均
+
+第 5–9 章  把问题写成数学（MDP）
+  环境 p(s', r | s, a)、策略 π(a | s)
+  价值 v_π、q_π ── Bellman 期望方程（今天 = 眼前 + γ × 明天，取平均）
+  最优 v*、q*  ── Bellman 最优方程（平均换成 max）
+
+第 10–12 章  知道 p：动态规划
+  策略评估（反复套期望方程）→ 策略改进（对 q 贪心）→ 策略迭代 / 价值迭代 → GPI
+
+第 13–16 章  不知道 p：边试边学
+  探索与利用（ε-greedy）、增量更新&quot;旧 + α(目标 − 旧)&quot;
+  MC（目标 = 真实回报 G）、TD（目标 = r + γV(s')）
+  SARSA（on-policy）、Q-learning（off-policy，直接学 q*）
+
+第 17–19 章  状态太多：函数近似 + 价值路线
+  梯度下降、v̂(s, w) → DQN（经验回放 + 目标网络）→ Double DQN（挑和打分分开）
+
+第 20–23 章  直接调策略：策略梯度路线
+  ∇J = E[G ∇log π] → REINFORCE → baseline、reward-to-go 降方差
+  → Actor-Critic（δ 当优势）、GAE（λ 调偏差 / 方差）→ 重要性采样、信任区域 → PPO（剪比率）
+
+第 24 章  收尾：PPO → GRPO（LLM），接下来做 CS 285 HW2–HW4
+</code></pre>
+<h2 id="_7">目录</h2>
+<p>每章都配一个动画：<strong>GIF</strong> 在讲义正文里直接播放，<strong>▶ 交互</strong>是可以点按钮、拖滑块的页面（本地看需要起服务，见 <a href="../animations/index.html">动画目录</a>"跑起来看"）。</p>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>主题</th>
+<th>一句话精要</th>
+<th>动画</th>
+<th>卡片</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../lessons/01-agent-environment.html">1</a></td>
+<td>智能体与环境：交互循环、轨迹；和监督学习的区别；边界</td>
+<td>看状态、做动作、拿奖励；奖励下标大一号；改不了的都是环境</td>
+<td><a href="../animations/l01-agent-environment.gif">GIF</a> · <a href="../animations/l01-agent-environment.html">▶ 交互</a></td>
+<td>R01、R02</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/02-return.html">2</a></td>
+<td>奖励与回报：<span class="arithmatex">\(G_t\)</span>；分幕与持续；奖励说"要什么"</td>
+<td>目标是把奖励加起来最多；<span class="arithmatex">\(G_t\)</span> 从 <span class="arithmatex">\(R_{t+1}\)</span> 加到底</td>
+<td><a href="../animations/l02-return.gif">GIF</a> · <a href="../animations/l02-return.html">▶ 交互</a></td>
+<td>R03、R04</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/03-discount.html">3</a></td>
+<td>折扣 γ：几何级数；<span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span></td>
+<td>往后一步打一折；每步 +1 总数 1/(1−γ)；倒着推</td>
+<td><a href="../animations/l03-discount.gif">GIF</a> · <a href="../animations/l03-discount.html">▶ 交互</a></td>
+<td>R05、R06</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/04-expectation.html">4</a></td>
+<td>概率与期望：加权平均、大数定律、条件期望</td>
+<td>期望 = 值 × 概率再相加；多试几次平均会靠近它</td>
+<td><a href="../animations/l04-expectation.gif">GIF</a> · <a href="../animations/l04-expectation.html">▶ 交互</a></td>
+<td>R07</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/05-mdp.html">5</a></td>
+<td>MDP：动力学 <span class="arithmatex">\(p(s', r \mid s, a)\)</span>；马尔可夫性质</td>
+<td>环境是一张概率表；只看现在不翻历史</td>
+<td><a href="../animations/l05-mdp.gif">GIF</a> · <a href="../animations/l05-mdp.html">▶ 交互</a></td>
+<td>R08、R09</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/06-policy.html">6</a></td>
+<td>策略 <span class="arithmatex">\(\pi(a \mid s)\)</span>：随机 / 确定性；RL 算法的三个部分</td>
+<td>策略是行事手册；跑样本 → 评估 → 改策略</td>
+<td><a href="../animations/l06-policy.gif">GIF</a> · <a href="../animations/l06-policy.html">▶ 交互</a></td>
+<td>R10</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/07-value.html">7</a></td>
+<td>价值函数 <span class="arithmatex">\(v_\pi\)</span>、<span class="arithmatex">\(q_\pi\)</span>；两者的关系</td>
+<td>价值是"房价"：从这里出发的平均回报；v 是 q 的加权平均</td>
+<td><a href="../animations/l07-value.gif">GIF</a> · <a href="../animations/l07-value.html">▶ 交互</a></td>
+<td>R11、R12</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/08-bellman.html">8</a></td>
+<td>Bellman 期望方程；直接解方程；5×5 网格</td>
+<td>今天 = 眼前奖励 + γ × 明天，取平均；A 格 8.8</td>
+<td><a href="../animations/l08-bellman.gif">GIF</a> · <a href="../animations/l08-bellman.html">▶ 交互</a></td>
+<td>R13、R14</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/09-optimal.html">9</a></td>
+<td>最优价值与 Bellman 最优方程；贪心即最优</td>
+<td>平均换成 max；有 <span class="arithmatex">\(q_*\)</span> 直接挑；A 格 24.4</td>
+<td><a href="../animations/l09-optimal.gif">GIF</a> · <a href="../animations/l09-optimal.html">▶ 交互</a></td>
+<td>R15、R16</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/10-policy-eval.html">10</a></td>
+<td>策略评估：反复套期望方程；4×4 网格</td>
+<td>旧值代右边、新值写左边，终点的 0 往外渗</td>
+<td><a href="../animations/l10-policy-eval.gif">GIF</a> · <a href="../animations/l10-policy-eval.html">▶ 交互</a></td>
+<td>R17</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/11-policy-iteration.html">11</a></td>
+<td>策略改进与策略迭代；改进定理</td>
+<td>每格挑 q 最大，处处不输；策略不变就是最优</td>
+<td><a href="../animations/l11-policy-iteration.gif">GIF</a> · <a href="../animations/l11-policy-iteration.html">▶ 交互</a></td>
+<td>R18、R19</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/12-value-iteration.html">12</a></td>
+<td>价值迭代、异步 DP、广义策略迭代 GPI</td>
+<td>评估一轮就改进，合成一个 max；评估改进你推我拉</td>
+<td><a href="../animations/l12-value-iteration.gif">GIF</a> · <a href="../animations/l12-value-iteration.html">▶ 交互</a></td>
+<td>R20、R21</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/13-bandit.html">13</a></td>
+<td>探索与利用：多臂老虎机、ε-greedy、增量更新</td>
+<td>九成贪心一成乱试；新 = 旧 + 步长 × (目标 − 旧)</td>
+<td><a href="../animations/l13-bandit.gif">GIF</a> · <a href="../animations/l13-bandit.html">▶ 交互</a></td>
+<td>R22、R23</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/14-monte-carlo.html">14</a></td>
+<td>蒙特卡洛：first-visit、常数 α；随机游走</td>
+<td>一局玩完，用真实回报的平均估价值；要等终局</td>
+<td><a href="../animations/l14-monte-carlo.gif">GIF</a> · <a href="../animations/l14-monte-carlo.html">▶ 交互</a></td>
+<td>R24</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/15-td.html">15</a></td>
+<td>时序差分 TD(0)：TD 误差、bootstrapping、TD vs MC</td>
+<td>走一步就用"下一步的估计"更新；方差小但有偏</td>
+<td><a href="../animations/l15-td.gif">GIF</a> · <a href="../animations/l15-td.html">▶ 交互</a></td>
+<td>R25、R26</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/16-sarsa-qlearning.html">16</a></td>
+<td>SARSA 与 Q-learning；on / off-policy；悬崖行走</td>
+<td>真要做的下一步 vs 下一格最好的；绕远路 vs 贴边走</td>
+<td><a href="../animations/l16-sarsa-qlearning.gif">GIF</a> · <a href="../animations/l16-sarsa-qlearning.html">▶ 交互</a></td>
+<td>R27、R28</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/17-function-approx.html">17</a></td>
+<td>函数近似与梯度下降：导数、SGD、半梯度</td>
+<td>表格装不下就用函数猜；朝下坡走一小步</td>
+<td><a href="../animations/l17-function-approx.gif">GIF</a> · <a href="../animations/l17-function-approx.html">▶ 交互</a></td>
+<td>R29、R30</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/18-dqn.html">18</a></td>
+<td>DQN：经验回放、目标网络、loss</td>
+<td>Q 表换网络；随机抽旧经历；目标网络隔一阵对齐</td>
+<td><a href="../animations/l18-dqn.gif">GIF</a> · <a href="../animations/l18-dqn.html">▶ 交互</a></td>
+<td>R31、R32</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/19-double-dqn.html">19</a></td>
+<td>过估计与 Double DQN</td>
+<td>max 挑到运气最好的；主网络挑、目标网络打分</td>
+<td><a href="../animations/l19-double-dqn.gif">GIF</a> · <a href="../animations/l19-double-dqn.html">▶ 交互</a></td>
+<td>R33</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/20-policy-gradient.html">20</a></td>
+<td>策略梯度与 REINFORCE：log 导数技巧</td>
+<td><span class="arithmatex">\(\nabla J = \mathbb{E}[G\,\nabla\log\pi]\)</span>：好的推高，坏的压低</td>
+<td><a href="../animations/l20-policy-gradient.gif">GIF</a> · <a href="../animations/l20-policy-gradient.html">▶ 交互</a></td>
+<td>R34、R35</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/21-baseline.html">21</a></td>
+<td>baseline 与 reward-to-go：降方差</td>
+<td>只看比平常好多少；动作只管身后事</td>
+<td><a href="../animations/l21-baseline.gif">GIF</a> · <a href="../animations/l21-baseline.html">▶ 交互</a></td>
+<td>R36、R37</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/22-actor-critic-gae.html">22</a></td>
+<td>Actor-Critic、优势函数与 GAE</td>
+<td>演员演、评委打分；δ 当优势；λ 调偏差与方差</td>
+<td><a href="../animations/l22-actor-critic-gae.gif">GIF</a> · <a href="../animations/l22-actor-critic-gae.html">▶ 交互</a></td>
+<td>R38、R39</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/23-ppo.html">23</a></td>
+<td>从 TRPO 到 PPO：重要性采样、KL、剪裁</td>
+<td>旧数据乘比率；每次别改太多；比率剪在 0.8–1.2</td>
+<td><a href="../animations/l23-ppo.gif">GIF</a> · <a href="../animations/l23-ppo.html">▶ 交互</a></td>
+<td>R40、R41</td>
+<td>正文完成，练习待做</td>
+</tr>
+<tr>
+<td><a href="../lessons/24-wrap-up.html">24</a></td>
+<td>收尾：全书地图、PPO → GRPO、KL 正则、下一步</td>
+<td>同题答几遍互相比；拴住参考模型别学坏</td>
+<td><a href="../animations/l24-wrap-up.gif">GIF</a> · <a href="../animations/l24-wrap-up.html">▶ 交互</a></td>
+<td>R42</td>
+<td>正文完成，练习待做</td>
+</tr>
+</tbody>
+</table>
+<p>附录：<a href="../lessons/appendix-glossary.html">缩写与术语表</a>（遇到缩写先查这一页；每章开头另有一行"本章缩写"）。</p>
+<p><strong>状态说明</strong>：24 章正文、动画、代码对照、notebook 都已写完；每章末尾的 3 道练习还没作答。作答时按仓库约定把原话、对错、点评记进各章"练习与作答记录"，卡住或答错的地方补成新的复习卡片。</p>
+<h2 id="_8">本书之后</h2>
+<table>
+<thead>
+<tr>
+<th>接下来</th>
+<th>内容</th>
+<th>去哪</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>动手</td>
+<td>CS 285 HW2（策略梯度）、HW3（DQN + SAC）、HW4（LLM RL，<code>[GPU]</code>）</td>
+<td>study-plan 作业里程碑</td>
+</tr>
+<tr>
+<td>本书没讲的理论</td>
+<td>变分推断与 SAC（CS 285 第 11–13 讲）、model-based RL（第 15–16 讲）、offline RL（第 17–18 讲）、探索（第 19、23 讲）</td>
+<td>study-plan 逐讲计划</td>
+</tr>
+<tr>
+<td>运控</td>
+<td>PPO / GRPO 在腿足机器人上；SuperMimic</td>
+<td>运控学习计划</td>
+</tr>
+<tr>
+<td>LLM 对齐</td>
+<td>RLHF、DPO、GRPO 变体（DAPO 等）</td>
+<td>CS336 a5、<code>materials/books/lambert-rlhf-book.pdf</code></td>
+</tr>
+<tr>
+<td>世界模型</td>
+<td>Dreamer、TD-MPC2</td>
+<td>cis6280-world-models</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_9">口诀汇总</h2>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>口诀</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>交互循环</td>
+<td>看状态，做动作，拿奖励，再看新状态；奖励下标大一号；改不了的都是环境</td>
+</tr>
+<tr>
+<td>回报</td>
+<td>奖励是一个数，目标是加总数；<span class="arithmatex">\(G_t\)</span> 从下一步加到底；奖励说要什么，别说怎么做</td>
+</tr>
+<tr>
+<td>折扣</td>
+<td>往后一步打一折；γ 为零最近视，γ 为一不打折；每步加一总数是 1/(1−γ)；今天总价 = 明天到手 + γ × 明天往后</td>
+</tr>
+<tr>
+<td>期望</td>
+<td>概率是占几成，加起来等于一；期望是加权平均；不知道概率就多试；竖线右边是已知</td>
+</tr>
+<tr>
+<td>MDP</td>
+<td>环境是张表；每组加起来等于一；马尔可夫：现在说明一切，不翻历史</td>
+</tr>
+<tr>
+<td>策略</td>
+<td>策略是手册；随机策略掷骰子，确定策略只一招；一步平均先 π 后 p；跑样本、评估、改策略</td>
+</tr>
+<tr>
+<td>价值</td>
+<td>价值是房价；q 先做 a 再按 π；v 是 q 按 π 的平均，q 是"眼前 + γ × 下一个 v"的平均</td>
+</tr>
+<tr>
+<td>Bellman 期望</td>
+<td>今天的价值 = 眼前奖励 + γ × 明天的价值，再取平均；一个状态一个方程</td>
+</tr>
+<tr>
+<td>Bellman 最优</td>
+<td>期望方程按 π 平均，最优方程挑最大，环境那层照旧平均；有了 v* 看一步，有了 q* 直接挑</td>
+</tr>
+<tr>
+<td>策略评估</td>
+<td>方程当规则：旧值代右边，新值写左边；误差每轮缩，最后停在真价值</td>
+</tr>
+<tr>
+<td>策略迭代</td>
+<td>换不换看 q；每格挑 q 最大，新策略处处不输；策略不变就停，停下就是最优</td>
+</tr>
+<tr>
+<td>价值迭代 / GPI</td>
+<td>评估一轮就改进，合成一个 max；评估改进你推我拉，所有方法都是 GPI；DP 要知道 p</td>
+</tr>
+<tr>
+<td>探索与利用</td>
+<td>只挑最好会被第一印象困住；九成贪心一成乱试；新估计 = 旧估计 + 步长 × (目标 − 旧估计)</td>
+</tr>
+<tr>
+<td>MC</td>
+<td>不要 p 只要经验，一局局玩、记回报、取平均；要等终局，抖得厉害</td>
+</tr>
+<tr>
+<td>TD</td>
+<td>周二的预报修正周一的；TD 目标：一步奖励 + γ × 下一个的估计；TD = MC 的采样 + DP 的自举</td>
+</tr>
+<tr>
+<td>SARSA / Q-learning</td>
+<td>SARSA 用真要做的下一步（同策略）；Q-learning 用下一格最好的（异策略）；悬崖边一个绕远路、一个贴边走</td>
+</tr>
+<tr>
+<td>函数近似</td>
+<td>状态太多不存表，带参数的函数来猜；导数是斜率；梯度下降朝下坡走一小步</td>
+</tr>
+<tr>
+<td>DQN</td>
+<td>Q 表换网络，y 当答案做回归；存进盒子随机抽；复制一份 θ⁻ 隔一阵对齐</td>
+</tr>
+<tr>
+<td>Double DQN</td>
+<td>max 挑到运气最好的那个；一组挑，另一组打分</td>
+</tr>
+<tr>
+<td>策略梯度</td>
+<td>不学价值直接调策略；<span class="arithmatex">\(\nabla\pi = \pi\nabla\log\pi\)</span> 把梯度变成期望；好的推高，坏的压低</td>
+</tr>
+<tr>
+<td>baseline</td>
+<td>只看比平常好多少；概率加起来是一、导数是零，减 b 不改方向只降噪；动作只管身后事</td>
+</tr>
+<tr>
+<td>Actor-Critic / GAE</td>
+<td>优势 = Q − V；演员做动作，评委打分；δ 就是优势；后面的 δ 按 γλ 打折相加</td>
+</tr>
+<tr>
+<td>PPO</td>
+<td>重要性采样：乘 新/旧；每次别改太多；好的最多涨到 1.2 倍，坏的最多压到 0.8 倍</td>
+</tr>
+<tr>
+<td>GRPO</td>
+<td>同题答几遍，组内平均当 baseline，全对全错没信号；KL 拴住参考模型</td>
+</tr>
+</tbody>
+</table>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

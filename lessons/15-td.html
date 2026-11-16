@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 15 章 · 时序差分 TD：走一步就更新，拿&quot;下一步的估计&quot;当目标 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="15-td">第 15 章 · 时序差分 TD：走一步就更新，拿"下一步的估计"当目标</h1>
+<blockquote>
+<p>本章回答：能不能不等一局结束就更新价值？"用一个估计去更新另一个估计"靠得住吗？TD 和 MC 谁更好？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/14-monte-carlo.html">第 14 章 蒙特卡洛</a> · 下一章：<a href="../lessons/16-sarsa-qlearning.html">第 16 章 SARSA 与 Q-learning</a><br />
+对应原文：Sutton &amp; Barto §6.1 TD Prediction（L8624–L8995，式 6.2，算法框 L8665，TD 误差 L8727–L8745）、§6.2 Advantages（L8996–L9206，例 6.2 随机游走）、§6.3 Optimality of TD(0)（L9207 起）<br />
+本章缩写：TD = Temporal Difference（时间上的 / 差分：前后两个时刻的估计之差）；TD(0)：最简单的一步 TD，括号里的 0 是 λ = 0（第 22 章 GAE 会讲 λ）；δ：希腊字母 delta（读"德尔塔"），TD 误差；bootstrapping：自举（原意"拽着自己的鞋带把自己提起来"）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：天气预报的类比：明天的预报比今天的更准（2026-11-13）</h3>
+<p><strong>MC 的毛病</strong>（第 14 章第四步）：要等一局结束，拿到真实回报 <span class="arithmatex">\(G_t\)</span> 才能更新。</p>
+<p><strong>类比：预测周六会不会下雨。</strong></p>
+<ul>
+<li><strong>MC 的做法</strong>：周一预测 30%，然后一直等到周六，看真的下没下，再回头改周一的预测；</li>
+<li><strong>TD 的做法</strong>：周一预测 30%；<strong>周二</strong>一看新的预报说 50%，就马上把周一的预测往 50% 挪一点。不用等到周六。</li>
+</ul>
+<p>为什么可以这样？因为<strong>周二的预测比周一的多知道了一天的信息</strong>，通常更准一点。用"更准一点的估计"去修正"老的估计"，就不用等最终结果了。</p>
+<p><strong>放到价值上</strong>：在状态 <span class="arithmatex">\(S_t\)</span> 走了一步，拿到奖励 <span class="arithmatex">\(R_{t+1}\)</span>，到了 <span class="arithmatex">\(S_{t+1}\)</span>。这时：</p>
+<ul>
+<li>原来的估计：<span class="arithmatex">\(V(S_t)\)</span>；</li>
+<li>多知道一步后的估计：<span class="arithmatex">\(R_{t+1} + \gamma V(S_{t+1})\)</span>（实际拿到的奖励 + 下一个状态的估计）。</li>
+</ul>
+<p>后者用到了一个<strong>真实发生的奖励</strong>，比前者多了一点真信息。</p>
+<p><strong>一句话</strong>：TD 不等最终结果，拿"走一步后的新估计"去修正"老估计"，像用周二的预报修正周一的预报。</p>
+<h3 id="td0-2026-11-13">第二步：TD(0) 的更新公式，一个个符号读（2026-11-13）</h3>
+<p><strong>TD(0)</strong>（式 6.2，L8653–L8658）：</p>
+<div class="arithmatex">\[V(S_t) \leftarrow V(S_t) + \alpha\,\big[\,R_{t+1} + \gamma V(S_{t+1}) - V(S_t)\,\big]\]</div>
+<p>套第 13 章的句式"新 = 旧 + 步长 × (目标 − 旧)"：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>MC（式 6.1）</th>
+<th>TD(0)（式 6.2）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目标</td>
+<td><span class="arithmatex">\(G_t\)</span>：整局真实回报</td>
+<td><span class="arithmatex">\(R_{t+1} + \gamma V(S_{t+1})\)</span>：一步真实奖励 + 下一状态的<strong>估计</strong></td>
+</tr>
+<tr>
+<td>什么时候能更新</td>
+<td>一局结束</td>
+<td><strong>走完一步</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>TD 误差 δ</strong>（L8727–L8740）：方括号里那一项叫 TD 误差：</p>
+<div class="arithmatex">\[\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)\]</div>
+<p>读作：走了一步以后发现"比原来估计的好了多少"。δ &gt; 0：比预期好，把 <span class="arithmatex">\(V(S_t)\)</span> 调高；δ &lt; 0：比预期差，调低。</p>
+<p><strong>用随机游走手算两步</strong>（第 14 章的环境；初值全是 0.5，α = 0.1，γ = 1）：</p>
+<p><strong>① 在 E 往右走出去</strong>，奖励 +1，到终点（终点价值是 0）：</p>
+<div class="arithmatex">\[\delta = 1 + 0 - V(E) = 1 - 0.5 = 0.5,\qquad V(E) \leftarrow 0.5 + 0.1 \times 0.5 = 0.55\]</div>
+<p><strong>② 下一局，从 D 走到 E</strong>，奖励 0：</p>
+<div class="arithmatex">\[\delta = 0 + V(E) - V(D) = 0.55 - 0.5 = 0.05,\qquad V(D) \leftarrow 0.5 + 0.1 \times 0.05 = 0.505\]</div>
+<p><strong>看到了吗</strong>：D 这一步自己什么奖励都没拿到，但因为 E 的估计变高了，D 也跟着变高了一点。<strong>好消息从 E 一步步往左"传"</strong>，不用等 D 自己哪天赢一局。</p>
+<p><strong>一句话</strong>：TD(0) 的目标是"一步奖励 + γ × 下一状态的估计"；方括号是 TD 误差 δ；好消息会一步步往前传。</p>
+<h3 id="bootstrapping2026-11-13">第三步：用估计更新估计：bootstrapping（2026-11-13）</h3>
+<p><strong>疑问</strong>：<span class="arithmatex">\(V(S_{t+1})\)</span> 本身也是个不准的估计，拿它当目标靠得住吗？</p>
+<p><strong>这个做法叫 bootstrapping（自举）</strong>（L6531、L8708–L8714）：用自己的估计去更新自己的估计。第 10–12 章的 DP 也是这样做的（右边用的是旧的 <span class="arithmatex">\(v_k\)</span>）。</p>
+<p><strong>TD 把 MC 和 DP 的优点拼在一起</strong>（L8701–L8714）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>用真实采样吗（不用知道 p）</th>
+<th>用别的估计吗（bootstrap）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DP</td>
+<td>不，按 p 把所有可能加权</td>
+<td>是</td>
+</tr>
+<tr>
+<td>MC</td>
+<td>是，用真实回报</td>
+<td>不</td>
+</tr>
+<tr>
+<td><strong>TD</strong></td>
+<td><strong>是</strong></td>
+<td><strong>是</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>像 MC：只需要真实经历，<strong>不需要 p</strong>；</li>
+<li>像 DP：用下一状态的估计，<strong>不用等终局</strong>。</li>
+</ul>
+<p><strong>为什么还能收敛</strong>：每一步的目标里都有一个<strong>真实的</strong> <span class="arithmatex">\(R_{t+1}\)</span>。这点真信息一轮轮累积，加上估计之间互相校正，书里说：对任何固定策略，步长合适时 TD(0) 收敛到 <span class="arithmatex">\(v_\pi\)</span>（"For any fixed policy π, TD(0) has been proved to converge"，L9022–L9030，§6.2）。</p>
+<p><strong>一句话</strong>：用估计更新估计叫 bootstrapping；TD = MC 的采样 + DP 的 bootstrapping，不要 p、不等终局，也能收敛。</p>
+<h3 id="td-mc-2026-11-13">第四步：随机游走上的比赛：TD 学得比 MC 快（2026-11-13）</h3>
+<p><strong>例 6.2 的实验</strong>（例 6.2 里的学习曲线，L9046–L9100）：同样的随机游走，比较 TD(0) 和常数 α MC，看谁估得更快更准。</p>
+<p>用代码各跑 100 次实验，每次玩 100 局（初值 0.5），比 RMS 误差（越小越准）：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>100 局后平均 RMS 误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TD(0)，α = 0.1</td>
+<td><strong>0.057</strong></td>
+</tr>
+<tr>
+<td>MC，α = 0.02</td>
+<td>0.076</td>
+</tr>
+</tbody>
+</table>
+<p>TD 更准。书里例 6.2 的右图也是这个结论：在随机游走上，TD 在各种步长下都比 MC 学得快。</p>
+<p><strong>为什么 TD 往往更快</strong>：</p>
+<ol>
+<li><strong>方差小</strong>：MC 的目标是一整局随机结果的总和（这局赢、下局输，跳来跳去）；TD 的目标只有<strong>一步</strong>的随机性（一个奖励 + 一个下一状态），稳得多；</li>
+<li><strong>能利用状态之间的关系</strong>：第二步看到的"好消息往前传"：E 学到了，D 马上沾光；MC 要等 D 自己哪天走到右边才知道。</li>
+</ol>
+<p><strong>代价：偏差</strong>：TD 的目标用了不准的估计，一开始是<strong>有偏的</strong>；MC 的目标 <span class="arithmatex">\(G_t\)</span> 是<strong>无偏的</strong>。这是全书反复出现的权衡：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>MC</th>
+<th>TD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>偏差 bias</td>
+<td>无</td>
+<td>有（用了估计）</td>
+</tr>
+<tr>
+<td>方差 variance</td>
+<td>大（整局随机）</td>
+<td>小（一步随机）</td>
+</tr>
+</tbody>
+</table>
+<p>第 22 章的 GAE 会用一个参数 λ 在两者之间连续调节。</p>
+<p><strong>一句话</strong>：随机游走上 TD 比 MC 学得快（0.057 vs 0.076）；TD 方差小但有偏，MC 无偏但方差大。</p>
+<h3 id="td">动画演示：TD 走一步就更新，好消息从右往左传</h3>
+<p><img alt="时序差分" src="../animations/l15-td.gif" /></p>
+<p>可交互版：<a href="../animations/l15-td.html">animations/l15-td.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>上面五个格子，小球每走一步，TD 立刻更新它离开的那一格，箭头标出 δ（第二步）；</li>
+<li>开头先演示第二步的两次手算：E 0.5 → 0.55，D 0.5 → 0.505；</li>
+<li>下面两条曲线：TD 和 MC 的 RMS 误差随局数下降（60 次实验平均），TD 那条更低（第四步）；</li>
+<li>滑块调 α：α 大学得快但抖，α 小稳但慢。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：<span class="arithmatex">\(V(C) = 0.5\)</span>，<span class="arithmatex">\(V(D) = 0.6\)</span>，从 C 走到 D，奖励 0，α = 0.1，γ = 1。算 TD 误差 δ 和更新后的 <span class="arithmatex">\(V(C)\)</span>。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：MC 的目标和 TD 的目标分别是什么？哪个要等一局结束？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：用"偏差"和"方差"两个词，说一说 TD 和 MC 各自的优缺点。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>周二的预报修正周一的，不等周六；<br />
+TD 目标：一步奖励 + γ × 下一个的估计；方括号是 δ；<br />
+用估计更新估计叫自举：TD = MC 的采样 + DP 的自举；<br />
+TD 方差小有偏，MC 无偏方差大。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R25（TD(0) 式 6.2 与 TD 误差 <span class="arithmatex">\(\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)\)</span>；手算 E 0.5 → 0.55）</li>
+<li>R26（bootstrapping；DP / MC / TD 对照表；TD 与 MC 的偏差–方差权衡）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §6.1</td>
+<td>L8624–L8760（式 6.1–6.5，算法框 L8665，TD 误差 L8727）</td>
+<td>本章原文；例 6.1 开车回家（L8843 起）是另一个好懂的类比</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto §6.2</td>
+<td>L8996–L9206（例 6.2 随机游走及学习曲线；图 6.2 是批量训练版本，在 §6.3）</td>
+<td>MC vs TD 的实验（第四步）</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §6.3</td>
+<td>L9207–L9364</td>
+<td>批量 TD 和批量 MC 收敛到不同的答案：TD 找的是"最符合马尔可夫模型"的估计</td>
+</tr>
+<tr>
+<td>CS 285 第 6 讲</td>
+<td><code>lec-06.txt</code> L48–L75（Value function fitting）</td>
+<td>深度 RL 里用 bootstrapped target <span class="arithmatex">\(r + \gamma \hat V(s')\)</span> 训练价值网络</td>
+</tr>
+<tr>
+<td>王树森 slides</td>
+<td><code>chinese/wangshusen-DRL/Slides/2_TD_1.pdf</code></td>
+<td>中文：TD 算法（他用"开车从纽约到亚特兰大"举例）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>MC 误差 = TD 误差之和</strong>（式 6.6，L8741–L8830）：若一局中 V 不变，<span class="arithmatex">\(G_t - V(S_t) = \sum_{k=t}^{T-1}\gamma^{k-t}\delta_k\)</span>。MC 一次把整局的 δ 加起来更新；TD 每一步只用当前的 δ。第 22 章的 GAE 就是在这两者之间加权。</li>
+<li><strong>TD 目标的期望</strong>：<span class="arithmatex">\(\mathbb{E}[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] = v_\pi(s)\)</span>（第 8 章 Bellman 方程）；TD 是在用<strong>一个样本</strong>代替 Bellman 方程右边的期望。</li>
+<li><strong>收敛</strong>：表格型 TD(0) 在步长满足 <span class="arithmatex">\(\sum\alpha = \infty\)</span>、<span class="arithmatex">\(\sum\alpha^2 &lt; \infty\)</span>（第 13 章附录）时以概率 1 收敛到 <span class="arithmatex">\(v_\pi\)</span>。</li>
+<li><strong>偏差–方差</strong>：MC 目标无偏、方差 ∝ 整局；TD 目标方差只来自一步，但 <span class="arithmatex">\(V(S_{t+1}) \ne v_\pi(S_{t+1})\)</span> 时有偏。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(V(S_t) \leftarrow V(S_t) + \alpha[R_{t+1} + \gamma V(S_{t+1}) - V(S_t)]\)</span></td>
+<td>TD(0)（式 6.2）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)\)</span></td>
+<td>TD 误差（式 6.5）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_t - V(S_t) = \sum_{k=t}^{T-1}\gamma^{k-t}\delta_k\)</span></td>
+<td>MC 误差 = TD 误差的折扣和（式 6.6）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(V(\text{终止}) = 0\)</span></td>
+<td>走出去后目标就是 <span class="arithmatex">\(R_{t+1}\)</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch15_td.py</code>，测试 <code>tests/test_ch10_16.py</code>（检查手算两步、以及 TD 比 MC 误差小）。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch15_td.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch15_td.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E 走出右边</td>
+<td><code>td_update(V, 4, 1.0, None, 0.1)</code></td>
+<td>δ = 0.50，V(E) 0.5 → 0.55</td>
+</tr>
+<tr>
+<td>D → E</td>
+<td><code>td_update(V, 3, 0.0, 4, 0.1)</code></td>
+<td>δ = 0.050，V(D) 0.5 → 0.505</td>
+</tr>
+<tr>
+<td>比赛</td>
+<td><code>compare()</code></td>
+<td>TD 0.057，MC 0.076</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">target = r + (0.0 if s_next is None else gamma * V[s_next])   # 走出去时下一状态价值为 0
+delta = target - V[s]
+V[s] += alpha * delta
+</code></pre>
+<p><strong>代码里才看得到的</strong>：MC 的代码（第 14 章）要先 <code>random_walk_episode</code> 拿到整局再更新；TD 的循环 <code>for s, r, ns in episode: td_update(...)</code> 每一步都能立刻更新。真正在线学习时，TD 连整局都不用存，这就是它在长任务里的优势。</p><nav class="pager"><a href="14-monte-carlo.html">← 第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值</a><a href="16-sarsa-qlearning.html">第 16 章 · SARSA 与 Q-learning：用 TD 学 q，学会怎么做 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

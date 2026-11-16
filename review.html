@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>cs285-deep-rl · 复习卡片 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="index.html">从零学强化学习</a>
+<a href="lessons/index.html">讲义目录</a>
+<a href="animations/index.html">动画</a>
+<a href="review.html">复习卡片</a>
+<a href="lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="cs285-deep-rl">cs285-deep-rl · 复习卡片</h1>
+<p>讲解中卡住、追问、答错的地方，以及必须记住的公式和符号，都会自动追加到这里。每张卡片的"来源"链接到 <a href="lessons/index.html">lessons/</a> 里对应的讲义章节，忘了就回去重读那一章。</p>
+<h2 id="_1">怎么用</h2>
+<ol>
+<li>先只看<strong>问题</strong>，自己说出或写出答案；</li>
+<li>再点开"答案"核对；</li>
+<li>答对了，在"复习记录"里补一个日期；答错了就当天再看一遍。</li>
+</ol>
+<p><strong>复习间隔</strong>（按答对的次数）：第 1 次 → 隔 1 天 → 隔 3 天 → 隔 7 天 → 隔 14 天 → 隔 30 天。连续答对 5 次的卡片移到文末"已掌握"。</p>
+<p>想复习时说一声"复习"，我会挑到期的卡片来考你。</p>
+<blockquote>
+<p>2026-11-13 全书 24 章正文写完时，按"必须记住的公式 / 符号"给每章加了 1–2 张卡（R02–R42）。各章练习题还没作答，卡片里不含练习答案；作答时卡住或答错的地方再补卡。</p>
+</blockquote>
+<hr />
+<h2 id="_2">先修：问题、回报与期望</h2>
+<h3 id="r01-r_1-r_0">R01 · 强化学习的交互循环是哪几步？轨迹怎么写？为什么第一个奖励是 <span class="arithmatex">\(R_1\)</span> 不是 <span class="arithmatex">\(R_0\)</span>？</h3>
+<p>来源：<a href="lessons/01-agent-environment.html">第 1 章</a> · 加入 2026-10-26 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<p>智能体看到状态 <span class="arithmatex">\(S_t\)</span> → 做动作 <span class="arithmatex">\(A_t\)</span> → 环境给出奖励 <span class="arithmatex">\(R_{t+1}\)</span> 和新状态 <span class="arithmatex">\(S_{t+1}\)</span> → 循环。</p>
+<p>轨迹：<span class="arithmatex">\(S_0, A_0, R_1, S_1, A_1, R_2, \dots\)</span>（Sutton &amp; Barto 式 3.1）</p>
+<p>奖励是做完动作<strong>之后</strong>才拿到的，所以第 0 步动作的奖励记作 <span class="arithmatex">\(R_1\)</span>。</p>
+<p>口诀：看状态，做动作，拿奖励，再看新状态。</p>
+</details>
+<h3 id="r02">R02 · 强化学习和监督学习最大的区别是什么？智能体和环境的边界按什么划？</h3>
+<p>来源：<a href="lessons/01-agent-environment.html">第 1 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>监督学习给<strong>正确答案</strong>（标签）；强化学习只给<strong>分数</strong>（奖励），正确的做法要自己试出来，而且奖励可能来得很晚。</li>
+<li>边界规则（S&amp;B L3698）：<strong>智能体不能随意改变的东西都算环境</strong>，包括机器人的电机、身体，以及奖励本身。不是按"身体"划的。</li>
+</ul>
+<p>口诀：监督学习给答案，强化学习只给分；改不了的都是环境。</p>
+</details>
+<h3 id="r03-g_t-g_t">R03 · 回报 <span class="arithmatex">\(G_t\)</span> 怎么定义？从哪个奖励开始加？<span class="arithmatex">\(G_T\)</span> 是多少？</h3>
+<p>来源：<a href="lessons/02-return.html">第 2 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<p><span class="arithmatex">\(G_t = R_{t+1} + R_{t+2} + \cdots + R_T\)</span>（式 3.7）：从第 t 步<strong>往后</strong>的奖励总和，起点是 <span class="arithmatex">\(R_{t+1}\)</span>，已经拿到的不算。</p>
+<p>最后一步之后没有奖励，所以 <span class="arithmatex">\(G_T = 0\)</span>。</p>
+<p>例：奖励 1, 0, 1, 0 → <span class="arithmatex">\(G_0 = 2\)</span>，<span class="arithmatex">\(G_1 = 1\)</span>，<span class="arithmatex">\(G_2 = 1\)</span>，<span class="arithmatex">\(G_3 = 0\)</span>。</p>
+</details>
+<h3 id="r04">R04 · 分幕任务和持续任务有什么区别？为什么奖励不应该奖励"中间步骤"？</h3>
+<p>来源：<a href="lessons/02-return.html">第 2 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>分幕任务（episodic）能切成一局一局，每局结束于终止状态；持续任务（continuing）没有终点，不打折的回报可能加到无穷大。</li>
+<li>奖励是告诉智能体<strong>要什么</strong>，不是<strong>怎么做</strong>（S&amp;B L3970–L3971）。奖励中间步骤（比如下棋吃子），智能体会钻空子：拼命吃子却输掉整盘。</li>
+<li>迷宫每步 −1 = "越快出去越好"。</li>
+</ul>
+</details>
+<h3 id="r05-0-1">R05 · 折扣回报的公式是什么？γ = 0 和 γ = 1 分别意味着什么？</h3>
+<p>来源：<a href="lessons/03-discount.html">第 3 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<p><span class="arithmatex">\(G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots = \sum_{k=0}^{\infty}\gamma^k R_{t+k+1}\)</span>（式 3.8），往后第 k 个奖励乘 <span class="arithmatex">\(\gamma^k\)</span>。</p>
+<ul>
+<li>γ = 0：近视，只看下一步；</li>
+<li>γ = 1：不打折，就是第 2 章的回报；</li>
+<li>γ 越接近 1 越有远见。</li>
+</ul>
+<p>例：γ = 0.9，奖励 1, 0, 1 → <span class="arithmatex">\(G_0 = 1 + 0 + 0.81 = 1.81\)</span>。</p>
+</details>
+<h3 id="r06-1">R06 · 回报的递推式是什么？每步奖励都是 +1 时折扣回报是多少？</h3>
+<p>来源：<a href="lessons/03-discount.html">第 3 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<p><span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>（式 3.9）：今天往后的总价值 = 明天到手的 + γ × 明天往后的总价值。从 <span class="arithmatex">\(G_T = 0\)</span> 倒着推最省事。</p>
+<p>每步 +1：<span class="arithmatex">\(\sum_{k=0}^{\infty}\gamma^k = \frac{1}{1-\gamma}\)</span>（式 3.10）；γ = 0.9 时是 10，大致就是"看多远"。</p>
+<p>推导：<span class="arithmatex">\(X - \gamma X = 1\)</span>。</p>
+</details>
+<h3 id="r07">R07 · 期望怎么算？不知道概率时怎么估？条件期望里的竖线是什么意思？</h3>
+<p>来源：<a href="lessons/04-expectation.html">第 4 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(\mathbb{E}[X] = \sum_x x\Pr(X = x)\)</span>：每个值乘它的概率再相加，就是按概率的加权平均（例：30% 出 10、70% 出 0 → 期望 3）；</li>
+<li>不知道概率：多试几次取平均，次数越多越接近期望（大数定律）；</li>
+<li><span class="arithmatex">\(\Pr(X \mid Y = y)\)</span>、<span class="arithmatex">\(\mathbb{E}[X \mid Y = y]\)</span>：竖线右边是<strong>已知条件</strong>，左边是要猜的结果；每个条件下概率加起来都是 1。</li>
+</ul>
+</details>
+<hr />
+<h2 id="mdp">MDP、策略与价值</h2>
+<h3 id="r08-ps-r-mid-s-a">R08 · <span class="arithmatex">\(p(s', r \mid s, a)\)</span> 怎么读？它满足什么条件？</h3>
+<p>来源：<a href="lessons/05-mdp.html">第 5 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<p>"在状态 s、做了动作 a 的条件下，到达 s'、拿到奖励 r 的概率"（式 3.2），叫 MDP 的动力学（dynamics），把环境完全写清楚了。</p>
+<p>条件：固定一组 (s, a)，所有 (s', r) 的概率加起来 = 1（式 3.3）。</p>
+<p>例（扫地机器人）：<span class="arithmatex">\(p(\text{高电}, -3 \mid \text{低电}, \text{搜索}) = 0.3\)</span>。</p>
+</details>
+<h3 id="r09-p-ps-mid-s-a-rs-a">R09 · 马尔可夫性质是什么？从 p 怎么算 <span class="arithmatex">\(p(s' \mid s, a)\)</span> 和 <span class="arithmatex">\(r(s, a)\)</span>？</h3>
+<p>来源：<a href="lessons/05-mdp.html">第 5 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>马尔可夫性质：下一步只取决于<strong>现在</strong>的状态和动作，跟更早的历史无关；这是对状态的要求：状态要包含所有对未来有用的信息（下棋看整个棋盘）。</li>
+<li><span class="arithmatex">\(p(s' \mid s, a) = \sum_r p(s', r \mid s, a)\)</span>（把奖励加掉，式 3.4）；</li>
+<li><span class="arithmatex">\(r(s, a) = \sum_r r\sum_{s'}p(s', r \mid s, a)\)</span>（按概率平均奖励，式 3.5）。例：<span class="arithmatex">\(r(\text{低电}, \text{搜索}) = 0.7 \times 2 + 0.3 \times (-3) = 0.5\)</span>。</li>
+</ul>
+</details>
+<h3 id="r10-pia-mid-s">R10 · 策略 <span class="arithmatex">\(\pi(a \mid s)\)</span> 是什么？随机策略和确定性策略的区别？一步的平均奖励怎么算？</h3>
+<p>来源：<a href="lessons/06-policy.html">第 6 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(\pi(a \mid s)\)</span>：在状态 s 选动作 a 的概率，智能体的"行事手册"，每行加起来是 1；学习就是在改它（p 是环境的，改不了）。</li>
+<li>随机策略按概率掷骰子；确定性策略每个状态只选一个动作（概率 1）。</li>
+<li><span class="arithmatex">\(\mathbb{E}_\pi[R_{t+1} \mid S_t = s] = \sum_a\pi(a \mid s)\,r(s, a)\)</span>：先按 π 选动作，再按 p 平均。例：高电 0.9 × 2 + 0.1 × 1 = 1.9。</li>
+</ul>
+</details>
+<h3 id="r11-v_pis-q_pis-a">R11 · <span class="arithmatex">\(v_\pi(s)\)</span> 和 <span class="arithmatex">\(q_\pi(s, a)\)</span> 的定义是什么？两者差在哪？</h3>
+<p>来源：<a href="lessons/07-value.html">第 7 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s]\)</span>（式 3.12）：从 s 出发、一直按 π 走，折扣回报的平均（状态的"房价"）；</li>
+<li><span class="arithmatex">\(q_\pi(s, a) = \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a]\)</span>（式 3.13）：<strong>第一步固定做 a</strong>，之后按 π 走；</li>
+<li>价值和策略绑在一起；终止状态的价值永远是 0；不会算时可以"多跑几次取平均"（蒙特卡洛）。</li>
+</ul>
+</details>
+<h3 id="r12-v-q">R12 · v 和 q 之间的两个关系式是什么？</h3>
+<p>来源：<a href="lessons/07-value.html">第 7 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(v_\pi(s) = \sum_a\pi(a \mid s)\,q_\pi(s, a)\)</span>：v 是 q 按策略的加权平均；</li>
+<li><span class="arithmatex">\(q_\pi(s, a) = \sum_{s', r}p(s', r \mid s, a)\,[r + \gamma v_\pi(s')]\)</span>：q 是"这一步奖励 + γ × 下一个状态的 v"的平均。</li>
+</ul>
+<p>例：<span class="arithmatex">\(q_\pi(\text{低电}, \text{充电}) = 0 + 0.9 \times 15.828 = 14.245\)</span>。</p>
+</details>
+<h3 id="r13-bellman-314">R13 · 写出 Bellman 期望方程（式 3.14），并说出从里往外怎么读</h3>
+<p>来源：<a href="lessons/08-bellman.html">第 8 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<div class="arithmatex">\[v_\pi(s) = \sum_a\pi(a \mid s)\sum_{s', r}p(s', r \mid s, a)\,[r + \gamma v_\pi(s')]\]</div>
+<ol>
+<li>方括号：某个具体结果之后的总价值；</li>
+<li>按 p 平均：得到 <span class="arithmatex">\(q_\pi(s, a)\)</span>；</li>
+<li>按 π 平均：得到 <span class="arithmatex">\(v_\pi(s)\)</span>。</li>
+</ol>
+<p>来源：把 <span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span> 两边取期望。每个状态一个方程，n 个状态 n 个一次方程，知道 p 就能直接解：<span class="arithmatex">\(v = (I - \gamma P_\pi)^{-1}r_\pi\)</span>。</p>
+</details>
+<h3 id="r14-55-a-88-10b-53-5">R14 · 5×5 网格世界随机策略下，为什么 A 格价值 8.8 小于 +10、B 格 5.3 大于 +5？</h3>
+<p>来源：<a href="lessons/08-bellman.html">第 8 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>A 格：拿 +10 后被传到最下一行的 A'，靠墙、随机乱走常撞墙扣分（A' 价值约 −1.3），所以 <span class="arithmatex">\(v(A) \approx 10 + 0.9 \times (-1.3) = 8.8\)</span>；</li>
+<li>B 格：拿 +5 后传到中间的 B'（价值约 0.4），不容易撞墙，后面还有点赚头，所以 5.3 &gt; 5。</li>
+</ul>
+<p>（图 3.2；价值是 25 个 Bellman 方程的解。）</p>
+</details>
+<h3 id="r15-bellman-319320">R15 · Bellman 最优方程（式 3.19、3.20）和期望方程比，哪一层变了、哪一层没变？</h3>
+<p>来源：<a href="lessons/09-optimal.html">第 9 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<div class="arithmatex">\[v_*(s) = \max_a\sum_{s', r}p(s', r \mid s, a)[r + \gamma v_*(s')]$$
+$$q_*(s, a) = \sum_{s', r}p(s', r \mid s, a)[r + \gamma\max_{a'}q_*(s', a')]\]</div>
+<ul>
+<li>选动作那一层：从"按 π 平均"换成"<strong>取 max</strong>"（最优的智能体直接挑最好的）；</li>
+<li>环境那一层：<strong>不变</strong>，还是按 p 平均（环境把你送到哪你挑不了）。</li>
+</ul>
+</details>
+<h3 id="r16-v_-q_">R16 · 有了 <span class="arithmatex">\(v_*\)</span> 或 <span class="arithmatex">\(q_*\)</span>，怎么得到最优策略？扫地机器人的最优策略是什么？</h3>
+<p>来源：<a href="lessons/09-optimal.html">第 9 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>有 <span class="arithmatex">\(v_*\)</span>：每个状态往前看一步，挑 <span class="arithmatex">\(\sum p[r + \gamma v_*(s')]\)</span> 最大的动作（对 <span class="arithmatex">\(v_*\)</span> 贪心就是最优，因为 <span class="arithmatex">\(v_*\)</span> 已经包含了所有未来）；</li>
+<li>有 <span class="arithmatex">\(q_*\)</span>：直接挑 <span class="arithmatex">\(q_*(s, a)\)</span> 最大的动作，连 p 都不用知道；</li>
+<li>机器人：<span class="arithmatex">\(v_*(\text{高电}) = 16.949\)</span>、<span class="arithmatex">\(v_*(\text{低电}) = 15.254\)</span>；<strong>高电搜索、低电充电</strong>（低电时充电 15.254 &gt; 等待 14.729 &gt; 搜索 14.686）。</li>
+</ul>
+</details>
+<hr />
+<h2 id="_3">动态规划</h2>
+<h3 id="r17-4544-2-175">R17 · 迭代策略评估（式 4.5）怎么做？4×4 网格第 2 轮挨着终点那格为什么是 −1.75？为什么会收敛？</h3>
+<p>来源：<a href="lessons/10-policy-eval.html">第 10 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(v_{k+1}(s) = \sum_a\pi(a \mid s)\sum_{s', r}p[r + \gamma v_k(s')]\)</span>：把 Bellman 期望方程当更新规则，右边用旧值、左边写新值，从全 0 开始反复套；</li>
+<li>−1.75：四个方向"−1 + 邻居第 1 轮的值"分别是 −2、−2、−2、−1（往终点那个），平均 −1.75；</li>
+<li>收敛：真价值是"不动点"，每轮误差至少缩成 γ 倍（压缩映射）；最终 0、−14、−20、−22 …</li>
+</ul>
+</details>
+<h3 id="r18">R18 · 策略改进怎么做？策略改进定理说了什么？</h3>
+<p>来源：<a href="lessons/11-policy-iteration.html">第 11 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>每个状态挑 <span class="arithmatex">\(q_\pi(s, a)\)</span> 最大的动作：<span class="arithmatex">\(\pi'(s) = \arg\max_a q_\pi(s, a)\)</span>（式 4.9，对 <span class="arithmatex">\(v_\pi\)</span> 贪心）；</li>
+<li>策略改进定理：若每个状态 <span class="arithmatex">\(q_\pi(s, \pi'(s)) \ge v_\pi(s)\)</span>，则每个状态 <span class="arithmatex">\(v_{\pi'}(s) \ge v_\pi(s)\)</span>，新策略处处不比原来差；</li>
+<li>只改一个状态时的判断：<span class="arithmatex">\(q_\pi(s, a) &gt; v_\pi(s)\)</span> 就换。</li>
+</ul>
+</details>
+<h3 id="r19">R19 · 策略迭代的流程是什么？为什么"改进后策略不变"就是最优？</h3>
+<p>来源：<a href="lessons/11-policy-iteration.html">第 11 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>流程：评估 → 贪心改进 → 评估 → …（<span class="arithmatex">\(\pi_0 \to v_{\pi_0} \to \pi_1 \to \cdots \to \pi_*\)</span>），策略不再变就停；</li>
+<li>不变说明每个状态的 π 已经在挑 q 最大的动作，于是 <span class="arithmatex">\(v_\pi\)</span> 满足 <strong>Bellman 最优方程</strong>；最优方程只有一个解，所以 <span class="arithmatex">\(v_\pi = v_*\)</span>；</li>
+<li>有限 MDP 的确定性策略有限多，每轮严格变好或停下，一定在有限轮内结束（4×4 网格 3 轮）。</li>
+</ul>
+</details>
+<h3 id="r20-410">R20 · 价值迭代（式 4.10）是什么？和策略评估差在哪？</h3>
+<p>来源：<a href="lessons/12-value-iteration.html">第 12 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<p><span class="arithmatex">\(v_{k+1}(s) = \max_a\sum_{s', r}p[r + \gamma v_k(s')]\)</span>：把 <strong>Bellman 最优方程</strong>当更新规则；相当于"评估一轮就改进"，两步合成一个 max。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>策略评估</th>
+<th>价值迭代</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>方程</td>
+<td>期望方程（按 π 平均）</td>
+<td>最优方程（取 max）</td>
+</tr>
+<tr>
+<td>收敛到</td>
+<td><span class="arithmatex">\(v_\pi\)</span></td>
+<td><span class="arithmatex">\(v_*\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>4×4 网格 4 轮就到 0、−1、−2、−3；收敛后再贪心一次读出策略。</p>
+</details>
+<h3 id="r21-gpidp">R21 · 什么是广义策略迭代 GPI？DP 最大的局限是什么？</h3>
+<p>来源：<a href="lessons/12-value-iteration.html">第 12 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>GPI：评估（让价值跟上策略）和改进（让策略对价值贪心）两个过程你推我拉，最后同时满足时就是 <span class="arithmatex">\(v_*\)</span>、<span class="arithmatex">\(\pi_*\)</span>；策略迭代、价值迭代、异步 DP 只是两者的"粒度"不同；书里说几乎所有 RL 方法都可以看成 GPI；</li>
+<li>DP 的局限：<strong>必须知道环境的 p</strong>；状态太多时扫一遍都算不动（维度灾难）。</li>
+</ul>
+</details>
+<hr />
+<h2 id="p">不知道 p：边试边学</h2>
+<h3 id="r22-greedy">R22 · 探索和利用是什么矛盾？ε-greedy 怎么选动作？为什么纯贪心会被困住？</h3>
+<p>来源：<a href="lessons/13-bandit.html">第 13 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>利用：选目前看起来最好的，眼前收益最大；探索：试看起来不怎么样的，可能发现更好的。一次只能做一样。</li>
+<li>ε-greedy：以 1 − ε 的概率选估计最大的动作，以 ε 的概率随便选一个。</li>
+<li>纯贪心：开头运气好的那个一直被选，别的动作一次都没试过，永远不知道更好的存在（3 台老虎机实验：贪心只有 21% 选到最好的，ε = 0.1 有 89%）。</li>
+</ul>
+</details>
+<h3 id="r23-frac1n">R23 · 增量更新的公式是什么？通用句式是什么？步长 <span class="arithmatex">\(\frac1n\)</span> 和常数 α 有什么区别？</h3>
+<p>来源：<a href="lessons/13-bandit.html">第 13 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(Q_{n+1} = Q_n + \frac1n[R_n - Q_n]\)</span>（式 2.3）：只需记住当前平均和次数；例 2、4、6、8 → 2、3、4、5；</li>
+<li>通用句式（式 2.4）：<strong>新估计 = 旧估计 + 步长 × (目标 − 旧估计)</strong>，贯穿全书（MC、TD、Q-learning 只是换了目标）；</li>
+<li><span class="arithmatex">\(\frac1n\)</span> 就是真平均；常数 α（式 2.5）更看重最近的奖励，适合会变的环境，但会一直抖。</li>
+</ul>
+</details>
+<h3 id="r24-mc-first-visit-mc">R24 · 蒙特卡洛 MC 怎么估价值？first-visit 是什么意思？MC 的毛病是什么？</h3>
+<p>来源：<a href="lessons/14-monte-carlo.html">第 14 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>不需要 p：一局局玩，每经过一个状态就记下它之后的<strong>真实回报</strong> G，取平均（倒着算回报最方便）；</li>
+<li>first-visit：每局里每个状态只用第一次出现之后的回报；</li>
+<li>常数 α 版：<span class="arithmatex">\(V(S_t) \leftarrow V(S_t) + \alpha[G_t - V(S_t)]\)</span>（式 6.1）；</li>
+<li>毛病：要等一局结束；整局随机、方差大；这局没走到的状态学不到。</li>
+</ul>
+</details>
+<h3 id="r25-td0-td-v-05-e-1-01ve">R25 · TD(0) 的更新式和 TD 误差 δ 是什么？在随机游走里手算：V 全是 0.5，从 E 走出右边拿 +1，α = 0.1，V(E) 变成多少？</h3>
+<p>来源：<a href="lessons/15-td.html">第 15 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(V(S_t) \leftarrow V(S_t) + \alpha[R_{t+1} + \gamma V(S_{t+1}) - V(S_t)]\)</span>（式 6.2）；</li>
+<li><span class="arithmatex">\(\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)\)</span>：走一步后发现比预期好了多少；</li>
+<li>E 走出去：终点价值 0，<span class="arithmatex">\(\delta = 1 + 0 - 0.5 = 0.5\)</span>，<span class="arithmatex">\(V(E) = 0.5 + 0.1 \times 0.5 = 0.55\)</span>。之后 D → E 时 D 也会跟着涨（好消息往前传）。</li>
+</ul>
+</details>
+<h3 id="r26-bootstrappingdpmctd-bootstraptd-mc">R26 · 什么是 bootstrapping？DP、MC、TD 各用不用采样、用不用 bootstrap？TD 和 MC 的偏差–方差各怎样？</h3>
+<p>来源：<a href="lessons/15-td.html">第 15 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<p>bootstrapping（自举）：用自己的估计去更新自己的估计。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>采样（不要 p）</th>
+<th>bootstrap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DP</td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td>MC</td>
+<td>是</td>
+<td>否</td>
+</tr>
+<tr>
+<td>TD</td>
+<td>是</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<p>MC 目标 <span class="arithmatex">\(G_t\)</span> 无偏但方差大（整局随机）；TD 目标方差小（一步随机）但用了不准的估计，有偏。随机游走上 TD 学得更快。</p>
+</details>
+<h3 id="r27-sarsa-q-learning-1-q-5-12-4-6-5">R27 · SARSA 和 Q-learning 的更新式差在哪？用"−1 + 下一格 Q = [−5, −12, −4, −6]、下一步实际选 ↑（−5）"算两个目标</h3>
+<p>来源：<a href="lessons/16-sarsa-qlearning.html">第 16 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>SARSA（式 6.7）：目标 <span class="arithmatex">\(R + \gamma Q(S', A')\)</span>，用<strong>真正要做的</strong>下一个动作；</li>
+<li>Q-learning（式 6.8）：目标 <span class="arithmatex">\(R + \gamma\max_a Q(S', a)\)</span>，用<strong>下一格最好的</strong>动作（就是 Bellman 最优方程的样本）；</li>
+<li>例（γ = 1）：SARSA −1 + (−5) = −6；Q-learning −1 + (−4) = −5。</li>
+</ul>
+</details>
+<h3 id="r28-on-policy-off-policy">R28 · on-policy 和 off-policy 是什么意思？悬崖行走里两个算法为什么走出不同路线？</h3>
+<p>来源：<a href="lessons/16-sarsa-qlearning.html">第 16 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>on-policy（SARSA）：学的就是正在执行的 ε-greedy 策略的价值；off-policy（Q-learning）：做的是 ε-greedy，学的是贪心策略的 <span class="arithmatex">\(q_*\)</span>。</li>
+<li>悬崖：Q-learning 学最短路线、贴着悬崖走，但执行时 10% 乱走常掉下去（训练中每局约 −51）；SARSA 把"自己会乱走"算进价值，绕到上面走（约 −27）。ε 慢慢变 0 时两者都收敛到最优路线。</li>
+<li>off-policy 的好处：能用旧数据、别人的数据（DQN 经验回放的基础）。</li>
+</ul>
+</details>
+<hr />
+<h2 id="_4">函数近似与深度价值方法</h2>
+<h3 id="r29-w-32-w-0-01">R29 · 导数是什么？梯度下降怎么走？<span class="arithmatex">\((w - 3)^2\)</span> 从 w = 0、步长 0.1 出发，前两步是多少？</h3>
+<p>来源：<a href="lessons/17-function-approx.html">第 17 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>导数 = 斜率：自变量往右挪一点，函数变了多少（<span class="arithmatex">\(x^2\)</span> 的导数是 2x，在 3 处是 6）；多个参数各求一个排成向量就是梯度 ∇；</li>
+<li>梯度下降：<span class="arithmatex">\(w \leftarrow w - \text{步长} \times \frac{df}{dw}\)</span>，朝下坡走一小步；</li>
+<li>例：导数 2(w − 3)。w = 0 → 0 − 0.1 × (−6) = 0.6 → 0.6 − 0.1 × (−4.8) = 1.08 → … → 3。</li>
+</ul>
+</details>
+<h3 id="r30-sgd-97">R30 · 函数近似的 SGD 更新式（式 9.7）是什么？线性函数时梯度是什么？什么叫半梯度？</h3>
+<p>来源：<a href="lessons/17-function-approx.html">第 17 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(\mathbf w \leftarrow \mathbf w + \alpha[U_t - \hat v(S_t, \mathbf w)]\nabla\hat v(S_t, \mathbf w)\)</span>：往"目标 − 估计"的方向挪，乘上每个参数对估计的影响；</li>
+<li>线性 <span class="arithmatex">\(\hat v = \mathbf w \cdot \mathbf x(s)\)</span> 时，<span class="arithmatex">\(\nabla\hat v = \mathbf x(s)\)</span>（特征本身）；</li>
+<li>目标 <span class="arithmatex">\(U_t = G_t\)</span> 是梯度 MC；<span class="arithmatex">\(U_t = R + \gamma\hat v(S', \mathbf w)\)</span> 是<strong>半梯度</strong> TD：目标里也有 <span class="arithmatex">\(\mathbf w\)</span>，但不对它求导，快但可能不稳。</li>
+<li>好处：调 <span class="arithmatex">\(\mathbf w\)</span> 会让相似状态一起变（泛化）。</li>
+</ul>
+</details>
+<h3 id="r31-dqn-loss-y">R31 · DQN 的 loss 怎么写？回合结束时 y 是什么？</h3>
+<p>来源：<a href="lessons/18-dqn.html">第 18 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(y = r + \gamma\max_{a'}Q(s', a'; \theta^-)\)</span>（用目标网络算，当常数不求导）；</li>
+<li><span class="arithmatex">\(\text{loss} = (y - Q(s, a; \theta))^2\)</span>，一批取平均，对 θ 做梯度下降（本质是回归）；</li>
+<li>结束时没有下一步：<span class="arithmatex">\(y = r\)</span>（代码里乘 <span class="arithmatex">\((1 - \text{done})\)</span>）。</li>
+<li>例：r = 0，γ = 0.9，<span class="arithmatex">\(Q(s', \cdot; \theta^-) = [0.5, 0.8]\)</span> → y = 0.72。</li>
+</ul>
+</details>
+<h3 id="r32-q-learning">R32 · 经验回放和目标网络各解决什么问题？为什么 Q-learning 能用经验回放？</h3>
+<p>来源：<a href="lessons/18-dqn.html">第 18 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>经验回放：把 (s, a, r, s', done) 存进缓冲区、训练时随机抽一批 → 打乱前后相关的数据、每条经历反复用；能用旧数据是因为 Q-learning 是 <strong>off-policy</strong>（学 <span class="arithmatex">\(q_*\)</span> 不要求数据来自当前策略）；</li>
+<li>目标网络：目标 y 里有 θ，改 θ 目标就晃（追自己的影子）；复制一份 <span class="arithmatex">\(\theta^-\)</span> 专门算 y，隔一阵才对齐（或 Polyak 软更新），让回归目标在一段时间内固定。</li>
+</ul>
+</details>
+<h3 id="r33-double-dqn">R33 · 什么是最大化偏差？Double DQN 的目标怎么写？</h3>
+<p>来源：<a href="lessons/19-double-dqn.html">第 19 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>最大化偏差：估计有噪声时，max 会挑到"运气最好"的那个，<span class="arithmatex">\(\mathbb{E}[\max_a Q(a)] \ge \max_a q(a)\)</span>（10 个真值 0 的动作，估计的 max 平均 0.69）；Q-learning 目标里有 max，偏差会一步步往前传；</li>
+<li>修法：一组估计挑动作、另一组打分（Double learning，偏差降到 0）；</li>
+<li>Double DQN：<span class="arithmatex">\(y = r + \gamma\,Q(s', \arg\max_{a'}Q(s', a'; \theta); \theta^-)\)</span>，<strong>主网络挑、目标网络打分</strong>。</li>
+</ul>
+</details>
+<hr />
+<h2 id="_5">策略梯度</h2>
+<h3 id="r34">R34 · 策略梯度定理怎么写？"方便的恒等式"是什么？它起了什么作用？</h3>
+<p>来源：<a href="lessons/20-policy-gradient.html">第 20 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(\nabla J(\theta) = \mathbb{E}_{\pi_\theta}[\sum_t G_t\,\nabla\log\pi_\theta(A_t \mid S_t)]\)</span>：回报大的动作被推得更可能；</li>
+<li>方便的恒等式：<span class="arithmatex">\(\nabla\pi = \pi\nabla\log\pi\)</span>（来自 log 的导数是 1/x）；</li>
+<li>作用：把 <span class="arithmatex">\(\sum_a q(a)\nabla\pi(a)\)</span> 写成 <span class="arithmatex">\(\sum_a\pi(a)[q(a)\nabla\log\pi(a)]\)</span>，梯度变成了<strong>期望</strong>，可以用样本估；不需要知道 p，也不需要对奖励求导。</li>
+</ul>
+</details>
+<h3 id="r35-softmax-nablalogpia-reinforce-0-0-1g-2-01">R35 · softmax 策略的 <span class="arithmatex">\(\nabla\log\pi(a)\)</span> 是什么？REINFORCE 的更新式？θ = [0, 0]、抽到机器 1、G = 2、α = 0.1 时 θ 变成多少？</h3>
+<p>来源：<a href="lessons/20-policy-gradient.html">第 20 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(\nabla_\theta\log\pi_\theta(a) = \text{one-hot}(a) - \pi_\theta\)</span>；</li>
+<li>REINFORCE（式 13.8）：<span class="arithmatex">\(\theta \leftarrow \theta + \alpha G_t\nabla\log\pi_\theta(A_t \mid S_t)\)</span>；</li>
+<li>例：<span class="arithmatex">\(\nabla\log\pi(1) = [0, 1] - [0.5, 0.5] = [-0.5, 0.5]\)</span>；θ = [0, 0] + 0.1 × 2 × [−0.5, 0.5] = [−0.1, 0.1]，π(机器 1) 从 0.5 涨到约 0.55。</li>
+<li>缺点：要等终局、方差大。</li>
+</ul>
+</details>
+<h3 id="r36-baseline">R36 · 为什么要减 baseline？为什么减了不会把梯度弄错？</h3>
+<p>来源：<a href="lessons/21-baseline.html">第 21 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>用 <span class="arithmatex">\((G - b)\)</span> 代替 G：只看"比平常好多少"，好的推高、差的压低；奖励都在 10 左右时，方差从 27.85 降到 0.25；</li>
+<li>无偏：<span class="arithmatex">\(\mathbb{E}[b\nabla\log\pi] = b\sum_a\pi\nabla\log\pi = b\sum_a\nabla\pi = b\nabla\sum_a\pi = b\nabla 1 = 0\)</span>；只要 b <strong>不随动作变</strong>（可以随状态变）。</li>
+</ul>
+</details>
+<h3 id="r37-reward-to-go-1-0-2-0-reward-to-go">R37 · reward-to-go 是什么？奖励 [1, 0, 2, 0] 的 reward-to-go 是多少？它为什么也不改变期望？</h3>
+<p>来源：<a href="lessons/21-baseline.html">第 21 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>时刻 t 只乘它<strong>之后</strong>的奖励之和 <span class="arithmatex">\(\hat Q_t = \sum_{t' \ge t}r_{t'}\)</span>（就是 <span class="arithmatex">\(G_t\)</span>）：一个动作只为它之后的结果负责（因果性）；</li>
+<li>[1, 0, 2, 0] → [3, 2, 2, 0]；</li>
+<li>过去的奖励和现在的动作无关，那部分乘 <span class="arithmatex">\(\nabla\log\pi\)</span> 平均下来是 0，所以去掉它只降方差、不改期望。</li>
+</ul>
+</details>
+<h3 id="r38-td-actor-critic">R38 · 优势函数是什么？为什么 TD 误差能当优势用？actor-critic 的两个更新是什么？</h3>
+<p>来源：<a href="lessons/22-actor-critic-gae.html">第 22 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)\)</span>：这个动作比平常好多少，按策略平均为 0；</li>
+<li><span class="arithmatex">\(\delta = r + \gamma\hat V(s') - \hat V(s)\)</span>：用一个样本代替 Q，评委准时 <span class="arithmatex">\(\mathbb{E}[\delta \mid s, a] = A(s, a)\)</span>；</li>
+<li>评委：<span class="arithmatex">\(\phi \leftarrow \phi + \alpha_\phi\delta\nabla\hat V_\phi(s)\)</span>；演员：<span class="arithmatex">\(\theta \leftarrow \theta + \alpha_\theta\delta\nabla\log\pi_\theta(a \mid s)\)</span>。不用等终局、方差小，但评委不准时有偏。</li>
+</ul>
+</details>
+<h3 id="r39-gae-0-1">R39 · GAE 的公式是什么？λ = 0 和 λ = 1 分别等于什么？</h3>
+<p>来源：<a href="lessons/22-actor-critic-gae.html">第 22 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(\hat A_t = \sum_{l \ge 0}(\gamma\lambda)^l\delta_{t+l}\)</span>，倒着算 <span class="arithmatex">\(\hat A_t = \delta_t + \gamma\lambda\hat A_{t+1}\)</span>；</li>
+<li>λ = 0：<span class="arithmatex">\(\hat A_t = \delta_t\)</span>（一步 TD，方差小、有偏）；λ = 1：<span class="arithmatex">\(G_t - \hat V(s_t)\)</span>（MC 优势，无偏、方差大）；常用 0.95。</li>
+<li>例：奖励 [0, 0, 1]，<span class="arithmatex">\(\hat V\)</span> = [0.5, 0.6, 0.8]，γ = 0.9 → δ = [0.04, 0.12, 0.2]；λ = 1 时 [0.31, 0.3, 0.2]。</li>
+</ul>
+</details>
+<h3 id="r40-ppo-r_ttheta">R40 · 重要性采样的公式是什么？PPO 里的比率 <span class="arithmatex">\(r_t(\theta)\)</span> 是什么？为什么每次只能改一点？</h3>
+<p>来源：<a href="lessons/23-ppo.html">第 23 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li><span class="arithmatex">\(\mathbb{E}_{p_{\text{新}}}[f] = \mathbb{E}_{p_{\text{旧}}}[\frac{p_{\text{新}}}{p_{\text{旧}}}f]\)</span>：用旧数据估新策略的平均，每个样本乘权重（例：旧各 0.5、新 0.8/0.2，样本 1 和 0 → 0.8）；</li>
+<li><span class="arithmatex">\(r_t(\theta) = \pi_\theta(a_t \mid s_t) / \pi_{\theta_{old}}(a_t \mid s_t)\)</span>，替代目标 <span class="arithmatex">\(\mathbb{E}[r_t\hat A_t]\)</span>；</li>
+<li>只能改一点：比率离 1 太远时方差爆炸；策略变了状态分布也会变，只有新旧策略差得不多时才可以忽略（信任区域，TRPO 用 KL ≤ δ）。</li>
+</ul>
+</details>
+<h3 id="r41-ppo-7a-0-a-0-0">R41 · PPO 的剪裁目标（式 7）是什么？A &gt; 0 和 A &lt; 0 时分别什么时候梯度为 0？</h3>
+<p>来源：<a href="lessons/23-ppo.html">第 23 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<div class="arithmatex">\[L^{\text{CLIP}} = \mathbb{E}[\min(r_t\hat A_t,\ \text{clip}(r_t, 1-\varepsilon, 1+\varepsilon)\hat A_t)]\]</div>
+<ul>
+<li>A &gt; 0：r 涨过 1 + ε（如 1.2）后目标变平、梯度 0（好动作最多涨到旧的 1.2 倍）；</li>
+<li>A &lt; 0：r 低于 1 − ε（如 0.8）后梯度 0（坏动作最多压到 0.8 倍）；</li>
+<li>min 保证只在"改对了但过头"时剪；改错方向（A &gt; 0 但 r = 0.5）时不剪，照样有梯度拉回来。</li>
+</ul>
+</details>
+<h3 id="r42-grpo-ppo-kl">R42 · GRPO 的优势怎么算？和 PPO 有什么区别？参考模型的 KL 正则是防什么的？</h3>
+<p>来源：<a href="lessons/24-wrap-up.html">第 24 章</a> · 加入 2026-11-13 · 复习记录：</p>
+<details>
+<summary>答案</summary>
+<ul>
+<li>同一道题生成 G 个回答，<span class="arithmatex">\(\hat A_i = \frac{r_i - \text{mean}(r)}{\text{std}(r)}\)</span>，分给回答里每个词；[1, 0, 0, 1] → [1, −1, −1, 1]；全对或全错时全是 0，没有学习信号；</li>
+<li>区别：PPO 要训练评委网络 + GAE 逐词打分；GRPO 不要评委，用组内平均当 baseline（第 21 章的想法），剪裁照用；</li>
+<li>参考模型 KL：<span class="arithmatex">\(\text{奖励} - \beta D_{KL}(\pi_\theta\|\pi_{ref})\)</span>，防止整个训练过程中离最初的模型太远、钻奖励模型的空子（PPO 剪裁防的是"每一步"改太多）。</li>
+</ul>
+</details>
+<hr />
+<h2 id="_6">已掌握</h2>
+<p>（暂无）</p>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

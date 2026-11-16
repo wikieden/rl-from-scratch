@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a) · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="7-value-functionv_s-q_s-a">第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a)</h1>
+<blockquote>
+<p>本章回答：一个状态"好不好"怎么用一个数说清楚？在某个状态先做某个动作，又值多少？这两个数之间什么关系？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/06-policy.html">第 6 章 策略</a> · 下一章：<a href="../lessons/08-bellman.html">第 8 章 Bellman 期望方程</a><br />
+对应原文：Sutton &amp; Barto §3.5（L4234–L4303，式 3.12、3.13）；CS 285 第 4 讲（<code>lec-04.txt</code> L167–L178 Definition: Q-function / value function）<br />
+本章缩写：v = value（价值），<span class="arithmatex">\(v_\pi\)</span> 读"v 下标 π"；q = quality（质量；书里叫 action-value 动作价值），Q-function 就是 q；<span class="arithmatex">\(\mathbb{E}_\pi[\cdot \mid \cdot]\)</span> 见第 4、6 章。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="v_pis2026-11-13">第一步：状态价值 <span class="arithmatex">\(v_\pi(s)\)</span>：从这里出发，平均能拿多少回报（2026-11-13）</h3>
+<p><strong>问题</strong>：机器人"高电"和"低电"，哪个状态更好？好多少？</p>
+<p>只看下一步的奖励不够（第 6 章第三步末尾：充电当下拿 0，但以后能拿更多）。要看<strong>从这个状态出发，往后一路的回报</strong>。但回报是随机的（策略掷骰子、环境掷骰子），所以取<strong>平均</strong>，也就是期望。</p>
+<p><strong>状态价值 state-value</strong>（式 3.12，L4251–L4260）：</p>
+<div class="arithmatex">\[v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s]\]</div>
+<p><strong>一个个符号读</strong>：</p>
+<ul>
+<li><span class="arithmatex">\(G_t\)</span>：从第 t 步往后的折扣回报（第 3 章）；</li>
+<li><span class="arithmatex">\(\mid S_t = s\)</span>：在"现在处于 s"的条件下（第 4 章第四步）；</li>
+<li><span class="arithmatex">\(\mathbb{E}_\pi\)</span>：按策略 π 行事时的平均（第 6 章）；</li>
+<li>合起来：<strong>从 s 出发、之后一直按 π 走，平均能拿多少折扣回报</strong>。</li>
+</ul>
+<p><strong>类比：房价。</strong> 一套房子值多少，不看它今天能收多少租金，而是看<strong>以后能一直收多少</strong>（打个折加起来）。价值函数就是给每个状态估"房价"。</p>
+<p><strong>两点要记住</strong>：</p>
+<ol>
+<li><strong>价值和策略绑在一起</strong>：同一个状态，换一份策略，价值就变了。所以下标写着 π；</li>
+<li><strong>终止状态的价值永远是 0</strong>（L4264–L4265）：结束了，后面再没有奖励。</li>
+</ol>
+<p><strong>一句话</strong>：<span class="arithmatex">\(v_\pi(s)\)</span> = 从 s 出发、按 π 一直走下去，折扣回报的平均值；状态的"房价"。</p>
+<h3 id="2026-11-13">第二步：用"多跑几次取平均"估出价值（2026-11-13）</h3>
+<p><strong>问题</strong>：<span class="arithmatex">\(v_\pi(\text{高电})\)</span> 具体是多少？</p>
+<p><strong>最直接的办法</strong>（第 4 章第三步）：从高电出发，按策略跑很多次，每次记下折扣回报，最后取平均。原文 L4285–L4296 说：这样的平均会<strong>收敛到真正的价值</strong>，这类方法叫<strong>蒙特卡洛 Monte Carlo</strong> 方法（第 14 章专门讲；Monte Carlo 是摩纳哥的赌城，名字取"靠随机试"的意思）。</p>
+<p>用代码从每个状态跑了 2000 次（γ = 0.9，策略是第 6 章那份，每次截到 100 步：<span class="arithmatex">\(0.9^{100}\)</span> 约 0.00003，后面的奖励几乎不影响）：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>2000 次回报的平均 ≈ <span class="arithmatex">\(v_\pi\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>高电</td>
+<td>15.84</td>
+</tr>
+<tr>
+<td>低电</td>
+<td>13.89</td>
+</tr>
+</tbody>
+</table>
+<p><strong>读这两个数</strong>：高电比低电值钱，大约多 2。为什么？低电时有 30% 搜索风险（被罚 −3），而且充电要花一步拿 0。</p>
+<p><strong>大小怎么理解</strong>：第 3 章说每步 +1 的回报是 <span class="arithmatex">\(\frac{1}{1-0.9} = 10\)</span>。高电时平均每步拿将近 1.6 左右，乘上"看 10 步"，就是 16 上下。数量级对得上。</p>
+<p><strong>一句话</strong>：不知道公式时，从 s 出发多跑几次、把折扣回报取平均，就估出了 <span class="arithmatex">\(v_\pi(s)\)</span>。</p>
+<h3 id="q_pis-a-a-2026-11-13">第三步：动作价值 <span class="arithmatex">\(q_\pi(s, a)\)</span>：先做 a，再按 π 走（2026-11-13）</h3>
+<p><strong>问题</strong>：机器人低电时，"充电"和"搜索"哪个更好？<span class="arithmatex">\(v_\pi\)</span> 回答不了：它是按策略掷骰子以后的平均，混在一起了。</p>
+<p><strong>动作价值 action-value</strong>（式 3.13，L4266–L4278）：</p>
+<div class="arithmatex">\[q_\pi(s, a) = \mathbb{E}_\pi[G_t \mid S_t = s,\ A_t = a]\]</div>
+<p>和 <span class="arithmatex">\(v_\pi\)</span> 只差一个条件：<strong>第一步固定做 a</strong>，之后再按 π 走。</p>
+<p><strong>估出来</strong>（同样跑 2000 次，只是第一步强制做那个动作）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>估计值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(q_\pi(\text{低电}, \text{充电})\)</span></td>
+<td>14.22</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_\pi(\text{低电}, \text{搜索})\)</span></td>
+<td>13.46</td>
+</tr>
+</tbody>
+</table>
+<p>所以低电时<strong>先充电</strong>比<strong>先搜索</strong>好（14.22 &gt; 13.46），虽然充电当下拿 0、搜索当下平均拿 0.5。价值把"以后"也算进来了。</p>
+<p><strong>q 的好处</strong>：有了 q，挑动作只要看哪个 q 最大，不用知道环境的 p。这就是后面 Q-learning（第 16 章）、DQN（第 18 章）里那个 Q 的来历。</p>
+<p><strong>一句话</strong>：<span class="arithmatex">\(q_\pi(s, a)\)</span> = 先做 a、再按 π 走的平均回报；比较同一状态下各动作的 q，就知道哪个动作更好。</p>
+<h3 id="v-q-v-q-2026-11-13">第四步：v 和 q 的关系：v 是按 π 对 q 的加权平均（2026-11-13）</h3>
+<p><strong>问题</strong>：<span class="arithmatex">\(v_\pi(\text{低电})\)</span> 和三个 <span class="arithmatex">\(q_\pi(\text{低电}, \cdot)\)</span> 有什么关系？</p>
+<p>想一想：在低电时按 π 行事，就是 20% 先搜索、30% 先等待、50% 先充电，然后都按 π 走下去。每种开头的平均回报正好是对应的 q。所以：</p>
+<div class="arithmatex">\[v_\pi(s) = \sum_a \pi(a \mid s)\, q_\pi(s, a)\]</div>
+<p>又是第 4 章的"值 × 概率再相加"。</p>
+<p><strong>用精确值验证</strong>（第 8 章教怎么精确算；先拿结果来看）：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th><span class="arithmatex">\(\pi(a \mid \text{低电})\)</span></th>
+<th><span class="arithmatex">\(q_\pi(\text{低电}, a)\)</span></th>
+<th>乘积</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>搜索</td>
+<td>0.2</td>
+<td>13.511</td>
+<td>2.702</td>
+</tr>
+<tr>
+<td>等待</td>
+<td>0.3</td>
+<td>13.482</td>
+<td>4.045</td>
+</tr>
+<tr>
+<td>充电</td>
+<td>0.5</td>
+<td>14.245</td>
+<td>7.122</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td></td>
+<td></td>
+<td><strong>13.869</strong></td>
+</tr>
+</tbody>
+</table>
+<p>精确的 <span class="arithmatex">\(v_\pi(\text{低电}) = 13.869\)</span>，和第二步跑出来的 13.89 很接近（差一点是随机误差）。</p>
+<p><strong>反过来</strong>，q 也能用 v 写出来：先做 a，环境给出 r 和 s'，之后从 s' 按 π 走，平均就是 <span class="arithmatex">\(v_\pi(s')\)</span>：</p>
+<div class="arithmatex">\[q_\pi(s, a) = \sum_{s', r} p(s', r \mid s, a)\,[\,r + \gamma\, v_\pi(s')\,]\]</div>
+<p>例：<span class="arithmatex">\(q_\pi(\text{低电}, \text{充电}) = 1 \times [0 + 0.9 \times 15.828] = 14.245\)</span>（充电一定到高电、奖励 0）。</p>
+<p>这两个式子一接，就是第 8 章的 Bellman 方程。</p>
+<p><strong>一句话</strong>：v 是按 π 对 q 的加权平均；q 是"这一步的奖励 + γ × 下一个状态的 v"的平均。</p>
+<h3 id="_2">动画演示：从一个状态出发跑很多次，回报的平均就是价值</h3>
+<p><img alt="价值函数" src="../animations/l07-value.gif" /></p>
+<p>可交互版：<a href="../animations/l07-value.html">animations/l07-value.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>每帧从"低电"出发按策略跑一局（截到 60 步），记下这一局的折扣回报（一个点）；</li>
+<li>横线是到目前为止所有点的平均，慢慢稳在 <span class="arithmatex">\(v_\pi(\text{低电}) \approx 13.9\)</span> 附近（第二步）；</li>
+<li>切换"第一步固定"按钮：固定先充电或先搜索，平均分别靠向 <span class="arithmatex">\(q_\pi\)</span> 的两个值（第三步）；</li>
+<li>右下角显示 <span class="arithmatex">\(\sum_a \pi(a \mid s)\,q_\pi(s, a)\)</span> 的加权，和 <span class="arithmatex">\(v_\pi\)</span> 对上（第四步）。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：用自己的话说出 <span class="arithmatex">\(v_\pi(s)\)</span> 和 <span class="arithmatex">\(q_\pi(s, a)\)</span> 的区别（提示：第一步谁说了算）。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：某状态有两个动作，<span class="arithmatex">\(\pi\)</span> 各选 0.5，<span class="arithmatex">\(q_\pi\)</span> 分别是 10 和 4。<span class="arithmatex">\(v_\pi\)</span> 是多少？如果策略改成第一个动作选 0.9，<span class="arithmatex">\(v_\pi\)</span> 变成多少？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：<span class="arithmatex">\(v_\pi(\text{高电}) = 15.828\)</span>，γ = 0.9。高电时"等待"一定拿 +1、留在高电。用第四步第二个式子算 <span class="arithmatex">\(q_\pi(\text{高电}, \text{等待})\)</span>。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>价值是房价：从这出发按 π 走，折扣回报的平均；<br />
+q 先做 a 再按 π，挑动作只看 q；<br />
+v 是 q 按 π 的平均，q 是"眼前 + γ × 下一个 v"的平均；<br />
+不会算就多跑几次取平均。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R11（<span class="arithmatex">\(v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s]\)</span> 与 <span class="arithmatex">\(q_\pi(s, a)\)</span> 的定义和区别）</li>
+<li>R12（<span class="arithmatex">\(v_\pi(s) = \sum_a \pi(a \mid s) q_\pi(s, a)\)</span>；<span class="arithmatex">\(q_\pi(s, a) = \sum p\,[r + \gamma v_\pi(s')]\)</span>）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §3.5</td>
+<td>L4234–L4303（式 3.12、3.13）</td>
+<td>本章原文：价值、动作价值，以及"用平均来估"的蒙特卡洛思想（L4285–L4303）</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto 习题 3.12、3.13</td>
+<td>L4279–L4284</td>
+<td>正好是第四步的两个式子：v 用 q 和 π 写、q 用 v 和 p 写</td>
+</tr>
+<tr>
+<td>★ CS 285 第 4 讲</td>
+<td><code>lec-04.txt</code> L167–L178</td>
+<td>课程版的 Q-function、value function 定义，以及"怎么用它们改策略"</td>
+</tr>
+<tr>
+<td>Spinning Up "Key Concepts"</td>
+<td><code>spinningup/docs/spinningup/rl_intro.rst</code> 的 Value Functions 一节</td>
+<td>四种价值函数（<span class="arithmatex">\(V^\pi, Q^\pi, V^*, Q^*\)</span>）的统一记号</td>
+</tr>
+<tr>
+<td>王树森 slides</td>
+<td><code>chinese/wangshusen-DRL/Slides/1_Basics_2.pdf</code></td>
+<td>中文：动作价值、状态价值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>价值是条件期望</strong>：<span class="arithmatex">\(v_\pi(s) = \mathbb{E}_\pi[\sum_{k=0}^{\infty}\gamma^k R_{t+k+1} \mid S_t = s]\)</span>，与 t 无关（马尔可夫 + 策略固定，从哪一步开始算都一样）。</li>
+<li><strong>全期望公式</strong>（第 4 章附录）：按第一个动作分组，<span class="arithmatex">\(v_\pi(s) = \sum_a \Pr(A_t = a \mid s)\,\mathbb{E}[G_t \mid s, a] = \sum_a \pi(a \mid s)\,q_\pi(s, a)\)</span>。</li>
+<li><strong>一步展开</strong>：<span class="arithmatex">\(q_\pi(s, a) = \mathbb{E}[R_{t+1} + \gamma G_{t+1} \mid s, a]\)</span>，用第 3 章的递推，再把 <span class="arithmatex">\(\mathbb{E}[G_{t+1} \mid S_{t+1} = s']\)</span> 换成 <span class="arithmatex">\(v_\pi(s')\)</span>（马尔可夫性质保证可以这样换）。</li>
+<li><strong>蒙特卡洛误差</strong>：n 次平均的误差约 <span class="arithmatex">\(\sigma / \sqrt n\)</span>；2000 次时误差在 0.1 量级，所以 13.89 和 13.869 差 0.02 正常。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s]\)</span></td>
+<td>状态价值（式 3.12）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_\pi(s, a) = \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a]\)</span></td>
+<td>动作价值（式 3.13）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_\pi(s) = \sum_a \pi(a \mid s)\,q_\pi(s, a)\)</span></td>
+<td>v 由 q 加权得到（习题 3.12）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_\pi(s, a) = \sum_{s', r} p(s', r \mid s, a)[r + \gamma v_\pi(s')]\)</span></td>
+<td>q 由 v 得到（习题 3.13）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_\pi(\text{终止}) = 0\)</span></td>
+<td>结束后没有奖励</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch07_value.py</code>，测试 <code>tests/test_ch05_09.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch07_value.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch07_value.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>跑 2000 次估 <span class="arithmatex">\(v_\pi\)</span></td>
+<td><code>mc_value(P, pi, s)</code></td>
+<td>高电 15.84，低电 13.89</td>
+</tr>
+<tr>
+<td>第一步固定估 <span class="arithmatex">\(q_\pi\)</span></td>
+<td><code>mc_value(P, pi, 1, first_action=2)</code> / <code>=0</code></td>
+<td>充电 14.22，搜索 13.46</td>
+</tr>
+<tr>
+<td>精确值（第 8 章）</td>
+<td><code>ch08_bellman.solve_v</code>、<code>q_from_v</code></td>
+<td>13.869、14.245、13.511</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">for t in range(horizon):
+    a = first_action if (t == 0 and first_action is not None) else sample_action(pi, s, rng)
+    s, r = step(P, s, a, rng)      # 环境掷骰子
+    G += disc * r; disc *= gamma   # 一边走一边累计折扣回报
+</code></pre>
+<p><strong>代码里才看得到的</strong>：持续任务没有终点，代码只能"截到 100 步"。因为 <span class="arithmatex">\(0.9^{100} \approx 3 \times 10^{-5}\)</span>，截掉的部分最多影响 <span class="arithmatex">\(2 \times 3\times10^{-5} / 0.1 \approx 0.0005\)</span>，可以忽略。γ 越接近 1，要截的步数越多。</p><nav class="pager"><a href="06-policy.html">← 第 6 章 · 策略 policy π(a|s)：智能体的&quot;行事手册&quot;</a><a href="08-bellman.html">第 8 章 · Bellman 期望方程：今天的价值 = 眼前的奖励 + γ × 明天的价值 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

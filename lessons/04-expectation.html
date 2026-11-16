@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 4 章 · 概率与期望 expectation：按概率的加权平均 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="4-expectation">第 4 章 · 概率与期望 expectation：按概率的加权平均</h1>
+<blockquote>
+<p>本章回答：环境有随机性，同一个动作这次拿 10、下次拿 0，"平均来看拿多少"怎么算？<span class="arithmatex">\(\mathbb{E}\)</span> 这个符号是什么意思？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/03-discount.html">第 3 章 折扣</a> · 下一章：<a href="../lessons/05-mdp.html">第 5 章 马尔可夫决策过程</a><br />
+对应原文：Sutton &amp; Barto 记号表（Summary of Notation，L619 起，L631–L638）里的 <span class="arithmatex">\(\Pr\{X = x\}\)</span>、<span class="arithmatex">\(\mathbb{E}[X]\)</span>；§2.1 动作价值是"期望奖励"（L2052 起）；本章是数学前置，书里没有单独一节<br />
+本章缩写：Pr = Probability（概率）；<span class="arithmatex">\(\mathbb{E}\)</span> = Expectation（期望），读"E"；<span class="arithmatex">\(\Pr(X = x \mid Y = y)\)</span> 中的竖线读"在……条件下"（conditional，条件）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="12026-11-13">第一步：概率：每种结果占几成，加起来是 1（2026-11-13）</h3>
+<p><strong>类比：扭蛋机。</strong> 投一个币，掉出来的扭蛋有两种：</p>
+<ul>
+<li>30% 的可能装着 10 块零食；</li>
+<li>70% 的可能是空的（0 块）。</li>
+</ul>
+<p><strong>概率 probability</strong> 就是"每种结果占几成"，写成 0 到 1 之间的数：0.3 和 0.7。记号：</p>
+<div class="arithmatex">\[\Pr(X = 10) = 0.3,\qquad \Pr(X = 0) = 0.7\]</div>
+<ul>
+<li><span class="arithmatex">\(X\)</span>：这次扭蛋出来几块零食。它事先不知道，要扭了才知道，这种量叫<strong>随机变量 random variable</strong>；</li>
+<li><span class="arithmatex">\(\Pr(X = 10)\)</span>：读"X 等于 10 的概率"。</li>
+</ul>
+<p><strong>概率有一条铁律</strong>：所有可能的结果，概率加起来<strong>必须等于 1</strong>（0.3 + 0.7 = 1）。这和 Transformer 讲义第 3 章 softmax 的"比例加起来等于 1"是同一回事：softmax 输出的就是一组概率。</p>
+<p><strong>一句话</strong>：概率是每种结果占几成，都在 0 到 1 之间，所有结果加起来是 1。</p>
+<h3 id="2026-11-13">第二步：期望 = 按概率的加权平均（2026-11-13）</h3>
+<p><strong>问题</strong>：扭一次"平均来看"能拿几块？</p>
+<p>不能简单把 10 和 0 平均成 5，因为出 0 的可能大得多。要<strong>按概率加权</strong>：</p>
+<div class="arithmatex">\[\mathbb{E}[X] = 10 \times 0.3 + 0 \times 0.7 = 3\]</div>
+<p>这就是<strong>期望 expectation</strong>，记作 <span class="arithmatex">\(\mathbb{E}[X]\)</span>（读"X 的期望"）。一般写法：</p>
+<div class="arithmatex">\[\mathbb{E}[X] = \sum_{x} x \cdot \Pr(X = x)\]</div>
+<p>读作：把每一种可能的值 x，乘上它出现的概率，再全部加起来。</p>
+<p><strong>你已经见过它了</strong>：Transformer 讲义第 4 章"按比例取信息"，就是 <span class="arithmatex">\(0.73 \times\)</span> 一个向量 <span class="arithmatex">\(+ 0.27 \times\)</span> 另一个向量。期望是同一个算法，只是"比例"换成了"概率"。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Transformer 第 4 章</th>
+<th>本章</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>比例从哪来</td>
+<td>softmax 的权重</td>
+<td>概率</td>
+</tr>
+<tr>
+<td>加权的是什么</td>
+<td>每个词的 v 向量</td>
+<td>每种结果的数值</td>
+</tr>
+<tr>
+<td>叫什么</td>
+<td>加权平均</td>
+<td>期望</td>
+</tr>
+</tbody>
+</table>
+<p><strong>再算一个</strong>：骰子 1–6 点，每面概率 <span class="arithmatex">\(\frac16\)</span>：<span class="arithmatex">\(\mathbb{E} = (1+2+3+4+5+6) \times \frac16 = 3.5\)</span>。注意 3.5 这个点数根本掷不出来：<strong>期望是"平均来看"，不一定是能真正出现的值</strong>。</p>
+<p><strong>一句话</strong>：期望 = 每个值 × 它的概率，全部加起来；就是按概率的加权平均。</p>
+<h3 id="2026-11-13_1">第三步：多试几次，平均值会靠近期望（2026-11-13）</h3>
+<p><strong>问题</strong>：概率往往不知道（扭蛋机不会告诉你 30%），期望怎么得到？</p>
+<p><strong>办法：多扭几次，算平均。</strong> 用代码扭了几次（附录有代码）：</p>
+<table>
+<thead>
+<tr>
+<th>扭几次</th>
+<th>平均每次拿几块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10 次</td>
+<td>3.0</td>
+</tr>
+<tr>
+<td>100 次</td>
+<td>2.5</td>
+</tr>
+<tr>
+<td>10000 次</td>
+<td>3.008</td>
+</tr>
+</tbody>
+</table>
+<p>次数少时会偏（100 次那组偏低），次数越多越接近真正的期望 3。这叫<strong>大数定律 law of large numbers</strong>。</p>
+<p><strong>这对强化学习极其重要</strong>：智能体不知道环境的概率，但它能<strong>一遍遍去试</strong>，把试出来的结果取平均，就估计出了期望。第 7 章估价值、第 14 章蒙特卡洛方法，用的都是这个办法。</p>
+<p><strong>一句话</strong>：不知道概率时，多试几次取平均，平均值会越来越接近期望。</p>
+<h3 id="2026-11-13_2">第四步：条件概率：竖线"在……条件下"（2026-11-13）</h3>
+<p>强化学习里的概率几乎都带一根竖线，比如第 5 章的 <span class="arithmatex">\(p(s' \mid s, a)\)</span>。</p>
+<p><strong>条件概率</strong>：<span class="arithmatex">\(\Pr(X = x \mid Y = y)\)</span> 读作"<strong>在 Y = y 的条件下</strong>，X = x 的概率"。竖线右边是<strong>已经知道的情况</strong>，左边是<strong>要猜的结果</strong>。</p>
+<p><strong>例子</strong>：扭蛋机有两台。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>出 10 块的概率</th>
+<th>出 0 的概率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>红色机器</td>
+<td>0.3</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>蓝色机器</td>
+<td>0.6</td>
+<td>0.4</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><span class="arithmatex">\(\Pr(X = 10 \mid \text{红}) = 0.3\)</span>；<span class="arithmatex">\(\Pr(X = 10 \mid \text{蓝}) = 0.6\)</span>；</li>
+<li><strong>条件期望</strong>：<span class="arithmatex">\(\mathbb{E}[X \mid \text{红}] = 10 \times 0.3 = 3\)</span>，<span class="arithmatex">\(\mathbb{E}[X \mid \text{蓝}] = 10 \times 0.6 = 6\)</span>。</li>
+</ul>
+<p>条件不同，概率和期望都跟着变。注意：<strong>每一行</strong>（固定一个条件）的概率加起来都是 1。</p>
+<p><strong>和后面的关系</strong>：第 7 章的价值 <span class="arithmatex">\(v(s) = \mathbb{E}[G_t \mid S_t = s]\)</span>，读作"在<strong>现在处于状态 s</strong> 的条件下，回报的期望"。把这一行读懂，第 7 章就不难。</p>
+<p><strong>一句话</strong>：竖线右边是已知条件，左边是要猜的结果；换个条件，概率和期望都会变，每个条件下概率加起来都是 1。</p>
+<h3 id="_2">动画演示：扭蛋扭得越多，平均值越靠近期望</h3>
+<p><img alt="概率与期望" src="../animations/l04-expectation.gif" /></p>
+<p>可交互版：<a href="../animations/l04-expectation.html">animations/l04-expectation.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>左边扭蛋机，每帧扭一次，出 10 或 0；</li>
+<li>右边曲线是"到目前为止的平均值"，虚线是期望 <span class="arithmatex">\(\mathbb{E}[X] = 3\)</span>；</li>
+<li>前几次抖得厉害，次数一多就贴着虚线走（第三步）；</li>
+<li>拖滑块改"出 10 的概率"p，虚线移到 10p，曲线也跟着去。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：一个转盘：50% 得 4 分，30% 得 0 分，20% 得 −5 分。先检查概率加起来是不是 1，再算期望。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：上题的转盘你转了 3 次，得到 4、4、4，平均是 4。这说明期望算错了吗？为什么？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：按第四步的蓝色机器，<span class="arithmatex">\(\Pr(X = 0 \mid \text{蓝})\)</span> 是多少？<span class="arithmatex">\(\mathbb{E}[X \mid \text{蓝}]\)</span> 是多少？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>概率是占几成，加起来等于一；<br />
+期望是加权平均：每个值乘概率再相加；<br />
+不知道概率就多试，平均会靠近期望；<br />
+竖线右边是已知，换了条件全都变。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R07（期望 <span class="arithmatex">\(\mathbb{E}[X] = \sum_x x \Pr(X = x)\)</span>；样本平均靠近期望；条件期望里竖线的意思）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto 记号表</td>
+<td><code>sutton-barto-RLbook2020.txt</code> 开头的 Summary of Notation（L619–L700，Pr 与 E 在 L631–L638）</td>
+<td>书里 <span class="arithmatex">\(\Pr\)</span>、<span class="arithmatex">\(\mathbb{E}\)</span>、竖线的标准写法</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §2.1</td>
+<td>L2052–L2125</td>
+<td>第一次用期望：每台老虎机的"价值" = 期望奖励（第 13 章细讲）</td>
+</tr>
+<tr>
+<td>Murphy《RL: An Overview》</td>
+<td><code>text/books/murphy-rl-overview-2412.05265.txt</code> 记号部分</td>
+<td>更完整的概率记号，想查时再翻</td>
+</tr>
+<tr>
+<td>CS 285 第 4 讲</td>
+<td><code>cs285-slides/lec-04.txt</code> L92–L101（Expectations and stochastic systems）</td>
+<td>"In RL, we almost always care about expectations"：为什么 RL 处处是期望</td>
+</tr>
+<tr>
+<td>Transformer 讲义第 4 章</td>
+<td><code>transformer-deep-dive/notes/lessons/04-weighted-average.md</code></td>
+<td>加权平均：期望的"同一个算法"</td>
+</tr>
+<tr>
+<td>Hands-on-RL 第 3 章</td>
+<td><code>chinese/Hands-on-RL/第3章-马尔可夫决策过程.ipynb</code></td>
+<td>中文的概率与 MDP 入门，带代码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>期望是线性的</strong>：<span class="arithmatex">\(\mathbb{E}[aX + bY] = a\,\mathbb{E}[X] + b\,\mathbb{E}[Y]\)</span>。第 3 章的折扣回报 <span class="arithmatex">\(G_t\)</span> 取期望时，可以一项一项拆开取：<span class="arithmatex">\(\mathbb{E}[G_t] = \mathbb{E}[R_{t+1}] + \gamma\,\mathbb{E}[R_{t+2}] + \cdots\)</span>。</li>
+<li><strong>大数定律</strong>：独立地试 n 次，平均值 <span class="arithmatex">\(\frac1n\sum X_i \to \mathbb{E}[X]\)</span>；误差大致随 <span class="arithmatex">\(\frac{1}{\sqrt n}\)</span> 变小（试 100 倍次数，误差缩到十分之一）。</li>
+<li><strong>全期望公式</strong>（第 8 章要用）：<span class="arithmatex">\(\mathbb{E}[X] = \sum_y \Pr(Y = y)\,\mathbb{E}[X \mid Y = y]\)</span>：先按条件分组算期望，再按每组的概率加权。例：红蓝两台机器各一半概率被选中，总期望 = 0.5 × 3 + 0.5 × 6 = 4.5。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\sum_x \Pr(X = x) = 1\)</span></td>
+<td>概率加起来是 1</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\mathbb{E}[X] = \sum_x x \Pr(X = x)\)</span></td>
+<td>期望 = 加权平均</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\frac1n\sum_{i=1}^n X_i \approx \mathbb{E}[X]\)</span></td>
+<td>样本平均估期望</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\mathbb{E}[X \mid Y = y] = \sum_x x \Pr(X = x \mid Y = y)\)</span></td>
+<td>条件期望</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch04_expectation.py</code>，测试 <code>tests/test_ch01_04.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch04_expectation.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch04_expectation.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>扭蛋期望</td>
+<td><code>expectation([10, 0], [0.3, 0.7])</code></td>
+<td>3.0</td>
+</tr>
+<tr>
+<td>扭 10 / 100 / 10000 次</td>
+<td><code>sample_mean(vals, ps, n)</code></td>
+<td>3.0 / 2.5 / 3.008</td>
+</tr>
+<tr>
+<td>骰子</td>
+<td><code>expectation(range(1, 7), [1/6] * 6)</code></td>
+<td>3.5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">float(values @ probs)                           # 期望：值和概率做点积
+rng.choice(values, size=n, p=probs).mean()      # 按概率抽 n 次再取平均
+</code></pre>
+<p><strong>代码里才看得到的</strong>：期望就是"值向量"和"概率向量"的<strong>点积</strong>（Transformer 讲义第 2 章）：对位相乘再相加。<code>rng = np.random.default_rng(0)</code> 固定了随机种子，每次跑出来的 2.5、3.008 都一样，方便核对。</p><nav class="pager"><a href="03-discount.html">← 第 3 章 · 折扣 discount γ：远处的奖励打个折</a><a href="05-mdp.html">第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a) →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

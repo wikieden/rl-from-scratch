@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 8 章 · Bellman 期望方程：今天的价值 = 眼前的奖励 + γ × 明天的价值 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="8-bellman">第 8 章 · Bellman 期望方程：今天的价值 = 眼前的奖励 + γ × 明天的价值</h1>
+<blockquote>
+<p>本章回答：不跑几千次，能不能直接算出 <span class="arithmatex">\(v_\pi\)</span>？各个状态的价值之间有什么关系？书上那张 5×5 网格的数字是怎么来的？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/07-value.html">第 7 章 价值函数</a> · 下一章：<a href="../lessons/09-optimal.html">第 9 章 最优价值</a><br />
+对应原文：Sutton &amp; Barto §3.5（L4304–L4374，式 3.14，backup diagram）、例 3.5 网格世界（L4468 起，图 3.2）；CS 285 第 4 讲 L29（"This bit of linear algebra will be important later!"）<br />
+本章缩写：Bellman：人名，Richard Bellman（理查德·贝尔曼，动态规划的发明人）；<span class="arithmatex">\(v_\pi\)</span>、<span class="arithmatex">\(q_\pi\)</span> 见第 7 章；<span class="arithmatex">\(P_\pi\)</span>、<span class="arithmatex">\(r_\pi\)</span>：按策略 π 合并以后的转移矩阵和奖励向量（第四步）；I = Identity matrix（单位矩阵）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：从回报的递推，推出价值的递推（2026-11-13）</h3>
+<p>第 3 章有个最重要的式子：<span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>。两边都取期望（"从 s 出发、按 π 走"的平均）：</p>
+<div class="arithmatex">\[v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s] = \mathbb{E}_\pi[R_{t+1} + \gamma G_{t+1} \mid S_t = s]\]</div>
+<p>右边 <span class="arithmatex">\(\mathbb{E}[G_{t+1}]\)</span> 就是"下一个状态的价值"<span class="arithmatex">\(v_\pi(S_{t+1})\)</span>。所以：</p>
+<div class="arithmatex">\[v_\pi(s) = \mathbb{E}_\pi[R_{t+1} + \gamma\, v_\pi(S_{t+1}) \mid S_t = s]\]</div>
+<p><strong>白话</strong>：今天的价值 = 眼前这一步的奖励 + 打个折的明天的价值，取平均。</p>
+<p><strong>类比：房价。</strong> 一套房今天值多少？= 今年的租金 + 打个折的"明年这套房值多少"。不用一直算到 100 年后，只要知道明年的房价就行。</p>
+<p><strong>这就是 Bellman 期望方程的核心</strong>：价值不是孤立的数，<strong>每个状态的价值都和它下一步可能去的状态的价值连在一起</strong>。</p>
+<p><strong>一句话</strong>：把 <span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span> 取期望，就是 <span class="arithmatex">\(v_\pi(s)\)</span> = 眼前奖励 + γ × 下一个状态价值，的平均。</p>
+<h3 id="314-2026-11-13">第二步：把平均写开：两层加权，式 3.14 一个个符号读（2026-11-13）</h3>
+<p>"取平均"要考虑两层随机（第 6 章第三步）：先按 π 选动作，再按 p 给结果。写开就是书里的<strong>式 3.14</strong>（L4309–L4344）：</p>
+<div class="arithmatex">\[v_\pi(s) = \sum_a \pi(a \mid s) \sum_{s', r} p(s', r \mid s, a)\,\big[\,r + \gamma\, v_\pi(s')\,\big]\]</div>
+<p><strong>从里往外读</strong>：</p>
+<ol>
+<li><span class="arithmatex">\([r + \gamma v_\pi(s')]\)</span>：某一种具体结果（拿到 r、到了 s'）之后的"总价值"；</li>
+<li><span class="arithmatex">\(\sum_{s', r} p(s', r \mid s, a)[\dots]\)</span>：按环境的概率平均，这就是第 7 章的 <span class="arithmatex">\(q_\pi(s, a)\)</span>；</li>
+<li><span class="arithmatex">\(\sum_a \pi(a \mid s)\,q_\pi(s, a)\)</span>：再按策略平均，就是 <span class="arithmatex">\(v_\pi(s)\)</span>（第 7 章第四步）。</li>
+</ol>
+<p>原文 L4351–L4354 说：对每一组 (a, s', r) 算出它的概率 <span class="arithmatex">\(\pi(a \mid s)\,p(s', r \mid s, a)\)</span>，用它给方括号里的数加权，全部加起来，就是一个期望。</p>
+<p><strong>用机器人代进去验证</strong>（精确值 <span class="arithmatex">\(v_\pi(\text{高电}) = 15.828\)</span>，<span class="arithmatex">\(v_\pi(\text{低电}) = 13.869\)</span>）：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>π</th>
+<th>结果</th>
+<th>p</th>
+<th><span class="arithmatex">\(r + 0.9\,v_\pi(s')\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>搜索</td>
+<td>0.9</td>
+<td>→ 高电，+2</td>
+<td>0.8</td>
+<td><span class="arithmatex">\(2 + 0.9 \times 15.828 = 16.245\)</span></td>
+</tr>
+<tr>
+<td>搜索</td>
+<td>0.9</td>
+<td>→ 低电，+2</td>
+<td>0.2</td>
+<td><span class="arithmatex">\(2 + 0.9 \times 13.869 = 14.482\)</span></td>
+</tr>
+<tr>
+<td>等待</td>
+<td>0.1</td>
+<td>→ 高电，+1</td>
+<td>1</td>
+<td><span class="arithmatex">\(1 + 0.9 \times 15.828 = 15.245\)</span></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><span class="arithmatex">\(q_\pi(\text{高电}, \text{搜索}) = 0.8 \times 16.245 + 0.2 \times 14.482 = 15.892\)</span></li>
+<li><span class="arithmatex">\(q_\pi(\text{高电}, \text{等待}) = 15.245\)</span></li>
+<li><span class="arithmatex">\(v_\pi(\text{高电}) = 0.9 \times 15.892 + 0.1 \times 15.245 = 15.828\)</span> ✓</li>
+</ul>
+<p>左边是 15.828，右边算出来也是 15.828：<strong>价值满足这个方程</strong>。</p>
+<p><strong>backup diagram（回溯图）</strong>（L4355–L4374）：书里画成一棵小树：顶上空心圆是 s，往下分出几个实心点（每个动作），每个实心点再分出几个空心圆（可能的 s'）。方程就是"从叶子往根汇总"：叶子的值往上按概率加权，汇到根上。</p>
+<p><strong>一句话</strong>：式 3.14 = 先按 p 把结果平均成 q，再按 π 把 q 平均成 v；代进真实价值，左右两边相等。</p>
+<h3 id="2026-11-13_1">第三步：几个状态，几个方程：直接解出价值（2026-11-13）</h3>
+<p><strong>关键想法</strong>：式 3.14 对<strong>每一个</strong>状态都成立。机器人有 2 个状态，就有 2 个方程，未知数是 <span class="arithmatex">\(v(\text{高})\)</span>、<span class="arithmatex">\(v(\text{低})\)</span> 两个数。</p>
+<p>把高电那个方程整理一下（数字照第二步）：</p>
+<div class="arithmatex">\[v(\text{高}) = 0.9\,[0.8(2 + 0.9 v(\text{高})) + 0.2(2 + 0.9 v(\text{低}))] + 0.1\,[1 + 0.9 v(\text{高})]\]</div>
+<p>右边全是 <span class="arithmatex">\(v(\text{高})\)</span>、<span class="arithmatex">\(v(\text{低})\)</span> 的一次式。低电那个方程也一样。<strong>两个一次方程、两个未知数</strong>，就是初中的二元一次方程组，能直接解出来：15.828 和 13.869。</p>
+<p><strong>这比第 7 章跑 2000 次好在哪</strong>：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>第 7 章：跑很多次取平均</th>
+<th>本章：解方程</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>要知道 p 吗</td>
+<td>不用，跑就行</td>
+<td><strong>要</strong>，方程里有 p</td>
+</tr>
+<tr>
+<td>结果</td>
+<td>近似（15.84）</td>
+<td>精确（15.828）</td>
+</tr>
+<tr>
+<td>状态很多时</td>
+<td>还能用</td>
+<td>方程太多，解不动</td>
+</tr>
+</tbody>
+</table>
+<p>原文 L4392 说：<span class="arithmatex">\(v_\pi\)</span> 是它 Bellman 方程的<strong>唯一解</strong>。第 10 章会讲一种不用解方程组、而是"反复代入"的算法，状态多时更好用。</p>
+<p><strong>一句话</strong>：每个状态一个 Bellman 方程，n 个状态 n 个一次方程，知道 p 就能直接解出全部价值。</p>
+<h3 id="55-a-882026-11-13">第四步：书上的 5×5 网格：随机乱走，A 格值 8.8（2026-11-13）</h3>
+<p><strong>例 3.5 网格世界</strong>（L4468 起，图 3.2）：</p>
+<ul>
+<li>5 × 5 的格子，每格是一个状态；每格可以往上下左右走，确定地走一格；</li>
+<li>撞墙：原地不动，奖励 −1；</li>
+<li>特殊格 <strong>A</strong>（第 1 行第 2 列）：不管做什么动作，<strong>+10</strong>，并被传送到 A'（最下一行第 2 列）；</li>
+<li>特殊格 <strong>B</strong>（第 1 行第 4 列）：任何动作 <strong>+5</strong>，传送到 B'（第 3 行第 4 列）；</li>
+<li>其余移动奖励 0；γ = 0.9；策略：<strong>四个方向各 0.25</strong>，完全随机。</li>
+</ul>
+<p>25 个状态、25 个方程，用代码一次解出来（附录）：</p>
+<pre><code> 3.3   8.8   4.4   5.3   1.5
+ 1.5   3.0   2.3   1.9   0.5
+ 0.1   0.7   0.7   0.4  -0.4
+-1.0  -0.4  -0.4  -0.6  -1.2
+-1.9  -1.3  -1.2  -1.4  -2.0
+</code></pre>
+<p>和书上图 3.2 右边<strong>一模一样</strong>。读几个数：</p>
+<ol>
+<li><strong>A 格是 8.8，比 +10 还小</strong>：拿完 10 被传到最下面的 A'，那里靠墙，随机乱走常撞墙扣分（−1.3），所以 <span class="arithmatex">\(8.8 \approx 10 + 0.9 \times (-1.3)\)</span>；</li>
+<li><strong>B 格是 5.3，比 +5 还大</strong>：传到的 B' 在中间（0.4），不容易撞墙，后面还有点赚头；</li>
+<li><strong>底边和角落是负数</strong>：随机策略很容易撞墙，越靠边越亏。</li>
+</ol>
+<p><strong>验证一下 A 格的方程</strong>：A 格任何动作都 +10 到 A'（A' 的价值 −1.3）：<span class="arithmatex">\(v(A) = 10 + 0.9 \times (-1.3) = 8.83 \approx 8.8\)</span> ✓（格子里的数四舍五入到一位小数，所以只差一点点）。</p>
+<p><strong>一句话</strong>：网格的 25 个价值是 25 个方程的解；A 格 8.8 小于 10，因为被传到容易撞墙的 A'。</p>
+<h3 id="_2">动画演示：网格上每格的价值 = 四个邻居的平均（打折）+ 奖励</h3>
+<p><img alt="Bellman 期望方程" src="../animations/l08-bellman.gif" /></p>
+<p>可交互版：<a href="../animations/l08-bellman.html">animations/l08-bellman.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>5×5 网格，颜色越深价值越高（数字是图 3.2 的解）；</li>
+<li>每帧挑一格，画出四个方向的箭头：每个方向 0.25 × [奖励 + 0.9 × 邻居价值]，加起来正好等于这一格（第二步）；</li>
+<li>走到 A 格时，四个箭头都指向 A'，<span class="arithmatex">\(10 + 0.9 \times (-1.3)\)</span>（第四步）；</li>
+<li>点任意一格，自己看它的方程；滑块调 γ，看全图怎么变（γ 越小越"近视"，A、B 附近才亮）。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：用 <span class="arithmatex">\(v_\pi(\text{高电}) = 15.828\)</span>、<span class="arithmatex">\(v_\pi(\text{低电}) = 13.869\)</span>，按第二步的方法算 <span class="arithmatex">\(q_\pi(\text{低电}, \text{搜索})\)</span>。（低电搜索：0.7 → 低电 +2，0.3 → 高电 −3。）</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：网格里 B 格的价值是 5.3，B' 的价值约 0.4。按第四步验证 A 格的方法，写出 B 格的方程并算一算。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：第三步说"知道 p 才能解方程"。为什么第 7 章跑很多次取平均就不需要 p？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>今天的价值 = 眼前奖励 + γ × 明天的价值，再取平均；<br />
+先按 p 平均成 q，再按 π 平均成 v；<br />
+一个状态一个方程，知道 p 就能解；<br />
+A 格八点八：拿了十块被扔到墙边。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R13（Bellman 期望方程 式 3.14：<span class="arithmatex">\(v_\pi(s) = \sum_a \pi \sum_{s', r} p\,[r + \gamma v_\pi(s')]\)</span>，从里往外读）</li>
+<li>R14（网格世界：为什么 A 格 8.8 &lt; 10、B 格 5.3 &gt; 5）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §3.5</td>
+<td>L4304–L4374（式 3.14、backup diagram）</td>
+<td>本章原文</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto 例 3.5</td>
+<td>L4468 起，图 3.2（文本版排版乱，建议对照 PDF p.60）</td>
+<td>网格世界原题；习题 3.14–3.17 都围绕它</td>
+</tr>
+<tr>
+<td>CS 285 第 4 讲</td>
+<td><code>lec-04.txt</code> L15–L29、L75–L91</td>
+<td>转移写成矩阵、"这点线性代数后面很重要"、平稳分布</td>
+</tr>
+<tr>
+<td>Spinning Up "Key Concepts"</td>
+<td><code>rl_intro.rst</code> 的 Bellman Equations 一节</td>
+<td>深度 RL 的写法 <span class="arithmatex">\(V^\pi(s) = \mathbb{E}[r + \gamma V^\pi(s')]\)</span></td>
+</tr>
+<tr>
+<td>Hands-on-RL 第 3 章</td>
+<td><code>chinese/Hands-on-RL/第3章-马尔可夫决策过程.ipynb</code></td>
+<td>中文：用矩阵求逆解 Bellman 方程的代码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>矩阵形式</strong>：把每个状态的"按 π 合并后的一步平均奖励"排成向量 <span class="arithmatex">\(r_\pi\)</span>，一步转移概率排成矩阵 <span class="arithmatex">\(P_\pi\)</span>（第 s 行第 s' 列 = 从 s 一步到 s' 的概率），方程变成 <span class="arithmatex">\(v = r_\pi + \gamma P_\pi v\)</span>，整理得 <span class="arithmatex">\((I - \gamma P_\pi)\,v = r_\pi\)</span>，<span class="arithmatex">\(v = (I - \gamma P_\pi)^{-1} r_\pi\)</span>。</li>
+<li><strong>为什么解唯一</strong>：γ &lt; 1 时 <span class="arithmatex">\(I - \gamma P_\pi\)</span> 一定可逆（<span class="arithmatex">\(P_\pi\)</span> 每行加起来是 1，乘 γ 以后"缩"了），所以只有一组解（L4392）。</li>
+<li><strong>计算量</strong>：解 n 个方程大约要 <span class="arithmatex">\(n^3\)</span> 次运算。25 个状态很快，<span class="arithmatex">\(10^{20}\)</span> 个状态（双陆棋，L5081）就不可能了，第 10 章换成迭代法，第 17 章换成近似。</li>
+<li><strong>对 q 的 Bellman 方程</strong>：<span class="arithmatex">\(q_\pi(s, a) = \sum_{s', r} p\,[r + \gamma \sum_{a'} \pi(a' \mid s') q_\pi(s', a')]\)</span>（把第 7 章第四步两个式子反过来接）。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(v_\pi(s) = \mathbb{E}_\pi[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s]\)</span></td>
+<td>期望形式</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_\pi(s) = \sum_a \pi(a \mid s)\sum_{s', r} p(s', r \mid s, a)[r + \gamma v_\pi(s')]\)</span></td>
+<td>Bellman 期望方程（式 3.14）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v = r_\pi + \gamma P_\pi v \Rightarrow v = (I - \gamma P_\pi)^{-1} r_\pi\)</span></td>
+<td>矩阵形式、直接解</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_\pi(s, a) = \sum_{s', r} p\,[r + \gamma \sum_{a'}\pi(a' \mid s')\,q_\pi(s', a')]\)</span></td>
+<td>q 的 Bellman 方程</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch08_bellman.py</code>（网格定义在 <code>rl_envs.py</code> 的 <code>gridworld_5x5()</code>），测试 <code>tests/test_ch05_09.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch08_bellman.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch08_bellman.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>机器人两个方程</td>
+<td><code>solve_v(P, pi, 0.9)</code></td>
+<td>15.828、13.869</td>
+</tr>
+<tr>
+<td>代回去验证</td>
+<td><code>bellman_rhs(P, pi, v, 0.9, s)</code></td>
+<td>右边也是 15.828、13.869</td>
+</tr>
+<tr>
+<td>网格 25 个方程</td>
+<td><code>solve_v(G, uniform_policy(G), 0.9)</code></td>
+<td>图 3.2 右（A 8.8，B 5.3）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">r_pi[s] += pa * p * r          # 按 π、p 合并出一步平均奖励
+P_pi[s, ns] += pa * p          # 合并出一步转移概率
+np.linalg.solve(np.eye(n) - gamma * P_pi, r_pi)   # (I − γP_π) v = r_π
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>np.linalg.solve</code> 比先求逆再相乘更快也更准，解方程组时一律用它。第 10 章会看到另一种算法：不解方程，而是从 0 开始反复代入式 3.14，数会一轮轮逼近同一个答案。</p><nav class="pager"><a href="07-value.html">← 第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a)</a><a href="09-optimal.html">第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot; →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

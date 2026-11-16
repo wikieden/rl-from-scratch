@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 3 章 · 折扣 discount γ：远处的奖励打个折 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="3-discount">第 3 章 · 折扣 discount γ：远处的奖励打个折</h1><p><a class="btn" href="../animations/03-supermimic-loop.html">▶ 打开本章可交互动画</a></p>
+<blockquote>
+<p>本章回答：没完没了的任务，回报会加到无穷大，怎么办？为什么"明天的 1 块钱不如今天的 1 块钱"？回报能不能倒着算？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/02-return.html">第 2 章 奖励与回报</a> · 下一章：<a href="../lessons/04-expectation.html">第 4 章 概率与期望</a><br />
+对应原文：Sutton &amp; Barto §3.3 后半（L4016–L4098，式 3.8–3.10）、§3.4 Unified Notation（L4159–L4228，式 3.11）<br />
+本章缩写：γ：希腊字母 gamma（读"伽马"），discount rate（折扣率）；<span class="arithmatex">\(G_t\)</span> 见第 2 章；<span class="arithmatex">\(k\)</span>：从现在往后数第几个奖励。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="1-1-2026-11-13">第一步：明天的 1 块钱不如今天的 1 块钱（2026-11-13）</h3>
+<p><strong>类比：打折券。</strong> 商场发券：今天用值 1 块；明天用只值 0.9 块；后天 0.81 块……每晚一天，再打九折。</p>
+<p>强化学习也这样给未来的奖励打折。选一个 0 到 1 之间的数 <strong>γ（gamma，折扣率）</strong>：</p>
+<ul>
+<li>下一步的奖励按原价算；</li>
+<li>再往后一步的奖励乘 γ；</li>
+<li>再往后一步乘 <span class="arithmatex">\(\gamma^2\)</span>（γ 乘 γ）；</li>
+<li>往后第 k 步乘 <span class="arithmatex">\(\gamma^k\)</span>。</li>
+</ul>
+<p><strong>为什么要打折</strong>，有两个理由：</p>
+<ol>
+<li><strong>解决无穷大</strong>（第 2 章第三步）：持续任务每步 +1，不打折就是 <span class="arithmatex">\(1+1+1+\cdots=\infty\)</span>；打折以后越往后越小，加起来是个有限的数（第三步算给你看）；</li>
+<li><strong>越远越不确定</strong>：明天的事比一年后的事更有把握，远处的奖励说不定拿不到，打点折扣更稳妥。</li>
+</ol>
+<p><strong>一句话</strong>：γ 是每往后一步打的折，往后第 k 步的奖励乘 <span class="arithmatex">\(\gamma^k\)</span>。</p>
+<h3 id="2026-11-13">第二步：折扣回报的公式，一个个符号读（2026-11-13）</h3>
+<p>加上折扣，回报变成（式 3.8，L4024–L4041）：</p>
+<div class="arithmatex">\[G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}\]</div>
+<p><strong>怎么读右边</strong>：</p>
+<ul>
+<li><span class="arithmatex">\(\sum_{k=0}^{\infty}\)</span>："k 从 0 一直加到无穷"；</li>
+<li><span class="arithmatex">\(R_{t+k+1}\)</span>：k = 0 时是 <span class="arithmatex">\(R_{t+1}\)</span>，k = 1 时是 <span class="arithmatex">\(R_{t+2}\)</span>……就是"往后第 k 个"奖励；</li>
+<li><span class="arithmatex">\(\gamma^k\)</span>：给它打的折。k = 0 时 <span class="arithmatex">\(\gamma^0 = 1\)</span>（Transformer 讲义第 5 章：任何数的 0 次方是 1），所以第一个奖励按原价。</li>
+</ul>
+<p><strong>用数字算一遍</strong>：γ = 0.9，奖励 <span class="arithmatex">\(R_1 = 1, R_2 = 0, R_3 = 1\)</span>，然后结束。</p>
+<div class="arithmatex">\[G_0 = 1 + 0.9 \times 0 + 0.9^2 \times 1 = 1 + 0 + 0.81 = 1.81\]</div>
+<p>不打折（第 2 章）是 1 + 0 + 1 = 2；打折以后第 3 个奖励只值 0.81，总数变成 1.81。</p>
+<p><strong>γ 取两头会怎样</strong>（L4044–L4052）：</p>
+<table>
+<thead>
+<tr>
+<th>γ</th>
+<th>意思</th>
+<th>例子的 <span class="arithmatex">\(G_0\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><strong>近视 myopic</strong>：只看下一步，后面全打成 0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>0.9</td>
+<td>看得比较远</td>
+<td>1.81</td>
+</tr>
+<tr>
+<td>1</td>
+<td>不打折，就是第 2 章的回报</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>γ 越接近 1，智能体越"有远见 farsighted"。CS 285 作业里常用 0.99。</p>
+<p><strong>一句话</strong>：<span class="arithmatex">\(G_t = \sum_k \gamma^k R_{t+k+1}\)</span>；γ = 0 只看眼前，γ = 1 不打折。</p>
+<h3 id="2026-11-13_1">第三步：打折以后，无穷多项也能加出有限的数（2026-11-13）</h3>
+<p><strong>问题</strong>：持续任务每步都 +1，γ = 0.9，回报是多少？</p>
+<div class="arithmatex">\[G_t = 1 + 0.9 + 0.81 + 0.729 + \cdots\]</div>
+<p>一项比一项小。书里给出公式（式 3.10，L4082–L4098）：</p>
+<div class="arithmatex">\[\sum_{k=0}^{\infty} \gamma^k = \frac{1}{1 - \gamma}\]</div>
+<p>γ = 0.9 时 <span class="arithmatex">\(\frac{1}{1-0.9} = \frac{1}{0.1} = 10\)</span>。</p>
+<p><strong>为什么是这个数</strong>（推导很短）：设总数是 <span class="arithmatex">\(X = 1 + \gamma + \gamma^2 + \cdots\)</span>。两边乘 γ：<span class="arithmatex">\(\gamma X = \gamma + \gamma^2 + \cdots\)</span>，正好是 X 去掉开头的 1。所以 <span class="arithmatex">\(X - \gamma X = 1\)</span>，<span class="arithmatex">\(X = \frac{1}{1-\gamma}\)</span>。</p>
+<p><strong>手算验证一部分</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>加到第几项</th>
+<th>累计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 项</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2 项</td>
+<td>1.9</td>
+</tr>
+<tr>
+<td>3 项</td>
+<td>2.71</td>
+</tr>
+<tr>
+<td>10 项</td>
+<td>6.51</td>
+</tr>
+<tr>
+<td>50 项</td>
+<td>9.95</td>
+</tr>
+<tr>
+<td>1000 项</td>
+<td>10.00</td>
+</tr>
+</tbody>
+</table>
+<p>越加越接近 10，但永远不会超过。</p>
+<p><strong>一个好用的直觉</strong>：<span class="arithmatex">\(\frac{1}{1-\gamma}\)</span> 大致是智能体"看多远"。γ = 0.9 大约看 10 步，γ = 0.99 大约看 100 步。</p>
+<p><strong>一句话</strong>：只要 γ &lt; 1、奖励有上限，无穷多项也加得出有限的数；每步 +1 时总数是 <span class="arithmatex">\(\frac{1}{1-\gamma}\)</span>。</p>
+<h3 id="g_t-r_t1-gamma-g_t12026-11-13">第四步：倒着算：<span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>（2026-11-13）</h3>
+<p><strong>这是全书最重要的一个式子之一</strong>（式 3.9，L4053–L4078）：</p>
+<div class="arithmatex">\[G_t = R_{t+1} + \gamma G_{t+1}\]</div>
+<p><strong>怎么来的</strong>：把 <span class="arithmatex">\(G_t\)</span> 写开，从第二项起提出一个 γ：</p>
+<div class="arithmatex">\[G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots = R_{t+1} + \gamma\,(R_{t+2} + \gamma R_{t+3} + \cdots) = R_{t+1} + \gamma G_{t+1}\]</div>
+<p>括号里正好就是 <span class="arithmatex">\(G_{t+1}\)</span>。</p>
+<p><strong>白话</strong>：今天往后的总价值 = 明天马上拿的 + 打个折的"明天往后的总价值"。</p>
+<p><strong>倒着算最省事</strong>：先定 <span class="arithmatex">\(G_T = 0\)</span>（L4077–L4078），再一步步往前推。还是 γ = 0.9，奖励 1, 0, 1：</p>
+<table>
+<thead>
+<tr>
+<th>步</th>
+<th>式子</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(G_3\)</span></td>
+<td>结束了</td>
+<td>0</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_2\)</span></td>
+<td><span class="arithmatex">\(R_3 + 0.9 \times G_3 = 1 + 0\)</span></td>
+<td>1</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_1\)</span></td>
+<td><span class="arithmatex">\(R_2 + 0.9 \times G_2 = 0 + 0.9\)</span></td>
+<td>0.9</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_0\)</span></td>
+<td><span class="arithmatex">\(R_1 + 0.9 \times G_1 = 1 + 0.81\)</span></td>
+<td>1.81</td>
+</tr>
+</tbody>
+</table>
+<p>和第二步一项项加的 1.81 一样，但每一步只做一次乘法加法。后面第 8 章的 Bellman 方程、第 15 章的 TD，全都从这个式子长出来。</p>
+<p><strong>分幕和持续统一起来</strong>（§3.4，L4181–L4207）：把"一局结束"看成走进一个<strong>吸收状态</strong>：之后永远待在那里，奖励永远是 0。这样分幕任务的回报也能写成无穷和，后面的奖励全是 0，不影响结果。所以全书都用式 3.8 这一个公式。</p>
+<p><strong>一句话</strong>：<span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>，从 <span class="arithmatex">\(G_T = 0\)</span> 倒着推，一步一个乘加。</p>
+<h3 id="_2">动画演示：折扣怎么让远处的奖励缩小；倒着推回报</h3>
+<p><img alt="折扣" src="../animations/l03-discount.gif" /></p>
+<p>可交互版：<a href="../animations/l03-discount.html">animations/l03-discount.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>上面：每步都 +1，柱子高度 = 打折后的值 <span class="arithmatex">\(\gamma^k\)</span>，越往右越矮；</li>
+<li>右边的累计值一路涨，但停在 <span class="arithmatex">\(\frac{1}{1-\gamma}\)</span> 下面（第三步）；</li>
+<li>拖滑块改 γ：γ 越小柱子掉得越快，"看得越近"；</li>
+<li>下面：奖励 1, 0, 1 从右往左倒着推 <span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>（第四步）。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：γ = 0.5，奖励 <span class="arithmatex">\(R_1 = 4, R_2 = 2, R_3 = 8\)</span>，然后结束。用第四步的方法倒着算 <span class="arithmatex">\(G_3, G_2, G_1, G_0\)</span>。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：每步奖励都是 +2，γ = 0.8，无穷多步。回报 <span class="arithmatex">\(G_0\)</span> 是多少？（提示：先算 <span class="arithmatex">\(\frac{1}{1-\gamma}\)</span>。）</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：γ = 0 时，<span class="arithmatex">\(G_t\)</span> 等于什么？这时候智能体会有什么毛病？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>往后一步打一折，第 k 步乘 γ 的 k 次方；<br />
+γ 为零最近视，γ 为一不打折；<br />
+每步加一总数是 1/(1−γ)；<br />
+今天总价 = 明天到手 + γ × 明天往后，倒着推最省事。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R05（折扣回报 <span class="arithmatex">\(G_t = \sum_k \gamma^k R_{t+k+1}\)</span>；γ 的两头）</li>
+<li>R06（递推 <span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>；每步 +1 时的总数 <span class="arithmatex">\(\frac{1}{1-\gamma}\)</span>）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §3.3 后半</td>
+<td>L4016–L4098（式 3.8–3.10）</td>
+<td>本章原文：折扣、近视与远见、递推、几何级数</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §3.3 例 3.4</td>
+<td>L4109–L4128</td>
+<td>倒立摆：同一个任务当分幕（每步 +1）或当持续（失败 −1 + 折扣）两种写法</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §3.4</td>
+<td>L4159–L4228（式 3.11）</td>
+<td>吸收状态：把分幕和持续统一成一个公式（第四步末尾）</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto 习题 3.8、3.9</td>
+<td>L4142–L4148</td>
+<td>倒着算回报的练习（书后无答案，可以用本章代码核对）</td>
+</tr>
+<tr>
+<td>CS 285 第 6 讲</td>
+<td><code>lec-06.txt</code> L76–L100（Discount factors）</td>
+<td>课程里为什么在策略梯度里也加 γ</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>几何级数</strong>：<span class="arithmatex">\(\sum_{k=0}^{\infty}\gamma^k = \frac{1}{1-\gamma}\)</span>（|γ| &lt; 1）；推导：<span class="arithmatex">\(X - \gamma X = 1\)</span>。</li>
+<li><strong>有界奖励 ⇒ 回报有界</strong>：若每步 <span class="arithmatex">\(|R| \le R_{max}\)</span>，则 <span class="arithmatex">\(|G_t| \le \frac{R_{max}}{1-\gamma}\)</span>。</li>
+<li><strong>递推</strong>：<span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>，边界 <span class="arithmatex">\(G_T = 0\)</span>。动态规划（第 10–12 章）和时序差分（第 15 章）都建立在它上面。</li>
+<li><strong>有效视野</strong>：<span class="arithmatex">\(\frac{1}{1-\gamma}\)</span> 常被叫做 effective horizon（有效视野）：γ = 0.99 ≈ 100 步。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(G_t = \sum_{k=0}^{\infty}\gamma^k R_{t+k+1}\)</span></td>
+<td>折扣回报（式 3.8）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span></td>
+<td>递推（式 3.9）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\sum_{k=0}^{\infty}\gamma^k = \frac{1}{1-\gamma}\)</span></td>
+<td>每步 +1 的回报（式 3.10）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_t = \sum_{k=t+1}^{T}\gamma^{k-t-1}R_k\)</span></td>
+<td>分幕 / 持续统一写法（式 3.11）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch03_discount.py</code>，测试 <code>tests/test_ch01_04.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch03_discount.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch03_discount.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一项项加</td>
+<td><code>discounted_return([1, 0, 1], 0.9)</code></td>
+<td>1.81</td>
+</tr>
+<tr>
+<td>倒着推</td>
+<td><code>returns_backward([1, 0, 1], 0.9)</code></td>
+<td><code>[1.81, 0.9, 1.0, 0.0]</code></td>
+</tr>
+<tr>
+<td>γ = 0 / γ = 1</td>
+<td><code>discounted_return(r, 0.0)</code> / <code>(r, 1.0)</code></td>
+<td>1.0 / 2.0</td>
+</tr>
+<tr>
+<td>每步 +1 加 1000 项</td>
+<td><code>discounted_return([1] * 1000, 0.9)</code></td>
+<td>10.0（= 1/(1−0.9)）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">G = [0.0] * (len(rewards) + 1)          # 最后一个 G_T = 0
+for t in reversed(range(len(rewards))):  # 从后往前
+    G[t] = rewards[t] + gamma * G[t + 1]
+</code></pre>
+<p><strong>代码里才看得到的</strong>：倒着推的循环在后面会反复出现：CS 285 HW2 的 reward-to-go（第 21 章）、GAE（第 22 章）都是同一个 <code>reversed</code> 循环。</p><nav class="pager"><a href="02-return.html">← 第 2 章 · 奖励与回报 reward &amp; return：把一路的奖励加起来</a><a href="04-expectation.html">第 4 章 · 概率与期望 expectation：按概率的加权平均 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

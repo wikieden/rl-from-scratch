@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 24 章 · 收尾：全书地图、PPO 到 GRPO、接下来做什么 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="24-ppo-grpo">第 24 章 · 收尾：全书地图、PPO 到 GRPO、接下来做什么</h1>
+<blockquote>
+<p>本章回答：24 章学过的东西怎么串成一张图？LLM 训练里的 GRPO 和 PPO 差在哪？学完以后去做哪些作业、读哪些论文？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/23-ppo.html">第 23 章 从 TRPO 到 PPO</a> · 下一章：—<br />
+对应原文：CS 285 第 14 讲 LLM RL（<code>lec-14.txt</code> L202–L280：Language models and policy gradients、Value function baselines &amp; GAE、"Baselining without value functions … this is called GRPO" L260–L265、Reference model regularization L266–L272）；DeepSeekMath 论文 §4.1（<code>papers/deepseekmath-grpo-2402.03300.txt</code> L943–L1050，组内优势 L1044–L1050）；CS 285 第 4 讲算法分类（<code>lec-04.txt</code> L195–L207）<br />
+本章缩写：LLM = Large Language Model（大 / 语言 / 模型）；GRPO = Group Relative Policy Optimization（组 / 相对 / 策略 / 优化）；RLHF = Reinforcement Learning from Human Feedback（从人类反馈中强化学习）；KL 见第 23 章；std = standard deviation（标准差）；HW = Homework（作业）；CS336 = Stanford CS 336（Language Modeling from Scratch）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：全书一张图（2026-11-13）</h3>
+<pre><code>第 1–4 章  问题是什么
+  智能体看状态、做动作、拿奖励 → 回报 G = 奖励加起来（γ 打折） → 期望 = 按概率的平均
+
+第 5–9 章  把问题写成数学（MDP）
+  环境 p(s', r | s, a)、策略 π(a | s)
+  价值 v_π、q_π ── Bellman 期望方程（今天 = 眼前 + γ × 明天，取平均）
+  最优 v*、q*  ── Bellman 最优方程（平均换成 max）
+
+第 10–12 章  知道 p：动态规划
+  策略评估（反复套期望方程）→ 策略改进（对 q 贪心）→ 策略迭代 / 价值迭代 → GPI
+
+第 13–16 章  不知道 p：边试边学
+  探索与利用（ε-greedy）、增量更新&quot;旧 + α(目标 − 旧)&quot;
+  MC（目标 = 真实回报 G）、TD（目标 = r + γV(s')）
+  SARSA（on-policy）、Q-learning（off-policy，直接学 q*）
+
+第 17–19 章  状态太多：函数近似 + 价值路线
+  梯度下降、v̂(s, w) → DQN（经验回放 + 目标网络）→ Double DQN（挑和打分分开）
+
+第 20–23 章  直接调策略：策略梯度路线
+  ∇J = E[G ∇log π] → REINFORCE → baseline、reward-to-go 降方差
+  → Actor-Critic（δ 当优势）、GAE（λ 调偏差 / 方差）→ 重要性采样、信任区域 → PPO（剪比率）
+</code></pre>
+<p><strong>两条主路线</strong>（CS 285 第 4 讲 L195–L207 的分类）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>价值路线（value-based）</th>
+<th>策略路线（policy gradient / actor-critic）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>学什么</td>
+<td><span class="arithmatex">\(q_*\)</span>，挑 max 当策略</td>
+<td>直接学 <span class="arithmatex">\(\pi_\theta\)</span>（常配一个评委 V）</td>
+</tr>
+<tr>
+<td>代表</td>
+<td>Q-learning、DQN、Double DQN</td>
+<td>REINFORCE、A2C/A3C、TRPO、PPO</td>
+</tr>
+<tr>
+<td>数据</td>
+<td>off-policy，能用回放缓冲区，省样本</td>
+<td>大多 on-policy，费样本但稳</td>
+</tr>
+<tr>
+<td>动作</td>
+<td>离散动作好办，连续动作难取 max</td>
+<td>离散、连续都行</td>
+</tr>
+<tr>
+<td>用在</td>
+<td>Atari 游戏</td>
+<td>机器人运控、LLM 训练</td>
+</tr>
+</tbody>
+</table>
+<p><strong>贯穿全书的三句话</strong>：</p>
+<ol>
+<li><strong>递推</strong>：<span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span>（第 3 章）→ Bellman 方程 → TD → GAE，都是它；</li>
+<li><strong>更新句式</strong>：新 = 旧 + 步长 × (目标 − 旧)（第 13 章），换了无数种"目标"；</li>
+<li><strong>偏差 vs 方差</strong>：MC 无偏方差大，TD 方差小有偏（第 15 章）；baseline、reward-to-go、GAE、PPO 都在这条线上做取舍。</li>
+</ol>
+<p><strong>一句话</strong>：前半本把问题写成 MDP 和 Bellman 方程，中间讲不知道 p 时怎么学，后半本分价值和策略两条路线走到 DQN 和 PPO。</p>
+<h3 id="ppo-llm2026-11-13">第二步：把 PPO 用到 LLM：一句话就是一条轨迹（2026-11-13）</h3>
+<p><strong>CS 285 第 14 讲（<code>lec-14.txt</code> L197–L228）的对应关系</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>强化学习</th>
+<th>LLM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>状态 s</td>
+<td>题目（prompt）+ 已经生成的词</td>
+</tr>
+<tr>
+<td>动作 a</td>
+<td>下一个词（token，Transformer 讲义第 22 章）</td>
+</tr>
+<tr>
+<td>策略 <span class="arithmatex">\(\pi_\theta(a \mid s)\)</span></td>
+<td>语言模型输出的下一个词的 softmax 概率</td>
+</tr>
+<tr>
+<td>一局轨迹</td>
+<td>生成一整个回答</td>
+</tr>
+<tr>
+<td>奖励</td>
+<td>回答完以后打一个分（答对数学题 = 1，答错 = 0；或奖励模型打分）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这是第 20–23 章的策略梯度直接搬过来</strong>：<span class="arithmatex">\(\nabla\log\pi\)</span> 就是"让这个回答里每个词的 log 概率变大"，乘上优势；PPO 的剪裁照用（L212–L213："importance-weighted estimator (e.g., PPO)"）。</p>
+<p><strong>三个要"聪明地设计"的地方</strong>（L237–L243）：</p>
+<ol>
+<li>选一个好的 <strong>baseline</strong>（第三步）；</li>
+<li>加一个<strong>正则项</strong>（第四步）；</li>
+<li>设计或学一个<strong>奖励</strong>（人类偏好 → 奖励模型，L282–L310 Bradley-Terry；本书不展开）。</li>
+</ol>
+<p><strong>一句话</strong>：LLM 里状态是上文、动作是下一个词、一局是一个回答、奖励在最后；第 20–23 章的 PPO 原样搬过来。</p>
+<h3 id="grpo2026-11-13">第三步：GRPO：不要评委，同一道题答几遍互相比（2026-11-13）</h3>
+<p><strong>PPO 用在 LLM 上的麻烦</strong>（<code>lec-14.txt</code> L244–L254）：PPO 要一个<strong>评委</strong> <span class="arithmatex">\(\hat V\)</span>（第 22 章）。在 LLM 里，评委也得是一个和语言模型差不多大的网络（"either add a new head or make a copy of the entire network"）：显存翻倍、训练也更难。</p>
+<p><strong>GRPO 的想法</strong>（<code>lec-14.txt</code> L260–L265；DeepSeekMath L943–L1050）：<strong>不训练评委</strong>。对同一道题，让模型<strong>生成一组 G 个回答</strong>，用这组回答的平均分当 baseline：</p>
+<div class="arithmatex">\[\hat A_i = \frac{r_i - \text{mean}(r_1, \dots, r_G)}{\text{std}(r_1, \dots, r_G)}\]</div>
+<p>（DeepSeekMath L1044–L1050：减去组平均、除以组标准差；这个优势分给回答 i 里的<strong>每一个词</strong>。）</p>
+<p><strong>这是第 21 章的 baseline</strong>：b = 同一道题下几个回答的平均分。"比平常好多少"里的"平常"，就是"这道题我平时答得怎么样"。除以标准差是第 21 章附录提到的优势归一化。</p>
+<p><strong>用数字算</strong>：一道题生成 4 个回答，答对得 1、答错得 0：</p>
+<table>
+<thead>
+<tr>
+<th>4 个回答的奖励</th>
+<th>平均</th>
+<th>标准差</th>
+<th>优势 <span class="arithmatex">\(\hat A_i\)</span></th>
+<th>读法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[1, 0, 0, 1]</td>
+<td>0.5</td>
+<td>0.5</td>
+<td>[+1, −1, −1, +1]</td>
+<td>答对的推高，答错的压低</td>
+</tr>
+<tr>
+<td>[1, 0, 0, 0]</td>
+<td>0.25</td>
+<td>0.433</td>
+<td>[+1.73, −0.58, −0.58, −0.58]</td>
+<td>难题：唯一答对的那个被大力推高</td>
+</tr>
+<tr>
+<td>[1, 1, 1, 1]</td>
+<td>1</td>
+<td>0</td>
+<td>[0, 0, 0, 0]</td>
+<td>全对：没有对比，这道题不提供学习信号</td>
+</tr>
+</tbody>
+</table>
+<p><strong>最后一行很重要</strong>：题太简单（全对）或太难（全错）时，组内没有差别，优势全是 0，这道题等于白做。后来的 DAPO（<code>papers/dapo-2503.14476.txt</code>）就专门把这种题过滤掉。</p>
+<p><strong>GRPO vs PPO</strong>：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>PPO（第 23 章）</th>
+<th>GRPO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>baseline / 优势</td>
+<td>评委网络 <span class="arithmatex">\(\hat V\)</span> + GAE（每个词一个优势）</td>
+<td>同题一组回答的平均分（整个回答一个优势）</td>
+</tr>
+<tr>
+<td>额外网络</td>
+<td>要训练一个评委</td>
+<td>不要</td>
+</tr>
+<tr>
+<td>剪裁</td>
+<td><span class="arithmatex">\(\text{clip}(r, 1 \pm \varepsilon)\)</span></td>
+<td>照用</td>
+</tr>
+<tr>
+<td>适合</td>
+<td>奖励密集、需要逐步打分</td>
+<td>结果只有对 / 错的推理题</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：GRPO 不训练评委，同一道题答 G 遍，用组内平均分当 baseline、组内标准差归一化；全对或全错的题没有学习信号。</p>
+<h3 id="kl-2026-11-13">第四步：别跑太远：参考模型的 KL 正则；接下来做什么（2026-11-13）</h3>
+<p><strong>问题</strong>（<code>lec-14.txt</code> L266–L272）：只追奖励，模型可能学会"钻空子"：输出一些奖励模型给高分、但不是正常语言的东西（L268–L271："avoid producing 'nonsense text'""avoids 'exploiting' imperfect reward models"）。</p>
+<p><strong>办法：参考模型正则 reference model regularization</strong>：留一份训练前的模型 <span class="arithmatex">\(\pi_{ref}\)</span> 不动，在目标里减去新模型和它的 KL 散度（第 23 章第三步）：</p>
+<div class="arithmatex">\[\text{目标} = \text{奖励} - \beta\,D_{KL}(\pi_\theta\,\|\,\pi_{ref})\]</div>
+<p>β（读"beta"）控制拉得多紧。<strong>和第 23 章的区别</strong>：PPO 的剪裁 / KL 约束是"<strong>每一步</strong>别离上一份策略太远"（为了让替代目标可信）；这里的 KL 是"<strong>整个训练</strong>别离最初的模型太远"（为了别学坏）。两者常常一起用。</p>
+<p><strong>全书到这里结束。接下来</strong>（按 study-plan）：</p>
+<table>
+<thead>
+<tr>
+<th>做什么</th>
+<th>用到本书哪几章</th>
+<th>在哪</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CS 285 HW2：策略梯度（VPG、reward-to-go、baseline、GAE）</td>
+<td>第 20–22 章</td>
+<td><code>materials/cs285/homework_spring2026/hw2</code>，本机 CPU</td>
+</tr>
+<tr>
+<td>CS 285 HW3：DQN + Double DQN；SAC</td>
+<td>第 16–19 章（SAC 另需 CS 285 第 11–13 讲）</td>
+<td><code>hw3</code>，CartPole / LunarLander 本机，Atari <code>[GPU]</code></td>
+</tr>
+<tr>
+<td>CS 285 HW4：LLM RL（GR-REINFORCE / GRPO）</td>
+<td>第 20–24 章</td>
+<td><code>hw4</code> <code>[GPU]</code>；对照 CS336 a5 alignment</td>
+</tr>
+<tr>
+<td>读 PPO 37 个实现细节 + CleanRL <code>ppo.py</code></td>
+<td>第 22–23 章</td>
+<td><code>materials/blog/</code>、<code>materials/cleanrl/</code></td>
+</tr>
+<tr>
+<td>运控专题：PPO / GRPO 在腿足机器人上</td>
+<td>第 22–24 章</td>
+<td>运控学习计划、专题笔记</td>
+</tr>
+<tr>
+<td>策略学习全景（PPO / DPO / PRO、LLM RL vs 运控）</td>
+<td>全书</td>
+<td>topic-rl-policy-landscape.md</td>
+</tr>
+<tr>
+<td>本书没讲的：model-based（Dreamer、TD-MPC2）、offline RL（CQL、IQL）、探索</td>
+<td>—</td>
+<td>CS 285 第 15–19 讲；接 CIS 6280 世界模型</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：KL 正则让模型别离参考模型太远、防止钻奖励的空子；学完本书，去写 CS 285 HW2–HW4，再接运控专题和 LLM 对齐。</p>
+<h3 id="grpo">动画演示：GRPO 一组回答互相比；全书地图</h3>
+<p><img alt="收尾：从 PPO 到 GRPO" src="../animations/l24-wrap-up.gif" /></p>
+<p>可交互版：<a href="../animations/l24-wrap-up.html">animations/l24-wrap-up.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>一道题，模型生成 4 个回答，每个打 0 或 1；</li>
+<li>算组平均（虚线）和标准差，每个回答的优势 = (分数 − 平均) / 标准差，画成向上或向下的箭头（第三步表格）；</li>
+<li>依次播放三组：[1, 0, 0, 1]、[1, 0, 0, 0]、[1, 1, 1, 1]（最后一组箭头全为 0）；</li>
+<li>点"全书地图"切换到第一步的章节图，点一个方块会高亮它依赖的前几章。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：一道题 4 个回答的奖励是 [0, 0, 0, 1]。算组平均、标准差（4 个数的标准差：先算每个数减平均的平方，再平均，再开根号），以及每个回答的优势。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：GRPO 为什么不需要评委网络？它的 baseline 是什么？对应本书第几章的哪个想法？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：PPO 里的剪裁（第 23 章）和 LLM 训练里的"参考模型 KL"都是在"别跑太远"。它们各自防的是什么？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>前半写成 MDP 和 Bellman，中间不知道 p 边试边学，后半价值、策略两条路；<br />
+递推、"旧 + α(目标 − 旧)"、偏差方差，三句话贯穿全书；<br />
+LLM：上文是状态，下一个词是动作，一个回答是一局；<br />
+GRPO：同题答几遍，组内平均当 baseline，全对全错没信号；KL 拴住参考模型，别学坏。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R42（GRPO 组内优势 <span class="arithmatex">\(\hat A_i = (r_i - \text{mean}) / \text{std}\)</span>；和 PPO 的区别；参考模型 KL 正则的作用）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ CS 285 第 14 讲</td>
+<td><code>cs285-slides/lec-14.txt</code> L197–L330</td>
+<td>LLM 和策略梯度的对应、GAE 在 LLM 上的问题、GRPO、参考模型正则、RLHF</td>
+</tr>
+<tr>
+<td>★ DeepSeekMath（GRPO 原文）</td>
+<td><code>papers/deepseekmath-grpo-2402.03300.txt</code> L943–L1050（§4.1，式 3，Algorithm 1 L1020 附近）</td>
+<td>GRPO 的目标函数和组内优势</td>
+</tr>
+<tr>
+<td>DAPO</td>
+<td><code>papers/dapo-2503.14476.txt</code></td>
+<td>GRPO 的改进：动态采样（过滤全对全错的题）、clip-higher、token 级 loss</td>
+</tr>
+<tr>
+<td>InstructGPT</td>
+<td><code>papers/instructgpt-2203.02155.txt</code></td>
+<td>PPO + 奖励模型 + KL 的 RLHF 经典流程</td>
+</tr>
+<tr>
+<td>DPO</td>
+<td><code>papers/dpo-2305.18290.txt</code></td>
+<td>不用强化学习、直接从偏好数据训练（接 CS336 a5）</td>
+</tr>
+<tr>
+<td>Lambert《RLHF》</td>
+<td><code>books/lambert-rlhf-book.pdf</code>（文本 <code>text/books/lambert-rlhf-book.txt</code>）</td>
+<td>RLHF 全流程的一本书</td>
+</tr>
+<tr>
+<td>CS 285 HW4</td>
+<td><code>cs285-homeworks/hw4.txt</code></td>
+<td>GR-REINFORCE / GRPO 的作业说明</td>
+</tr>
+<tr>
+<td>本专题笔记</td>
+<td>topic-rl-policy-landscape.md</td>
+<td>PG 改进链、PPO / DPO / PRO、LLM RL vs 机器人运控</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>组内 baseline 无偏</strong>（近似）：同一道题下其他回答的平均分不依赖"回答 i 怎么生成"（第 21 章 baseline 不随动作变的条件）；严格说把回答 i 自己也算进平均会引入很小的偏差，有的实现用"留一法 leave-one-out"（其余 G − 1 个的平均）。</li>
+<li><strong>标准差</strong>：<span class="arithmatex">\(\text{std} = \sqrt{\frac1G\sum_i(r_i - \bar r)^2}\)</span>；[1, 0, 0, 1] 时每个偏差都是 ±0.5，平方 0.25，平均 0.25，开根号 0.5。</li>
+<li><strong>KL 正则的样本估计</strong>：<span class="arithmatex">\(D_{KL}(\pi_\theta\|\pi_{ref}) \approx \mathbb{E}_{\pi_\theta}[\log\pi_\theta - \log\pi_{ref}]\)</span>，逐词累加；GRPO 论文用另一个总是非负的估计 <span class="arithmatex">\(\frac{\pi_{ref}}{\pi_\theta} - \log\frac{\pi_{ref}}{\pi_\theta} - 1\)</span>（式 4，L1030–L1040）。</li>
+<li><strong>一个回答一个优势</strong>：GRPO 的 <span class="arithmatex">\(\hat A_i\)</span> 分给回答里的每个词，相当于第 21 章"用整局回报"、没有逐词的信用分配；PPO + GAE 能逐词打分但要评委。这是 运控专题 里"GRPO vs PPO 信用分配"动画讲的事。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\hat A_i = \frac{r_i - \text{mean}(r)}{\text{std}(r)}\)</span></td>
+<td>GRPO 组内相对优势</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(L = \mathbb{E}[\min(r_t\hat A, \text{clip}(r_t, 1 \pm \varepsilon)\hat A)] - \beta D_{KL}(\pi_\theta\|\pi_{ref})\)</span></td>
+<td>GRPO / PPO 目标 + 参考模型正则</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(G_t = R_{t+1} + \gamma G_{t+1}\)</span></td>
+<td>全书的递推</td>
+</tr>
+<tr>
+<td>新 = 旧 + α(目标 − 旧)</td>
+<td>全书的更新句式</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch24_wrap_up.py</code>，测试 <code>tests/test_ch17_24.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch24_wrap_up.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch24_wrap_up.py  
+uv run pytest            # 全书 24 章的测试一起跑</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[1, 0, 0, 1]</td>
+<td><code>group_advantage([1, 0, 0, 1])</code></td>
+<td>[1, −1, −1, 1]</td>
+</tr>
+<tr>
+<td>[1, 0, 0, 0]</td>
+<td><code>group_advantage([1, 0, 0, 0])</code></td>
+<td>[1.732, −0.577, −0.577, −0.577]</td>
+</tr>
+<tr>
+<td>[1, 1, 1, 1]</td>
+<td><code>group_advantage([1, 1, 1, 1])</code></td>
+<td>[0, 0, 0, 0]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">r = np.asarray(rewards, float)
+(r - r.mean()) / (r.std() + eps)     # eps 防止全对时除以 0
+</code></pre>
+<p><strong>代码里才看得到的</strong>：全对时标准差是 0，直接除会得到 0 / 0 = nan（not a number，不是一个数），一个 nan 就能把整个模型的参数全变成 nan。所以分母一定要加一个很小的 eps（这里 <span class="arithmatex">\(10^{-8}\)</span>）：分子也是 0，结果正好是 0。</p><nav class="pager"><a href="23-ppo.html">← 第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多</a><span></span></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

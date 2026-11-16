@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 13 章 · 探索与利用：多臂老虎机与 ε-greedy · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="13-greedy">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy</h1>
+<blockquote>
+<p>本章回答：不知道环境的概率时，只能自己去试。总挑"目前看起来最好的"有什么问题？怎么在"试新的"和"用好的"之间平衡？怎么一边试一边更新平均值？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/12-value-iteration.html">第 12 章 价值迭代与 GPI</a> · 下一章：<a href="../lessons/14-monte-carlo.html">第 14 章 蒙特卡洛</a><br />
+对应原文：Sutton &amp; Barto §2.1–2.4（L2052–L2528：k 臂老虎机、样本平均式 2.1、贪心式 2.2、ε-greedy、增量公式 2.3–2.4）、§2.5–2.6（L2529–L2760：常数步长式 2.5、乐观初值）<br />
+本章缩写：ε：希腊字母 epsilon（读"伊普西龙"），探索的概率；<span class="arithmatex">\(Q_t(a)\)</span>：Q 是 quality（质量），第 t 步时对动作 a 的价值估计；<span class="arithmatex">\(q_*(a)\)</span>：动作 a 的真实价值；k-armed bandit：k 臂老虎机（bandit 原意"强盗"，老虎机外号"独臂强盗"）；α：希腊字母 alpha（读"阿尔法"），步长。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：最简单的强化学习：三台老虎机，只有一个状态（2026-11-13）</h3>
+<p><strong>从这一章开始，智能体不知道环境的 p 了</strong>（第 12 章末尾），只能自己试。先看最简单的情况：<strong>只有一个状态</strong>，每次选一个动作，马上拿到奖励，然后重来。</p>
+<p><strong>类比：游戏厅里三台老虎机。</strong> 每台机器"平均吐多少"不一样，但你不知道。每拉一次，吐出来的数是随机的（这次 2.3，下次 0.7）。你有 1000 次机会，想让总收入最多。</p>
+<p>这叫 <strong>k 臂老虎机问题 k-armed bandit</strong>（§2.1，L2052 起）。讲义里设 3 台机器，真实平均（<span class="arithmatex">\(q_*(a)\)</span>，你不知道）是：</p>
+<table>
+<thead>
+<tr>
+<th>机器</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>真实平均 <span class="arithmatex">\(q_*(a)\)</span></td>
+<td>1.0</td>
+<td><strong>1.5</strong></td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<p>每次拉出来的奖励 = 真实平均 + 随机噪声（标准差 1，有时高有时低）。</p>
+<p><strong>估计价值：样本平均</strong>（式 2.1，L2151）：机器 a 的价值估计 <span class="arithmatex">\(Q_t(a)\)</span> = 它到目前为止拉出来的奖励的平均（第 4 章第三步：多试几次取平均）。</p>
+<p><strong>一句话</strong>：老虎机是只有一个状态的 RL：不知道每台机器的真实平均，只能边拉边用样本平均去估。</p>
+<h3 id="2026-11-13_1">第二步：只挑看起来最好的：贪心会被"第一印象"困住（2026-11-13）</h3>
+<p><strong>最直接的做法：贪心 greedy</strong>（式 2.2，L2163–L2176）：每次都拉<strong>目前估计最高</strong>的那台：</p>
+<div class="arithmatex">\[A_t = \arg\max_a Q_t(a)\]</div>
+<p><strong>问题出在哪</strong>：一开始三台估计都是 0。假设第一次随便拉了机器 1，吐出 1.2，于是 <span class="arithmatex">\(Q(1) = 1.2\)</span>，另外两台还是 0。接下来贪心<strong>永远拉机器 1</strong>，因为它看起来最好；机器 2 其实更好（1.5），但一次都没试过，永远不知道。</p>
+<p>用代码跑了 200 次实验，每次 1000 步：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>平均每步奖励</th>
+<th>选到最好机器（2 号）的比例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>贪心</td>
+<td>1.105</td>
+<td><strong>21%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>只有 21% 的时间在拉最好的机器：大部分实验被"第一印象"困住了。</p>
+<p><strong>这就是"探索与利用"的矛盾</strong>（L2088–L2103）：</p>
+<ul>
+<li><strong>利用 exploit</strong>：拉目前看起来最好的，眼前收益最大；</li>
+<li><strong>探索 explore</strong>：拉看起来不怎么样的，眼前可能亏，但能<strong>发现</strong>更好的机器。</li>
+</ul>
+<p>一次只能拉一台，没法同时探索和利用（L2101–L2103）。</p>
+<p><strong>类比：吃饭。</strong> 总去最常去的那家（利用），稳但可能错过更好吃的；偶尔试一家新的（探索），可能踩雷，但也可能发现新宠。</p>
+<p><strong>一句话</strong>：贪心只利用不探索，会被开头几次的运气困住；探索和利用不能同时做，要平衡。</p>
+<h3 id="-greedy2026-11-13">第三步：ε-greedy：大部分时候贪心，偶尔随便试（2026-11-13）</h3>
+<p><strong>最简单的平衡办法：ε-greedy</strong>（L2177–L2189）：</p>
+<ul>
+<li>以概率 <strong>1 − ε</strong>：贪心，拉估计最高的；</li>
+<li>以概率 <strong>ε</strong>：随便挑一台（每台等概率），不管估计。</li>
+</ul>
+<p>ε 取 0.1，就是"十次里有一次随便试"。</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>平均每步奖励</th>
+<th>选到最好机器的比例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>贪心（ε = 0）</td>
+<td>1.105</td>
+<td>21%</td>
+</tr>
+<tr>
+<td>ε-greedy（ε = 0.1）</td>
+<td><strong>1.426</strong></td>
+<td><strong>89%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>只拿出 10% 的机会去乱试，就几乎总能找到最好的机器，收入也高了很多。</p>
+<p><strong>为什么有效</strong>（L2186–L2189）：因为每台机器都会被一直试下去，次数越来越多，每台的估计 <span class="arithmatex">\(Q(a)\)</span> 都会越来越接近真实值 <span class="arithmatex">\(q_*(a)\)</span>，贪心那部分自然就挑中了真正最好的。</p>
+<p><strong>代价</strong>：永远有 10% 的时间在乱拉，即使早就知道哪台最好。所以 89% 不是 100%。（实践中常让 ε 随时间慢慢变小。）</p>
+<p><strong>这个办法后面一直在用</strong>：第 16 章的 SARSA、Q-learning，第 18 章的 DQN，选动作都是 ε-greedy。</p>
+<p><strong>一句话</strong>：ε-greedy = 1 − ε 的时间贪心、ε 的时间随便试；10% 的探索就能把找到最好机器的比例从 21% 拉到 89%。</p>
+<h3 id="2026-11-13_2">第四步：增量更新：新平均 = 旧平均 + 步长 × (新奖励 − 旧平均)（2026-11-13）</h3>
+<p><strong>问题</strong>：样本平均要把所有拉过的奖励都存起来再求平均吗？拉 100 万次就要存 100 万个数。</p>
+<p><strong>不用</strong>。每来一个新奖励，在旧平均上"改一点"就行（式 2.3，L2476–L2481）：</p>
+<div class="arithmatex">\[Q_{n+1} = Q_n + \frac{1}{n}\,\big[\,R_n - Q_n\,\big]\]</div>
+<p><strong>一个个符号读</strong>：</p>
+<ul>
+<li><span class="arithmatex">\(Q_n\)</span>：前 n − 1 个奖励的平均（旧估计）；</li>
+<li><span class="arithmatex">\(R_n\)</span>：第 n 个奖励（新来的）；</li>
+<li><span class="arithmatex">\(R_n - Q_n\)</span>：新奖励比旧估计<strong>高了多少</strong>（误差）；</li>
+<li><span class="arithmatex">\(\frac1n\)</span>：改多少：误差的 n 分之一。</li>
+</ul>
+<p><strong>用数字验证</strong>：奖励依次是 2、4、6、8。</p>
+<table>
+<thead>
+<tr>
+<th>n</th>
+<th>新奖励 <span class="arithmatex">\(R_n\)</span></th>
+<th>误差 <span class="arithmatex">\(R_n - Q_n\)</span></th>
+<th>更新</th>
+<th>新平均</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+<td>2 − 0 = 2</td>
+<td>0 + 2/1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4</td>
+<td>4 − 2 = 2</td>
+<td>2 + 2/2</td>
+<td>3</td>
+</tr>
+<tr>
+<td>3</td>
+<td>6</td>
+<td>6 − 3 = 3</td>
+<td>3 + 3/3</td>
+<td>4</td>
+</tr>
+<tr>
+<td>4</td>
+<td>8</td>
+<td>8 − 4 = 4</td>
+<td>4 + 4/4</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+<p>最后 5 = (2 + 4 + 6 + 8) / 4 ✓，但只需要记住"当前平均"和"拉了几次"两个数。</p>
+<p><strong>通用形式</strong>（式 2.4，L2487–L2495）：</p>
+<div class="arithmatex">\[\text{新估计} = \text{旧估计} + \text{步长} \times [\,\text{目标} - \text{旧估计}\,]\]</div>
+<p><strong>这是全书最常见的一个句式</strong>，后面每一章都会出现，只是"目标"和"步长"换了：</p>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>目标</th>
+<th>步长</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本章</td>
+<td>这次的奖励 <span class="arithmatex">\(R_n\)</span></td>
+<td><span class="arithmatex">\(\frac1n\)</span> 或常数 α</td>
+</tr>
+<tr>
+<td>第 14 章 MC</td>
+<td>整局的回报 <span class="arithmatex">\(G_t\)</span></td>
+<td>α</td>
+</tr>
+<tr>
+<td>第 15 章 TD</td>
+<td><span class="arithmatex">\(R + \gamma V(S')\)</span></td>
+<td>α</td>
+</tr>
+<tr>
+<td>第 16 章 Q-learning</td>
+<td><span class="arithmatex">\(R + \gamma \max_a Q(S', a)\)</span></td>
+<td>α</td>
+</tr>
+</tbody>
+</table>
+<p><strong>常数步长 α</strong>（§2.5，式 2.5，L2548）：如果机器的真实平均会<strong>慢慢变</strong>，最近的奖励更有参考价值，就把 <span class="arithmatex">\(\frac1n\)</span> 换成一个固定的 α（比如 0.1）：新奖励永远占 10% 的分量，越老的奖励影响越小。</p>
+<p><strong>一句话</strong>：增量更新 = 旧估计 + 步长 × (目标 − 旧估计)；步长 <span class="arithmatex">\(\frac1n\)</span> 就是真平均，常数 α 更看重最近的；这个句式贯穿全书。</p>
+<h3 id="vs-greedy">动画演示：三台老虎机，贪心 vs ε-greedy</h3>
+<p><img alt="探索与利用" src="../animations/l13-bandit.gif" /></p>
+<p>可交互版：<a href="../animations/l13-bandit.html">animations/l13-bandit.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>上下两排各三台机器：上排贪心，下排 ε-greedy（ε = 0.1）；虚线是真实平均（智能体看不见），实柱是当前估计 <span class="arithmatex">\(Q(a)\)</span>；</li>
+<li>每帧两边各拉一次，被拉的那台闪一下，估计按第四步更新；</li>
+<li>贪心那排常常一直拉同一台、2 号估计停在 0（第二步）；ε-greedy 那排每台都被试过，2 号慢慢胜出（第三步）；</li>
+<li>滑块调 ε，看"选到最好机器的比例"怎么变；换一个随机种子再看贪心会不会被困住。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：ε = 0.2、有 4 台机器时，<strong>贪心那台</strong>被选中的概率是多少？（提示：随便试的那 0.2 里也可能抽到它。）</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：用增量公式依次更新奖励 10、0、5（从 <span class="arithmatex">\(Q_1 = 0\)</span>、n 从 1 开始），写出每一步的 <span class="arithmatex">\(Q\)</span>，最后检查是不是等于三个数的平均。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：用自己的话说：为什么贪心策略会"被第一印象困住"？ε-greedy 怎么解决的？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>不知道 p 就去试；只挑最好会被第一印象困住；<br />
+利用拿眼前，探索找更好，一次只能做一样；<br />
+ε-greedy：九成贪心一成乱试；<br />
+新估计 = 旧估计 + 步长 × (目标 − 旧估计)，全书都是这句话。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R22（探索 vs 利用；ε-greedy 怎么选动作；为什么贪心会被困住）</li>
+<li>R23（增量更新式 2.3、2.4：新 = 旧 + 步长 × (目标 − 旧)；<span class="arithmatex">\(\frac1n\)</span> 与常数 α）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §2.1–2.2</td>
+<td>L2052–L2195（式 2.1、2.2、ε-greedy）</td>
+<td>本章第一到三步</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §2.3</td>
+<td>L2196–L2383（10 臂测试台，图 2.2）</td>
+<td>书里的实验：ε = 0、0.01、0.1 的对比曲线</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto §2.4</td>
+<td>L2384–L2528（式 2.3、2.4）</td>
+<td>增量公式和"目标 − 旧估计"的通用句式</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §2.5–2.6</td>
+<td>L2529–L2760（式 2.5，乐观初值 L2670 起）</td>
+<td>常数步长；把初值设高也能鼓励探索</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §2.7 UCB</td>
+<td>L2782 起</td>
+<td>更聪明的探索：优先试"试得少的"</td>
+</tr>
+<tr>
+<td>Hands-on-RL 第 2 章</td>
+<td><code>chinese/Hands-on-RL/第2章-多臂老虎机问题.ipynb</code></td>
+<td>中文：ε-greedy、UCB、Thompson 采样的代码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>增量公式的推导</strong>：<span class="arithmatex">\(Q_{n+1} = \frac1n\sum_{i=1}^{n} R_i = \frac1n[R_n + (n-1)Q_n] = Q_n + \frac1n[R_n - Q_n]\)</span>（L2430–L2480）。</li>
+<li><strong>常数步长是指数加权平均</strong>：<span class="arithmatex">\(Q_{n+1} = (1-\alpha)^n Q_1 + \sum_{i=1}^{n}\alpha(1-\alpha)^{n-i}R_i\)</span>（式 2.6，L2560–L2596），越旧的奖励权重越小。</li>
+<li><strong>收敛条件</strong>（式 2.7，L2612–L2640）：步长序列满足 <span class="arithmatex">\(\sum \alpha_n = \infty\)</span> 且 <span class="arithmatex">\(\sum \alpha_n^2 &lt; \infty\)</span> 时估计收敛到真值；<span class="arithmatex">\(\frac1n\)</span> 满足，常数 α 不满足（一直在抖，但能跟上变化）。</li>
+<li><strong>ε-greedy 的选择概率</strong>：贪心动作被选中的概率 = <span class="arithmatex">\(1 - \varepsilon + \frac{\varepsilon}{k}\)</span>，其他每个动作 <span class="arithmatex">\(\frac{\varepsilon}{k}\)</span>。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(Q_t(a) = \frac{\text{a 拿到的奖励之和}}{\text{a 被拉的次数}}\)</span></td>
+<td>样本平均（式 2.1）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(A_t = \arg\max_a Q_t(a)\)</span></td>
+<td>贪心（式 2.2）</td>
+</tr>
+<tr>
+<td>以 1 − ε 贪心，以 ε 随机</td>
+<td>ε-greedy</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(Q_{n+1} = Q_n + \frac1n[R_n - Q_n]\)</span></td>
+<td>增量平均（式 2.3）</td>
+</tr>
+<tr>
+<td>新 = 旧 + 步长 × (目标 − 旧)</td>
+<td>通用更新句式（式 2.4）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(Q_{n+1} = Q_n + \alpha[R_n - Q_n]\)</span></td>
+<td>常数步长（式 2.5）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch13_bandit.py</code>，测试 <code>tests/test_ch10_16.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch13_bandit.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch13_bandit.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>增量平均</td>
+<td><code>incremental_mean([2, 4, 6, 8])</code></td>
+<td><code>[2.0, 3.0, 4.0, 5.0]</code></td>
+</tr>
+<tr>
+<td>贪心，200 次实验 × 1000 步</td>
+<td><code>run_bandit(0.0, seed=s)</code></td>
+<td>每步 1.105，最好机器 21%</td>
+</tr>
+<tr>
+<td>ε-greedy</td>
+<td><code>run_bandit(0.1, seed=s)</code></td>
+<td>每步 1.426，最好机器 89%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">a = rng.integers(len(means)) if rng.random() &lt; eps else int(np.argmax(Q))   # ε-greedy
+N[a] += 1
+Q[a] += (r - Q[a]) / N[a]                                                    # 增量平均
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>np.argmax</code> 遇到并列时总是返回<strong>编号最小</strong>的那个，所以全 0 时贪心第一次一定拉 1 号机器，后面就可能一直困在 1 号。更公平的做法是在并列的里面随机挑（第 16 章的代码就是这样写的）。</p><nav class="pager"><a href="12-value-iteration.html">← 第 12 章 · 价值迭代与 GPI：评估只算一轮就改进</a><a href="14-monte-carlo.html">第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

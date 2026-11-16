@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="10-policy-evaluation-0-bellman">第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程</h1>
+<blockquote>
+<p>本章回答：状态很多、方程组解不动时，怎么算出一份策略的价值？"反复代入"为什么会收敛到正确答案？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/09-optimal.html">第 9 章 最优价值</a> · 下一章：<a href="../lessons/11-policy-iteration.html">第 11 章 策略改进与策略迭代</a><br />
+对应原文：Sutton &amp; Barto 第 4 章开头与 §4.1 Policy Evaluation（L5437–L5617，式 4.4、4.5，算法框 L5533，例 4.1 图 4.1）<br />
+本章缩写：DP = Dynamic Programming（动态 / 规划，第一步解释名字）；<span class="arithmatex">\(v_k\)</span>：第 k 轮的估计，k 读"第几轮"；θ：希腊字母 theta（读"西塔"），停止的阈值。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：把方程当成"更新规则"：右边算出新值，覆盖左边（2026-11-13）</h3>
+<p><strong>问题</strong>：第 8 章靠解 n 个方程算价值。网格有 25 个状态还行；状态一多（一张围棋棋盘的局面数比宇宙原子还多），方程组根本解不动。</p>
+<p><strong>办法</strong>：别去"解"方程，而是把它当成一条<strong>更新规则</strong>：先随便猜一组价值（比如全是 0），把它代进 Bellman 期望方程的<strong>右边</strong>，算出来的数当成新的<strong>左边</strong>；再代进去、再算……（式 4.5，L5487–L5516）：</p>
+<div class="arithmatex">\[v_{k+1}(s) = \sum_a \pi(a \mid s) \sum_{s', r} p(s', r \mid s, a)\,\big[\,r + \gamma\, v_k(s')\,\big]\]</div>
+<p><strong>和第 8 章的式 3.14 只差下标</strong>：右边用的是<strong>旧的</strong> <span class="arithmatex">\(v_k\)</span>，左边得到<strong>新的</strong> <span class="arithmatex">\(v_{k+1}\)</span>。</p>
+<p><strong>类比：传话估房价。</strong> 一开始大家都说"房价是 0"。第一轮，每家只看"今年租金"，估出一个数；第二轮，每家看"今年租金 + 打折的邻居家第一轮的估价"，又估出一个数……邻居的估价越来越准，你的也就越来越准。</p>
+<p><strong>这种算法叫动态规划 DP</strong>（第 4 章开头 L5358–L5366）：dynamic programming 是 Bellman 起的名字，"programming"在这里是"规划、排计划"的意思，不是写程序；思路是"大问题拆成相互依赖的小问题，反复利用小问题的答案"。DP 要求<strong>知道环境的 p</strong>。</p>
+<p><strong>一句话</strong>：策略评估 = 从猜测 <span class="arithmatex">\(v_0\)</span> 出发，反复把旧价值代进 Bellman 方程右边、得到新价值。</p>
+<h3 id="44-2026-11-13">第二步：4×4 网格，一轮一轮算给你看（2026-11-13）</h3>
+<p><strong>例 4.1</strong>（L5558–L5617，图 4.1）：</p>
+<ul>
+<li>4 × 4 的格子，<strong>左上角和右下角是终点</strong>（灰色），走到就结束；</li>
+<li>每走一步奖励 <strong>−1</strong>（不管走到哪），撞墙原地不动、也扣 1；</li>
+<li>策略：四个方向各 0.25，完全随机；不打折（γ = 1）。</li>
+</ul>
+<p><span class="arithmatex">\(v_\pi(s)\)</span> 的意思是"从 s 出发随机乱走，平均要走多少步才能到终点"，再加个负号。</p>
+<p><strong>第 0 轮</strong>：全部猜 0。</p>
+<p><strong>第 1 轮</strong>：每个非终点格子，四个方向都是"−1 + 邻居的旧值 0"，平均还是 −1。终点永远是 0。</p>
+<pre><code> 0.0  -1.0  -1.0  -1.0
+-1.0  -1.0  -1.0  -1.0
+-1.0  -1.0  -1.0  -1.0
+-1.0  -1.0  -1.0   0.0
+</code></pre>
+<p><strong>第 2 轮</strong>：看紧挨着左上终点的那格（第 1 行第 2 列）。它四个方向：</p>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>到哪</th>
+<th>−1 + 那格第 1 轮的值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>上</td>
+<td>撞墙，留在原地</td>
+<td>−1 + (−1) = −2</td>
+</tr>
+<tr>
+<td>下</td>
+<td>第 2 行第 2 列</td>
+<td>−1 + (−1) = −2</td>
+</tr>
+<tr>
+<td>右</td>
+<td>第 1 行第 3 列</td>
+<td>−1 + (−1) = −2</td>
+</tr>
+<tr>
+<td>左</td>
+<td><strong>终点</strong></td>
+<td>−1 + 0 = <strong>−1</strong></td>
+</tr>
+</tbody>
+</table>
+<p>平均：<span class="arithmatex">\((-2 - 2 - 2 - 1) / 4 = -1.75\)</span>。不挨着终点的格子，四个方向都是 −2，平均 −2。</p>
+<pre><code> 0.0  -1.75 -2.0  -2.0
+-1.75 -2.0  -2.0  -2.0
+-2.0  -2.0  -2.0  -1.75
+-2.0  -2.0  -1.75  0.0
+</code></pre>
+<p>（书上图 4.1 把 −1.75 印成 −1.7，是截掉了小数，不是四舍五入。）</p>
+<p><strong>第 3 轮、第 10 轮</strong>（代码算的）：</p>
+<pre><code>k = 3                          k = 10
+ 0.0  -2.4  -2.9  -3.0          0.0  -6.1  -8.4  -9.0
+-2.4  -2.9  -3.0  -2.9         -6.1  -7.7  -8.4  -8.4
+-2.9  -3.0  -2.9  -2.4         -8.4  -8.4  -7.7  -6.1
+-3.0  -2.9  -2.4   0.0         -9.0  -8.4  -6.1   0.0
+</code></pre>
+<p><strong>一句话</strong>：每一轮，每个格子 = 四个方向"−1 + 邻居上一轮的值"的平均；终点的 0 一轮一轮往外"渗"。</p>
+<h3 id="2026-11-13_1">第三步：一直算下去，停在真正的价值上（2026-11-13）</h3>
+<p>继续算，数字越变越慢，最后不动了（代码算了 258 轮，直到每格变化都小于 0.000001）：</p>
+<pre><code>  0   -14   -20   -22
+-14   -18   -20   -20
+-20   -20   -18   -14
+-22   -20   -14     0
+</code></pre>
+<p>这就是图 4.1 最后一张（k = ∞）。读法：<strong>从右上角出发随机乱走，平均要走 22 步才到终点</strong>。</p>
+<p><strong>为什么一定会停在正确答案上</strong>（L5492–L5496）：</p>
+<ol>
+<li>真正的 <span class="arithmatex">\(v_\pi\)</span> 代进右边，算出来还是 <span class="arithmatex">\(v_\pi\)</span>（第 8 章：它满足方程），所以它是这个过程的"不动点"：到了就不会再变；</li>
+<li>每一轮，估计和真值的差距都会<strong>缩小</strong>（γ &lt; 1 时至少缩成 γ 倍；这个例子 γ = 1，但每局一定会结束，也成立）；</li>
+<li>所以不管从什么猜测出发，都会一轮轮逼近 <span class="arithmatex">\(v_\pi\)</span>。</li>
+</ol>
+<p><strong>什么时候停</strong>（算法框 L5533–L5552）：记下这一轮所有格子里<strong>变化最大</strong>的那个数 Δ（希腊字母 delta，"变化量"），Δ 小于一个很小的阈值 θ 就停。</p>
+<p><strong>一句话</strong>：反复套方程，误差每轮都缩小，最后停在真正的 <span class="arithmatex">\(v_\pi\)</span>；变化小于 θ 就收工。</p>
+<h3 id="vs-2026-11-13">第四步：两种写法：两张表 vs 一张表（原地更新）（2026-11-13）</h3>
+<p><strong>两张表</strong>：第二步的做法：算第 k+1 轮时，右边<strong>全部</strong>用第 k 轮的旧值，新值写到另一张表里，一轮算完再整体替换。</p>
+<p><strong>一张表（原地更新 in place）</strong>（L5516–L5525）：只用一张表，算好一格<strong>马上覆盖</strong>；后面的格子算的时候，用到的邻居可能已经是<strong>这一轮的新值</strong>。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>两张表</th>
+<th>原地更新</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内存</td>
+<td>两份</td>
+<td>一份</td>
+</tr>
+<tr>
+<td>用到的邻居</td>
+<td>全是上一轮的</td>
+<td>有的已经是新的</td>
+</tr>
+<tr>
+<td>收敛速度</td>
+<td>慢一点</td>
+<td>通常更快（新信息传得快）</td>
+</tr>
+<tr>
+<td>结果</td>
+<td>都收敛到同一个 <span class="arithmatex">\(v_\pi\)</span></td>
+<td>同左</td>
+</tr>
+</tbody>
+</table>
+<p><strong>类比</strong>：两张表像"全班交完卷再统一公布成绩"；原地更新像"谁算好了马上告诉同桌"。书里的算法框（L5533）写的就是原地版本，本章代码用的是两张表版本（方便打印每一轮）。</p>
+<p><strong>"评估"这个名字</strong>：这一章只回答"<strong>这份策略</strong>有多好"（书里也叫 prediction 预测问题，L5441–L5443），还没有改策略。下一章用算出的价值来改策略。</p>
+<p><strong>一句话</strong>：两张表全用旧值，原地更新算好就覆盖；两种都收敛到同一个答案，原地版通常更快。</p>
+<h3 id="44-0">动画演示：4×4 网格，终点的 0 一轮轮往外渗</h3>
+<p><img alt="策略评估" src="../animations/l10-policy-eval.gif" /></p>
+<p>可交互版：<a href="../animations/l10-policy-eval.html">animations/l10-policy-eval.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>每帧做一轮更新（第二步），格子颜色越深越负；</li>
+<li>第 2 轮时高亮终点旁边那格，四个方向的 −2、−2、−2、−1 平均成 −1.75；</li>
+<li>右下的曲线是每轮最大变化 Δ，越来越小（第三步）；</li>
+<li>滑块跳到第 k 轮，对照图 4.1 的 k = 0、1、2、3、10、∞。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：第 2 轮里，第 2 行第 2 列那格（不挨着终点）为什么是 −2？列出它四个方向的值。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：最终价值里，左上终点正下方那格是 −14。用一句话说它的含义。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：如果第 0 轮不是全猜 0，而是全猜 −100，最后会收敛到不同的答案吗？用第三步的理由说明。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>方程当规则：旧值代右边，新值写左边；<br />
+一轮一轮套，终点的 0 往外渗；<br />
+误差每轮缩，最后停在真价值；<br />
+两张表稳当，一张表更快。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R17（迭代策略评估 式 4.5：<span class="arithmatex">\(v_{k+1}\)</span> 用 <span class="arithmatex">\(v_k\)</span> 算；4×4 网格第 2 轮的 −1.75；为什么收敛）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §4.1</td>
+<td>L5437–L5557（式 4.4、4.5，算法框 L5533）</td>
+<td>本章原文：迭代策略评估、两张表 vs 原地</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto 例 4.1</td>
+<td>L5558–L5617，图 4.1（对照 PDF p.77）</td>
+<td>4×4 网格逐轮的数字（左列）；右列的贪心策略是第 11 章</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto 第 4 章开头</td>
+<td>L5356–L5436</td>
+<td>什么是 DP、为什么要知道 p</td>
+</tr>
+<tr>
+<td>CS 285 第 7 讲</td>
+<td><code>lec-07.txt</code> 开头（Value-Based RL）</td>
+<td>课程版：policy evaluation 在 actor-critic 和 Q-learning 里的位置</td>
+</tr>
+<tr>
+<td>Hands-on-RL 第 4 章</td>
+<td><code>chinese/Hands-on-RL/第4章-动态规划算法.ipynb</code></td>
+<td>中文：悬崖漫步上的策略评估代码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>压缩映射 contraction</strong>：记"把 v 代进右边"这个操作为 <span class="arithmatex">\(T_\pi\)</span>。对任意两个估计 u、w，<span class="arithmatex">\(\max_s |T_\pi u(s) - T_\pi w(s)| \le \gamma \max_s |u(s) - w(s)|\)</span>。所以每做一轮，离真值的距离至少乘 γ，<span class="arithmatex">\(v_k \to v_\pi\)</span>。</li>
+<li><strong>γ = 1 时</strong>：靠"每局一定会结束"（例 4.1 的随机策略总会走到终点）保证收敛。</li>
+<li><strong>原地更新</strong>：叫 Gauss–Seidel（高斯–赛德尔，两位数学家）式迭代；两张表叫 Jacobi（雅可比）式迭代。</li>
+<li><strong>计算量</strong>：每轮要对每个状态、每个动作、每个可能的 s' 算一次，约 <span class="arithmatex">\(|\mathcal S|^2 |\mathcal A|\)</span>；比解方程组的 <span class="arithmatex">\(|\mathcal S|^3\)</span> 便宜，而且可以只算需要的状态（第 12 章 asynchronous DP）。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(v_{k+1}(s) = \sum_a \pi(a \mid s)\sum_{s', r} p\,[r + \gamma v_k(s')]\)</span></td>
+<td>迭代策略评估（式 4.5）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\Delta = \max_s \lvert v_{k+1}(s) - v_k(s)\rvert &lt; \theta\)</span></td>
+<td>停止条件</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\lVert v_k - v_\pi \rVert_\infty \le \gamma^k \lVert v_0 - v_\pi \rVert_\infty\)</span></td>
+<td>误差每轮缩成 γ 倍</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch10_policy_eval.py</code>（网格定义在 <code>rl_envs.py</code> 的 <code>gridworld_4x4()</code>），测试 <code>tests/test_ch10_16.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch10_policy_eval.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch10_policy_eval.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一轮更新（两张表）</td>
+<td><code>sweep(P, pi, v, gamma)</code></td>
+<td>新的一整张表</td>
+</tr>
+<tr>
+<td>第 0、1、2、3、10 轮</td>
+<td><code>policy_evaluation(..., history=True)</code> 的 <code>hist[k]</code></td>
+<td>图 4.1 左列</td>
+</tr>
+<tr>
+<td>收敛</td>
+<td>258 轮</td>
+<td>0、−14、−20、−22 …</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">new = np.array([sum(pa * q_from_v(P, v, gamma, s, a) for a, pa in pi[s].items()) for s in P])
+if np.max(np.abs(new - v)) &lt; theta:   # Δ &lt; θ 就停
+    return new
+</code></pre>
+<p><strong>代码里才看得到的</strong>：终点在代码里写成"做什么都留在原地、奖励 0、<code>done=True</code>"，<code>q_from_v</code> 遇到 <code>done</code> 就不加 <span class="arithmatex">\(\gamma v(s')\)</span>，所以终点的价值一直是 0。把 <code>sweep</code> 改成"算一格马上写回 v"就是原地版本，可以自己试试它要几轮收敛。</p><nav class="pager"><a href="09-optimal.html">← 第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot;</a><a href="11-policy-iteration.html">第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

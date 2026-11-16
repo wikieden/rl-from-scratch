@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 19 章 · 过估计与 Double DQN：max 会挑到&quot;运气好&quot;的那个 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="19-double-dqnmax">第 19 章 · 过估计与 Double DQN：max 会挑到"运气好"的那个</h1>
+<blockquote>
+<p>本章回答：Q-learning 和 DQN 学到的 Q 值为什么普遍偏高？"挑最大"这个动作本身有什么问题？用两个估计怎么修？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/18-dqn.html">第 18 章 DQN</a> · 下一章：<a href="../lessons/20-policy-gradient.html">第 20 章 策略梯度与 REINFORCE</a><br />
+对应原文：Sutton &amp; Barto §6.7 Maximization Bias and Double Learning（L9993–L10151，例 6.7 L10007，Double Q-learning 式 6.10 L10108）；CS 285 第 8 讲 Part 3（<code>lec-08.txt</code> L113–L134：Overestimation、Double Q-learning in practice）<br />
+本章缩写：Double DQN（DDQN）= Double Deep Q-Network（双 / 深度 Q 网络）；bias：偏差（平均来看偏离真值多少）；<span class="arithmatex">\(Q_1, Q_2\)</span>：两个独立的估计。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：十个都一样好的动作，挑出来的"最大值"却偏高（2026-11-13）</h3>
+<p><strong>一个思想实验</strong>：有 10 个动作，<strong>真实价值都是 0</strong>（哪个都一样）。但你不知道真值，只能各试 5 次、取平均当估计。每次试的结果有噪声（标准差 1）。</p>
+<p>估计出来大概是这样（某一次）：</p>
+<pre><code>动作:   1     2     3     4     5     6     7     8     9    10
+估计: -0.3  +0.5  -0.1  +0.8  -0.6  +0.2  -0.4  +0.1  +0.3  -0.2
+</code></pre>
+<p>每个估计都是"真值 0 + 一点噪声"，<strong>平均来看</strong>是准的：有的偏高有的偏低。</p>
+<p><strong>但 Q-learning 要的是 max</strong>：<span class="arithmatex">\(\max = +0.8\)</span>。真实的最大值是 0，你却估成了 0.8。</p>
+<p><strong>问题出在哪</strong>：10 个估计里，总会有一两个<strong>运气好</strong>、噪声往上偏的；max 专门把"运气最好"的那个挑出来。所以 max 一次次地偏高，<strong>平均下来也偏高</strong>。用代码重复了 2 万次：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>平均值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>真实的 <span class="arithmatex">\(\max_a q(a)\)</span></td>
+<td>0</td>
+</tr>
+<tr>
+<td>估计的 <span class="arithmatex">\(\max_a Q(a)\)</span></td>
+<td><strong>0.691</strong></td>
+</tr>
+</tbody>
+</table>
+<p>这叫<strong>最大化偏差 maximization bias</strong>（§6.7，L9993–L10006，"We call this maximization bias" L10006）：用"带噪声的估计的最大值"去估"真实值的最大值"，会系统性偏高。</p>
+<p><strong>类比：选秀。</strong> 10 个水平一样的选手，每人表演一次，评委按这一次的分数选冠军。冠军通常是"那天发挥最好"的人，他的分数比他真实水平高；你如果拿冠军的分数当"这群人的最高水平"，就会高估。</p>
+<p><strong>一句话</strong>：动作一样好时，max 会挑到噪声最往上偏的那个，所以"估计的最大值"系统性偏高（最大化偏差）。</p>
+<h3 id="q-learning-2026-11-13">第二步：在 Q-learning 里偏差会越滚越大（2026-11-13）</h3>
+<p><strong>Q-learning / DQN 的目标里正好有 max</strong>（第 16、18 章）：</p>
+<div class="arithmatex">\[y = r + \gamma\max_{a'} Q(s', a')\]</div>
+<p>Q 在训练中一直有误差，max 就一直偏高；偏高的目标又被拿去更新前一个状态的 Q，前一个状态的 Q 也偏高；它又成为更前面状态的目标……<strong>偏差一步步往前传、往上叠</strong>。</p>
+<p><strong>CS 285 第 8 讲 L115–L120</strong> 展示了 DQN 在 Atari 游戏上的实验：网络估出来的 Q 值，比真正玩出来的回报<strong>高出一大截</strong>。</p>
+<p><strong>书里的例 6.7</strong>（L10007–L10075，图 6.5）：一个小 MDP，从 A 出发，往右直接结束（奖励 0）；往左到 B，B 有很多动作、每个奖励都是"平均 −0.1 的随机数"，然后结束。往左<strong>其实更差</strong>（平均 −0.1 &lt; 0），但 Q-learning 因为在 B 处取 max 偏高，一开始<strong>大部分时间都选往左</strong>，要很久才纠正过来。</p>
+<p><strong>一句话</strong>：Q-learning 的目标里有 max，偏高的目标会传给前面的状态，偏差越滚越大；DQN 在 Atari 上的 Q 值明显高于真实回报。</p>
+<h3 id="2026-11-13_1">第三步：挑选和打分分开：两个估计（2026-11-13）</h3>
+<p><strong>问题的根源</strong>：用<strong>同一组</strong>估计，既去<strong>挑</strong>哪个动作最大，又用它来<strong>打分</strong>。运气好的那个被挑中，打分时又用了它运气好的分数。</p>
+<p><strong>修法：Double learning</strong>（L10076–L10108）：准备<strong>两组独立的</strong>估计 <span class="arithmatex">\(Q_1\)</span>、<span class="arithmatex">\(Q_2\)</span>（各自用不同的数据学出来，噪声互不相关）：</p>
+<ol>
+<li>用 <span class="arithmatex">\(Q_1\)</span> <strong>挑</strong>：<span class="arithmatex">\(a^* = \arg\max_a Q_1(a)\)</span>；</li>
+<li>用 <span class="arithmatex">\(Q_2\)</span> <strong>打分</strong>：用 <span class="arithmatex">\(Q_2(a^*)\)</span> 当这个动作的价值。</li>
+</ol>
+<p><span class="arithmatex">\(Q_1\)</span> 挑中的那个动作，在 <span class="arithmatex">\(Q_1\)</span> 里是"运气好"的；但 <span class="arithmatex">\(Q_2\)</span> 的噪声和它无关，平均来看不偏不倚。</p>
+<p><strong>选秀类比</strong>：一组评委负责<strong>选出</strong>冠军，另一组评委<strong>重新打分</strong>。第二组不知道第一组看到的那次超常发挥，给出的分数更接近真实水平。</p>
+<p><strong>还是那个 10 个动作的实验</strong>，重复 2 万次：</p>
+<table>
+<thead>
+<tr>
+<th>做法</th>
+<th>平均值</th>
+<th>真值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>同一组估计，挑 + 打分</td>
+<td>0.691</td>
+<td>0</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(Q_1\)</span> 挑，<span class="arithmatex">\(Q_2\)</span> 打分</td>
+<td><strong>−0.000</strong></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>偏差没了。</p>
+<p><strong>Double Q-learning</strong>（式 6.10，L10108）：表格版每一步随机选一组来更新，比如更新 <span class="arithmatex">\(Q_1\)</span> 时：</p>
+<div class="arithmatex">\[Q_1(S, A) \leftarrow Q_1(S, A) + \alpha\big[R + \gamma\, Q_2\big(S', \arg\max_a Q_1(S', a)\big) - Q_1(S, A)\big]\]</div>
+<p><strong>一句话</strong>：同一组估计既挑又打分才会偏高；一组挑、另一组打分，噪声不相关，偏差就消失了（Double learning）。</p>
+<h3 id="double-dqn2026-11-13">第四步：Double DQN：现成的两个网络（2026-11-13）</h3>
+<p><strong>DQN 里本来就有两个网络</strong>（第 18 章）：主网络 θ 和目标网络 <span class="arithmatex">\(\theta^-\)</span>。不用再加新网络，直接分工（<code>lec-08.txt</code> L121–L123，"Double Q-learning in practice"）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>DQN</th>
+<th>Double DQN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>谁挑动作</td>
+<td>目标网络 <span class="arithmatex">\(\theta^-\)</span></td>
+<td><strong>主网络 θ</strong></td>
+</tr>
+<tr>
+<td>谁打分</td>
+<td>目标网络 <span class="arithmatex">\(\theta^-\)</span></td>
+<td>目标网络 <span class="arithmatex">\(\theta^-\)</span></td>
+</tr>
+<tr>
+<td>目标 y</td>
+<td><span class="arithmatex">\(r + \gamma\max_{a'}Q(s', a'; \theta^-)\)</span></td>
+<td><span class="arithmatex">\(r + \gamma\,Q\big(s', \arg\max_{a'}Q(s', a'; \theta); \theta^-\big)\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>手算一个例子</strong>：r = 0，γ = 0.9，在 s' 处：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主网络 θ 的输出</td>
+<td>1.0</td>
+<td><strong>2.0</strong></td>
+<td>0.5</td>
+</tr>
+<tr>
+<td>目标网络 <span class="arithmatex">\(\theta^-\)</span> 的输出</td>
+<td>1.2</td>
+<td>0.7</td>
+<td><strong>1.5</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>DQN</strong>：目标网络自己挑最大（动作 3，1.5）：<span class="arithmatex">\(y = 0.9 \times 1.5 = 1.35\)</span>；</li>
+<li><strong>Double DQN</strong>：主网络挑（动作 2），目标网络给动作 2 打分（0.7）：<span class="arithmatex">\(y = 0.9 \times 0.7 = 0.63\)</span>。</li>
+</ul>
+<p>两个网络"意见不一"时（主网络觉得 2 好，目标网络觉得 3 好），Double DQN 给出一个保守得多的目标。</p>
+<p><strong>改动只有一行代码</strong>，几乎没有额外计算，在 Atari 上明显减少了过估计、提高了分数。CS 285 HW3 §2.5 就要求在 DQN 上加上 Double DQN 并比较。</p>
+<p><strong>一句话</strong>：Double DQN = 主网络挑动作、目标网络打分；只改目标里的一行，例子里目标从 1.35 降到 0.63。</p>
+<h3 id="max">动画演示：十个动作的估计，max 总挑到最高的噪声</h3>
+<p><img alt="过估计与 Double DQN" src="../animations/l19-double-dqn.gif" /></p>
+<p>可交互版：<a href="../animations/l19-double-dqn.html">animations/l19-double-dqn.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>十根柱子是十个动作的估计（真值都是 0，虚线），每帧重新抽一次噪声；</li>
+<li>红框是 <span class="arithmatex">\(Q_1\)</span> 挑出的最大那根，右边记下它的值：这些点平均在 0.69 左右（第一步）；</li>
+<li>绿点是用 <span class="arithmatex">\(Q_2\)</span> 给同一个动作重新打分的值，平均贴着 0（第三步）；</li>
+<li>滑块调动作个数：动作越多，max 偏得越高；调每个动作"试几次"：试得越多噪声越小，偏差也越小。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：三个动作的真值都是 5，估计分别是 4.6、5.9、5.2。用"同一组估计取 max"估出的最大值是多少？偏了多少？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：主网络在 s' 的输出 [3, 1, 2]，目标网络 [1, 4, 2]，r = 1，γ = 0.5。分别算 DQN 和 Double DQN 的 y。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：用自己的话说：为什么"一组挑、另一组打分"就不偏了？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>十个一样好，max 挑到运气最好的那个，估计就偏高；<br />
+目标里有 max，偏高一步步往前传；<br />
+挑和打分分开：一组挑，另一组打分，噪声不相关就不偏；<br />
+Double DQN：主网络挑，目标网络打分，只改一行。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R33（最大化偏差：<span class="arithmatex">\(\mathbb{E}[\max_a Q(a)] \ge \max_a q(a)\)</span>；Double DQN 目标 <span class="arithmatex">\(r + \gamma Q(s', \arg\max_{a'}Q(s', a'; \theta); \theta^-)\)</span>）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §6.7</td>
+<td><code>books/sutton-barto-RLbook2020.txt</code> L9993–L10151（例 6.7 L10007，式 6.10 L10108）</td>
+<td>最大化偏差和 Double Q-learning 的原文</td>
+</tr>
+<tr>
+<td>★ CS 285 第 8 讲 Part 3</td>
+<td><code>cs285-slides/lec-08.txt</code> L113–L134</td>
+<td>DQN 在 Atari 上的过估计实验图；Double Q-learning in practice</td>
+</tr>
+<tr>
+<td>CS 285 第 8 讲</td>
+<td><code>lec-08.txt</code> L134 之后</td>
+<td>multi-step returns、连续动作的 Q-learning（接 SAC）</td>
+</tr>
+<tr>
+<td>Rainbow 论文</td>
+<td><code>papers/rainbow-1710.02298.txt</code> §2–§3</td>
+<td>DQN 的六个改进合在一起：Double、Dueling、优先回放、多步、分布式、噪声网络</td>
+</tr>
+<tr>
+<td>TD3 论文</td>
+<td><code>papers/td3-1802.09477.txt</code> §4</td>
+<td>连续动作里的过估计：取两个 Q 的较小值（clipped double Q）</td>
+</tr>
+<tr>
+<td>王树森 slides</td>
+<td><code>chinese/wangshusen-DRL/Slides/3_DQN_3.pdf</code></td>
+<td>中文：高估问题、Double DQN</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>为什么 max 偏高</strong>：max 是凸函数，由 Jensen 不等式（Jensen 是丹麦数学家的名字），<span class="arithmatex">\(\mathbb{E}[\max_a Q(a)] \ge \max_a \mathbb{E}[Q(a)] = \max_a q(a)\)</span>；噪声越大、动作越多，差距越大。</li>
+<li><strong>10 个标准正态的最大值</strong>：每个估计是 5 次平均，标准差 <span class="arithmatex">\(1/\sqrt5 \approx 0.447\)</span>；10 个标准正态最大值的期望约 1.54，乘 0.447 ≈ 0.69，和实验的 0.691 一致。</li>
+<li><strong>Double 估计为什么无偏</strong>：<span class="arithmatex">\(Q_2\)</span> 与 <span class="arithmatex">\(Q_1\)</span> 独立，<span class="arithmatex">\(\mathbb{E}[Q_2(a^*) \mid a^*] = q(a^*)\)</span>；当所有 q 相等时它就是 <span class="arithmatex">\(\max q\)</span>。代价是可能<strong>低估</strong>（当 <span class="arithmatex">\(Q_1\)</span> 挑错时）。</li>
+<li><strong>TD3 的做法</strong>：目标里用 <span class="arithmatex">\(\min(Q_1, Q_2)\)</span>，故意偏向低估，在连续控制里更稳。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\mathbb{E}[\max_a Q(a)] \ge \max_a q(a)\)</span></td>
+<td>最大化偏差</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(a^* = \arg\max_a Q_1(a)\)</span>，用 <span class="arithmatex">\(Q_2(a^*)\)</span></td>
+<td>Double learning：一组挑、一组打分</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(Q_1(S,A) \leftarrow Q_1 + \alpha[R + \gamma Q_2(S', \arg\max_a Q_1(S', a)) - Q_1]\)</span></td>
+<td>Double Q-learning（式 6.10）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(y = r + \gamma\,Q(s', \arg\max_{a'}Q(s', a'; \theta); \theta^-)\)</span></td>
+<td>Double DQN 目标</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch19_double_dqn.py</code>，测试 <code>tests/test_ch17_24.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch19_double_dqn.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch19_double_dqn.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10 个动作重复 2 万次</td>
+<td><code>max_bias()</code></td>
+<td>单估计 0.691，双估计 −0.000</td>
+</tr>
+<tr>
+<td>手算一步</td>
+<td><code>targets(0.0, 0.9, [1.0, 2.0, 0.5], [1.2, 0.7, 1.5])</code></td>
+<td>DQN 1.35，Double DQN 0.63</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">single.append(Q1.max())             # 同一组估计既挑又打分
+double.append(Q2[np.argmax(Q1)])    # Q1 挑动作，Q2 打分
+</code></pre>
+<p><strong>代码里才看得到的</strong>：在第 18 章的 DQN 代码里改成 Double DQN，只要把 <code>target(NS).max(dim=1).values</code> 换成 <code>target(NS).gather(1, q(NS).argmax(dim=1, keepdim=True)).squeeze(1)</code>：用主网络 <code>q</code> 的 argmax 去目标网络 <code>target</code> 里取值。</p><nav class="pager"><a href="18-dqn.html">← 第 18 章 · DQN：神经网络 + 经验回放 + 目标网络</a><a href="20-policy-gradient.html">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

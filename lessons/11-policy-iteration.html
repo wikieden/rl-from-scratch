@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="11">第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估</h1>
+<blockquote>
+<p>本章回答：知道了一份策略的价值，怎么得到一份更好的策略？反复"评估 → 改进"，为什么一定会走到最优？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/10-policy-eval.html">第 10 章 策略评估</a> · 下一章：<a href="../lessons/12-value-iteration.html">第 12 章 价值迭代与 GPI</a><br />
+对应原文：Sutton &amp; Barto §4.2 Policy Improvement（L5618–L5881，式 4.6–4.9，策略改进定理）、§4.3 Policy Iteration（L5882–L6152，算法框 L5918）<br />
+本章缩写：π'（读"π 撇"）：改进后的新策略；argmax 见第 9 章；PI = Policy Iteration（策略 / 迭代）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="q2026-11-13">第一步：只改一个状态的动作，值不值？看 q（2026-11-13）</h3>
+<p><strong>问题</strong>：手上有一份策略 π，也算出了它的价值 <span class="arithmatex">\(v_\pi\)</span>（第 10 章）。在某个状态 s，如果<strong>只这一步</strong>换个动作 a，之后还按 π 走，会更好吗？</p>
+<p>"先做 a、之后按 π 走"的价值，正是第 7 章的 <span class="arithmatex">\(q_\pi(s, a)\)</span>（式 4.6，L5716–L5722）：</p>
+<div class="arithmatex">\[q_\pi(s, a) = \sum_{s', r} p(s', r \mid s, a)\,[\,r + \gamma\, v_\pi(s')\,]\]</div>
+<p><strong>判断标准</strong>（L5726–L5729）：如果 <span class="arithmatex">\(q_\pi(s, a) &gt; v_\pi(s)\)</span>，也就是"这一步换成 a"比"照旧按 π"平均更好，那以后<strong>每次</strong>到 s 都选 a，整份策略都会变好。</p>
+<p><strong>类比：上班路线。</strong> 你每天按习惯的路线走（策略 π），平均 40 分钟（<span class="arithmatex">\(v_\pi\)</span>）。某天在第一个路口试着右转，之后照旧走，结果 35 分钟（<span class="arithmatex">\(q_\pi\)</span>）。那以后到这个路口都右转，总时间只会更短。</p>
+<p><strong>一句话</strong>：在 s 换成动作 a 值不值，就比 <span class="arithmatex">\(q_\pi(s, a)\)</span> 和 <span class="arithmatex">\(v_\pi(s)\)</span>；更大就换。</p>
+<h3 id="q-2026-11-13">第二步：每个状态都挑 q 最大的：贪心改进（2026-11-13）</h3>
+<p><strong>把第一步推广到所有状态</strong>：每个状态都挑 <span class="arithmatex">\(q_\pi(s, a)\)</span> <strong>最大</strong>的动作，得到新策略 π'（式 4.9，L5824–L5836）：</p>
+<div class="arithmatex">\[\pi'(s) = \arg\max_a q_\pi(s, a) = \arg\max_a \sum_{s', r} p(s', r \mid s, a)\,[\,r + \gamma\, v_\pi(s')\,]\]</div>
+<p>这叫<strong>对 <span class="arithmatex">\(v_\pi\)</span> 贪心 greedy</strong>（第 9 章第三步对 <span class="arithmatex">\(v_*\)</span> 贪心，这里对的是当前策略的 <span class="arithmatex">\(v_\pi\)</span>）。</p>
+<p><strong>策略改进定理 policy improvement theorem</strong>（L5730–L5747，式 4.7、4.8）：这样得到的 π' <strong>一定不比 π 差</strong>，每个状态都满足 <span class="arithmatex">\(v_{\pi'}(s) \ge v_\pi(s)\)</span>。</p>
+<p><strong>直觉</strong>：在每个状态，π' 都选了"至少和 π 一样好"的动作（max 一定 ≥ 平均）。处处不差，整体当然不差。</p>
+<p><strong>用 4×4 网格试一下</strong>（例 4.1，图 4.1 右列）：拿第 10 章随机策略的最终价值（0、−14、−20、−22 …），每格往四个方向看一步，挑"−1 + 邻居价值"最大的：</p>
+<pre><code> 终  ←   ←   ↓←
+ ↑   ↑←  ↓←  ↓
+ ↑   ↑→  ↓→  ↓
+ ↑→  →   →   终
+</code></pre>
+<p>（并列最优的方向都画上了。）<strong>只贪心改进了一次</strong>，箭头就已经全部指向最近的终点：这正是最优策略。例 4.1 很简单，一次就到位；一般情况要多来几轮。</p>
+<p><strong>一句话</strong>：每个状态挑 <span class="arithmatex">\(q_\pi\)</span> 最大的动作，得到的新策略处处不比原来差（策略改进定理）。</p>
+<h3 id="2026-11-13">第三步：改了再评估，评估了再改：策略迭代（2026-11-13）</h3>
+<p><strong>新策略 π' 有了，它的价值 <span class="arithmatex">\(v_{\pi'}\)</span> 又变了</strong>。拿新价值再贪心一次，可能又能改进。于是轮流做（§4.3，L5882–L5917）：</p>
+<div class="arithmatex">\[\pi_0 \xrightarrow{\ \text{评估}\ } v_{\pi_0} \xrightarrow{\ \text{改进}\ } \pi_1 \xrightarrow{\ \text{评估}\ } v_{\pi_1} \xrightarrow{\ \text{改进}\ } \pi_2 \to \cdots \to \pi_* \to v_*\]</div>
+<p><strong>什么时候停</strong>：改进以后策略<strong>一点都没变</strong>，就停。</p>
+<p><strong>为什么停下来就是最优</strong>（L5836–L5855）：策略没变，说明每个状态的 π 已经在挑 <span class="arithmatex">\(q_\pi\)</span> 最大的动作，也就是</p>
+<div class="arithmatex">\[v_\pi(s) = \max_a \sum_{s', r} p\,[r + \gamma v_\pi(s')]\]</div>
+<p>这正是第 9 章的 <strong>Bellman 最优方程</strong>。最优方程只有一个解 <span class="arithmatex">\(v_*\)</span>，所以 <span class="arithmatex">\(v_\pi = v_*\)</span>，π 就是最优策略。</p>
+<p><strong>为什么一定会停</strong>（L5908–L5912）：有限 MDP 的确定性策略只有有限多种（每个状态选一个动作），每一轮要么严格变好、要么停下，不会绕圈，所以有限轮内一定结束。</p>
+<p><strong>跑出来</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>策略迭代几轮停下</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4×4 网格（例 4.1）</td>
+<td>3 轮（最后一轮是"确认没变"）</td>
+<td>价值 0、−1、−2、−3 …（离最近终点几步）</td>
+</tr>
+<tr>
+<td>5×5 网格（例 3.5）</td>
+<td>5 轮</td>
+<td><span class="arithmatex">\(v_*(A) = 24.4\)</span>，和第 9 章一样</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：策略迭代 = 评估 → 贪心改进 → 评估 → …，策略不再变就停，停下时满足最优方程，就是最优。</p>
+<h3 id="2026-11-13_1">第四步：每轮都要等评估算完：太慢了？（2026-11-13）</h3>
+<p><strong>问题</strong>：策略迭代每一轮都要完整做一次第 10 章的策略评估（4×4 网格要 200 多轮小循环），才能改一次策略。</p>
+<p><strong>观察</strong>：回到第二步，<strong>评估只算了一部分</strong>、价值还没准的时候，贪心出来的策略往往已经是对的了。例 4.1 的图 4.1 右列显示：k = 3 时贪心策略就已经是最优的，后面 250 多轮评估对"改策略"没有任何帮助。</p>
+<p>所以有个想法：<strong>评估不用算到底，算几轮就改一次策略</strong>。极端一点：<strong>评估只算一轮就改</strong>。这就是下一章的<strong>价值迭代</strong>。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>评估算到底</th>
+<th>评估只算一轮</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>名字</td>
+<td>策略迭代（本章）</td>
+<td>价值迭代（第 12 章）</td>
+</tr>
+<tr>
+<td>每轮的代价</td>
+<td>大</td>
+<td>小</td>
+</tr>
+<tr>
+<td>要几轮</td>
+<td>少（4×4：3 轮）</td>
+<td>多一些，但每轮便宜</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：策略迭代每轮都要把评估算到底，其实评估没算完时贪心策略常已经对了，所以有了下一章"评估一轮就改"的价值迭代。</p>
+<h3 id="_2">动画演示：评估 ↔ 改进来回走，箭头一步步变成最优</h3>
+<p><img alt="策略迭代" src="../animations/l11-policy-iteration.gif" /></p>
+<p>可交互版：<a href="../animations/l11-policy-iteration.html">animations/l11-policy-iteration.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>左边是价值（颜色），右边是策略（箭头）；</li>
+<li>"评估"阶段：价值一轮轮更新，箭头不动（第 10 章）；</li>
+<li>"改进"阶段：每格往四邻看一步，箭头换成 q 最大的方向（第二步）；</li>
+<li>交替几次后，改进完箭头不再变，提示"已停下：满足最优方程"（第三步）；滑块"评估几轮就改一次"：调到 1 就是下一章的价值迭代。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：某状态下 π 选的动作 <span class="arithmatex">\(q_\pi = 5\)</span>，另一个动作 <span class="arithmatex">\(q_\pi = 7\)</span>，<span class="arithmatex">\(v_\pi(s) = 5\)</span>。按第一步，该不该换？换了以后这个状态的价值会变小吗？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：4×4 网格的第一张贪心箭头图里，第 1 行第 4 列（右上角）画着"↓←"两个方向。为什么两个都是最优？（提示：看它左边和下边两格的价值。）</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：策略迭代"改进以后策略不变"时为什么就是最优？用第三步的两句话复述。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>换不换看 q：q 比 v 大就换；<br />
+每格挑 q 最大，新策略处处不输（改进定理）；<br />
+评估、改进、再评估，策略不变就停，停下就是最优；<br />
+评估不必算到底，下一章只算一轮。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R18（策略改进：<span class="arithmatex">\(\pi'(s) = \arg\max_a q_\pi(s, a)\)</span>；策略改进定理）</li>
+<li>R19（策略迭代的流程；为什么"策略不变"就是最优）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §4.2</td>
+<td>L5618–L5881（式 4.6–4.9、策略改进定理及证明 L5730–L5790）</td>
+<td>本章第一、二步</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto §4.3</td>
+<td>L5882–L5917（算法框 L5918；"往往几轮就收敛" L6118）</td>
+<td>策略迭代的完整算法</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto 例 4.2</td>
+<td>L5955 起（Jack 的租车问题，图 4.2）</td>
+<td>策略迭代在一个更大问题上的表现：4 轮收敛</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto 习题 4.4</td>
+<td>L6125</td>
+<td>并列最优动作时策略迭代可能"来回换"永不停的 bug，以及怎么修</td>
+</tr>
+<tr>
+<td>CS 285 第 7 讲</td>
+<td><code>lec-07.txt</code>（Value-Based RL）开头</td>
+<td>课程版：policy iteration → value iteration → fitted Q-iteration 的演化</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>策略改进定理</strong>：若对所有 s 有 <span class="arithmatex">\(q_\pi(s, \pi'(s)) \ge v_\pi(s)\)</span>，则对所有 s 有 <span class="arithmatex">\(v_{\pi'}(s) \ge v_\pi(s)\)</span>。证明是把 <span class="arithmatex">\(v_\pi(s) \le q_\pi(s, \pi'(s))\)</span> 一层层展开（L5753–L5790），每展开一层就多一步按 π' 走。</li>
+<li><strong>最优性</strong>：改进后不变 ⇔ <span class="arithmatex">\(v_\pi\)</span> 满足 Bellman 最优方程 ⇔ <span class="arithmatex">\(v_\pi = v_*\)</span>。</li>
+<li><strong>有限步收敛</strong>：确定性策略共 <span class="arithmatex">\(|\mathcal A|^{|\mathcal S|}\)</span> 种，单调改进不会重复，所以有限步结束；实际上通常几轮就停。</li>
+<li><strong>并列的处理</strong>：argmax 有并列时要固定一种挑法（比如编号最小的），否则可能在两个一样好的策略之间来回换、判断不出"不变"（习题 4.4）。本章代码把并列动作平分概率，比较的是整张概率表。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(q_\pi(s, a) = \sum_{s', r} p\,[r + \gamma v_\pi(s')]\)</span></td>
+<td>只这一步换成 a（式 4.6）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(q_\pi(s, \pi'(s)) \ge v_\pi(s)\ \forall s \Rightarrow v_{\pi'}(s) \ge v_\pi(s)\ \forall s\)</span></td>
+<td>策略改进定理（式 4.7、4.8）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\pi'(s) = \arg\max_a q_\pi(s, a)\)</span></td>
+<td>贪心改进（式 4.9）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\pi_0 \to v_{\pi_0} \to \pi_1 \to \cdots \to \pi_*\)</span></td>
+<td>策略迭代</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch11_policy_iteration.py</code>，测试 <code>tests/test_ch10_16.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch11_policy_iteration.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch11_policy_iteration.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>对随机策略贪心一次</td>
+<td><code>greedy_policy(P, v_rand, 1.0)</code></td>
+<td>第二步的箭头图</td>
+</tr>
+<tr>
+<td>策略迭代（4×4）</td>
+<td><code>policy_iteration(P, 1.0, policy_evaluation)</code></td>
+<td>3 轮，价值 0、−1、−2、−3</td>
+</tr>
+<tr>
+<td>策略迭代（5×5）</td>
+<td><code>policy_iteration(G, 0.9, solve_v)</code></td>
+<td>5 轮，<span class="arithmatex">\(v_*(A) = 24.4\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">while True:
+    v = evaluate(P, pi, gamma)            # 评估（第 10 章，或第 8 章直接解）
+    new = greedy_policy(P, v, gamma)      # 改进：每格挑 q 最大
+    if new == pi: return pi, v, rounds    # 不变就停
+    pi = new
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>evaluate</code> 是作为参数传进去的：4×4 用第 10 章的迭代评估，5×5 直接用第 8 章的 <code>solve_v</code> 解方程。策略迭代只要求"能算出 <span class="arithmatex">\(v_\pi\)</span>"，用哪种办法都行。</p><nav class="pager"><a href="10-policy-eval.html">← 第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程</a><a href="12-value-iteration.html">第 12 章 · 价值迭代与 GPI：评估只算一轮就改进 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 16 章 · SARSA 与 Q-learning：用 TD 学 q，学会怎么做 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="16-sarsa-q-learning-td-q">第 16 章 · SARSA 与 Q-learning：用 TD 学 q，学会怎么做</h1>
+<blockquote>
+<p>本章回答：TD 只学会了"评估"，怎么用它来找最好的动作？SARSA 和 Q-learning 只差一个字，结果为什么会走出两条完全不同的路线？on-policy 和 off-policy 是什么意思？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/15-td.html">第 15 章 时序差分 TD</a> · 下一章：<a href="../lessons/17-function-approx.html">第 17 章 函数近似与梯度下降</a><br />
+对应原文：Sutton &amp; Barto §6.4 Sarsa（L9365–L9513，式 6.7，算法框 L9438）、§6.5 Q-learning（L9514–L9653，式 6.8，算法框 L9537，例 6.6 悬崖行走 L9563，图 6.4）<br />
+本章缩写：SARSA = State, Action, Reward, State, Action（状态 / 动作 / 奖励 / 下一状态 / 下一动作，一次更新用到的五样东西）；Q-learning：学 Q（动作价值 q）的方法；on-policy：同策略（学的和做的是同一份策略）；off-policy：异策略（学的和做的不是同一份）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="v-q-p-q2026-11-13">第一步：从学 V 到学 Q：不知道 p 时，挑动作要靠 q（2026-11-13）</h3>
+<p><strong>问题</strong>：第 15 章的 TD 学会了 <span class="arithmatex">\(V(s)\)</span>。可是知道了 <span class="arithmatex">\(V\)</span>，怎么挑动作？第 9 章说过：有 <span class="arithmatex">\(v_*\)</span> 时要"往前看一步"，算 <span class="arithmatex">\(\sum p\,[r + \gamma v(s')]\)</span>，<strong>这需要 p</strong>。</p>
+<p><strong>办法</strong>（第 9 章第三步末尾）：直接学<strong>动作价值 <span class="arithmatex">\(Q(s, a)\)</span></strong>。有了 Q，挑动作只要看哪个 Q 最大，<strong>不需要 p</strong>。</p>
+<p><strong>用 TD 学 Q</strong>：把第 15 章公式里的 <span class="arithmatex">\(V(S_t)\)</span> 换成 <span class="arithmatex">\(Q(S_t, A_t)\)</span>，"下一状态的估计"换成"下一个状态–动作的估计"：</p>
+<div class="arithmatex">\[Q(S_t, A_t) \leftarrow Q(S_t, A_t) + \alpha\,\big[\,R_{t+1} + \gamma\, \underbrace{(\text{下一步的 Q})}_{?} - Q(S_t, A_t)\,\big]\]</div>
+<p><strong>"下一步的 Q"取哪个</strong>，就分出了本章的两个算法。</p>
+<p><strong>整体流程是 GPI</strong>（第 12 章）：边学 Q（评估），边用 Q 来选动作（改进）。选动作用 <strong>ε-greedy</strong>（第 13 章），保证每个动作都会被试到。</p>
+<p><strong>一句话</strong>：不知道 p 时，学 Q 而不是学 V，挑动作看 Q 最大；用 TD 更新 Q，"下一步的 Q"取哪个分出两个算法。</p>
+<h3 id="sarsa2026-11-13">第二步：SARSA：用真正要做的下一个动作（2026-11-13）</h3>
+<p><strong>SARSA</strong>（式 6.7，L9405–L9410）：下一步的 Q 用<strong>实际要做的下一个动作</strong> <span class="arithmatex">\(A_{t+1}\)</span>：</p>
+<div class="arithmatex">\[Q(S_t, A_t) \leftarrow Q(S_t, A_t) + \alpha\,\big[\,R_{t+1} + \gamma\, Q(S_{t+1}, A_{t+1}) - Q(S_t, A_t)\,\big]\]</div>
+<p><strong>名字的来历</strong>（L9413–L9416）：一次更新用到 <span class="arithmatex">\(S_t, A_t, R_{t+1}, S_{t+1}, A_{t+1}\)</span> 五样，首字母连起来就是 S-A-R-S-A。</p>
+<p><strong>流程</strong>（算法框 L9438）：</p>
+<ol>
+<li>在 S 按 ε-greedy 选好动作 A；</li>
+<li>做 A，看到 R 和 S'；</li>
+<li><strong>在 S' 按 ε-greedy 选好下一个动作 A'</strong>（这一步真的会去做）；</li>
+<li>用 <span class="arithmatex">\(Q(S', A')\)</span> 更新 <span class="arithmatex">\(Q(S, A)\)</span>；</li>
+<li>S ← S'，A ← A'，回到 2。</li>
+</ol>
+<p><strong>on-policy（同策略）</strong>：SARSA 学的 Q，是"<strong>按 ε-greedy 这份策略</strong>行事"的 Q：包括它偶尔会乱走那 10%。学的和做的是同一份策略。</p>
+<p><strong>一句话</strong>：SARSA 的目标用实际要做的下一个动作 <span class="arithmatex">\(Q(S', A')\)</span>；学的是自己正在执行的 ε-greedy 策略的价值（on-policy）。</p>
+<h3 id="q-learning2026-11-13">第三步：Q-learning：用下一格最好的动作（2026-11-13）</h3>
+<p><strong>Q-learning</strong>（式 6.8，L9520–L9524；Watkins 1989）：下一步的 Q 用<strong>下一个状态里最大的那个</strong>，不管自己实际会做什么：</p>
+<div class="arithmatex">\[Q(S_t, A_t) \leftarrow Q(S_t, A_t) + \alpha\,\big[\,R_{t+1} + \gamma\, \max_a Q(S_{t+1}, a) - Q(S_t, A_t)\,\big]\]</div>
+<p><strong>认出来了吗</strong>：方括号里的目标就是第 9 章 <strong>Bellman 最优方程</strong>（式 3.20）右边，只是把"按 p 平均"换成了"一个真实样本"。所以 Q-learning 直接学的是<strong>最优</strong>的 <span class="arithmatex">\(q_*\)</span>（"directly approximates q*"，L9527–L9528）。</p>
+<p><strong>off-policy（异策略）</strong>：做动作时还是 ε-greedy（会乱走），但学的是"<strong>以后一直挑最好的</strong>"那份贪心策略的 Q。做的和学的不是同一份策略。</p>
+<p><strong>手算对比</strong>：在格子 (3, 0)，往上走，奖励 −1，到了 (2, 0)。(2, 0) 四个动作当前的 Q（编的）：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>↑</th>
+<th>↓</th>
+<th>→</th>
+<th>←</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q((2,0), ·)</td>
+<td>−5</td>
+<td>−12</td>
+<td><strong>−4</strong></td>
+<td>−6</td>
+</tr>
+</tbody>
+</table>
+<p>假设 ε-greedy 在 (2, 0) 这次掷骰子掷到了"乱走"，选了 ↑。γ = 1：</p>
+<ul>
+<li><strong>SARSA 目标</strong> = <span class="arithmatex">\(-1 + Q((2,0), \uparrow) = -1 + (-5) = -6\)</span>（用真正要做的 ↑）；</li>
+<li><strong>Q-learning 目标</strong> = <span class="arithmatex">\(-1 + \max = -1 + (-4) = -5\)</span>（用最好的 →）。</li>
+</ul>
+<p>同一步经历，两个算法得出不同的目标。</p>
+<p><strong>一句话</strong>：Q-learning 的目标用下一格最大的 Q，等于在采样解 Bellman 最优方程；学的是贪心策略的 <span class="arithmatex">\(q_*\)</span>，做的却是 ε-greedy（off-policy）。</p>
+<h3 id="2026-11-13">第四步：悬崖行走：一个走安全路，一个贴着悬崖走（2026-11-13）</h3>
+<p><strong>例 6.6 悬崖行走 cliff walking</strong>（L9563–L9642，图 6.4）：</p>
+<pre><code>. . . . . . . . . . . .
+. . . . . . . . . . . .
+. . . . . . . . . . . .
+S C C C C C C C C C C G
+</code></pre>
+<ul>
+<li>4 × 12 的格子，从左下 S 出发，到右下 G 结束；</li>
+<li>每一步 −1；最下一行中间 10 格是<strong>悬崖 C</strong>：掉下去 <strong>−100</strong>，送回起点；</li>
+<li>两个算法都用 ε-greedy，ε = 0.1，α = 0.5，不打折。</li>
+</ul>
+<p>用代码各跑 30 次、每次 500 局：</p>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>学到的路线</th>
+<th>训练中最后 100 局平均每局奖励</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SARSA</td>
+<td>绕到<strong>上面</strong>走（第 0–2 行），离悬崖远</td>
+<td><strong>−27.2</strong></td>
+</tr>
+<tr>
+<td>Q-learning</td>
+<td><strong>贴着悬崖</strong>走（第 2 行）</td>
+<td>−51.3</td>
+</tr>
+</tbody>
+</table>
+<p>和书上图 6.4 一样：SARSA 每局大约 −25，Q-learning 大约 −50。</p>
+<p><strong>为什么会这样</strong>：</p>
+<ul>
+<li><strong>Q-learning 学的是"以后都挑最好的"</strong>：如果永远不乱走，贴着悬崖走是最短路线（13 步，−13），这确实是最优的。所以它学到了这条路；</li>
+<li><strong>但它实际执行时有 10% 会乱走</strong>：贴着悬崖时，乱走一步向下就掉下去 −100。所以训练中它的<strong>实际得分反而更低</strong>；</li>
+<li><strong>SARSA 学的是"包括我会乱走"的价值</strong>：它把"在悬崖边乱走会掉下去"算进了 Q 里，于是学会离悬崖远一点，绕远路，多走几步但很少掉下去。</li>
+</ul>
+<p><strong>类比：新手司机和老司机。</strong> 老司机（Q-learning）知道最短路线是贴着护栏开；新手（SARSA）知道自己手会抖，选择离护栏远一点的车道。如果新手手会抖（ε 不为 0），新手的选择实际上更安全。</p>
+<p><strong>两点补充</strong>：</p>
+<ol>
+<li>如果让 ε 慢慢变到 0（不再乱走），两个算法都会收敛到贴着悬崖的最优路线（L9641–L9642）；</li>
+<li>Q-learning 的 off-policy 性质很有用：它可以从<strong>别人的经验</strong>、<strong>旧的经验</strong>里学最优策略，这正是第 18 章 DQN 用"经验回放"的基础。</li>
+</ol>
+<p><strong>一句话</strong>：悬崖上 SARSA 把自己的乱走算进去、绕远路，训练得分高；Q-learning 学最短路线、贴着悬崖，乱走时常掉下去；ε → 0 时两者一样。</p>
+<h3 id="sarsa-q-learning">动画演示：悬崖边两条路线：SARSA 绕上去，Q-learning 贴着走</h3>
+<p><img alt="SARSA 与 Q-learning" src="../animations/l16-sarsa-qlearning.gif" /></p>
+<p>可交互版：<a href="../animations/l16-sarsa-qlearning.html">animations/l16-sarsa-qlearning.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>上下两张 4×12 网格，底排红色是悬崖；上面 SARSA，下面 Q-learning，同时训练；</li>
+<li>开头先演示第三步的手算：同一步经历，两个目标 −6 和 −5；</li>
+<li>每帧训练若干局，画出当前贪心路线：SARSA 的路线慢慢抬到上面，Q-learning 的贴着悬崖（第四步）；</li>
+<li>右边曲线是每局奖励（滑动平均），SARSA 在上；滑块调 ε，调到 0 时两条路线变成一样。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：<span class="arithmatex">\(Q(S, A) = -10\)</span>，走一步奖励 −1，到 S'，<span class="arithmatex">\(Q(S', \cdot)\)</span> 是 [−8, −3, −6]，下一步 ε-greedy 实际选了第 1 个动作（−8）。α = 0.5，γ = 1。分别算 SARSA 和 Q-learning 更新后的 <span class="arithmatex">\(Q(S, A)\)</span>。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：为什么说 Q-learning 是 off-policy？它"学的策略"和"做的策略"各是什么？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：悬崖行走里，训练时 Q-learning 每局平均得分比 SARSA 低，是因为它学错了吗？说说你的理由。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>不知道 p 学 Q 不学 V，挑动作看 Q 最大；<br />
+SARSA 用真要做的下一步，学的就是正在做的（同策略）；<br />
+Q-learning 用下一格最好的，学最优、做 ε-greedy（异策略）；<br />
+悬崖边：SARSA 知道自己手抖绕远路，Q-learning 贴边常掉崖。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R27（SARSA 式 6.7 与 Q-learning 式 6.8：目标只差 <span class="arithmatex">\(Q(S', A')\)</span> 和 <span class="arithmatex">\(\max_a Q(S', a)\)</span>；手算 −6 vs −5）</li>
+<li>R28（on-policy vs off-policy；悬崖行走两条路线的原因）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §6.4</td>
+<td>L9365–L9513（式 6.7，算法框 L9438，例 6.5 有风网格）</td>
+<td>SARSA 原文</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto §6.5</td>
+<td>L9514–L9653（式 6.8，算法框 L9537，例 6.6 悬崖 L9563）</td>
+<td>Q-learning 原文、悬崖行走</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §6.6</td>
+<td>L9654–L9814</td>
+<td>Expected SARSA：把 <span class="arithmatex">\(Q(S', A')\)</span> 换成按策略的平均，介于两者之间</td>
+</tr>
+<tr>
+<td>CS 285 第 7 讲</td>
+<td><code>lec-07.txt</code> L120–L180（Fitted Q-iteration）</td>
+<td>Q-learning 换成神经网络的第一步（第 17–18 章）</td>
+</tr>
+<tr>
+<td>CleanRL</td>
+<td><code>cleanrl/cleanrl/dqn.py</code></td>
+<td>先看一眼：DQN 的目标就是本章的 <span class="arithmatex">\(r + \gamma\max_a Q(s', a)\)</span></td>
+</tr>
+<tr>
+<td>Hands-on-RL 第 5 章</td>
+<td><code>chinese/Hands-on-RL/第5章-时序差分算法.ipynb</code></td>
+<td>中文：同一个悬崖环境上的 SARSA、Q-learning 代码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>SARSA 收敛</strong>：在"每个状态–动作都无限次访问、ε 逐渐变到 0"（GLIE，Greedy in the Limit with Infinite Exploration：极限时贪心、探索无限次）的条件下，以概率 1 收敛到 <span class="arithmatex">\(q_*\)</span>（L9423–L9428）。</li>
+<li><strong>Q-learning 收敛</strong>：只要每个状态–动作被无限次更新、步长满足第 13 章的条件，就收敛到 <span class="arithmatex">\(q_*\)</span>，<strong>与行为策略无关</strong>（L9527–L9530）；这就是 off-policy 的含义。</li>
+<li><strong>Q-learning 目标 = 最优方程的样本</strong>：<span class="arithmatex">\(\mathbb{E}[R + \gamma\max_a q_*(S', a) \mid s, a] = q_*(s, a)\)</span>（式 3.20）。</li>
+<li><strong>max 带来的偏差</strong>：<span class="arithmatex">\(\max_a Q(S', a)\)</span> 在 Q 有噪声时会偏高，这是第 19 章"过估计"的来源。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(Q(S,A) \leftarrow Q(S,A) + \alpha[R + \gamma Q(S', A') - Q(S,A)]\)</span></td>
+<td>SARSA（式 6.7）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(Q(S,A) \leftarrow Q(S,A) + \alpha[R + \gamma\max_a Q(S', a) - Q(S,A)]\)</span></td>
+<td>Q-learning（式 6.8）</td>
+</tr>
+<tr>
+<td>以 1 − ε 选 <span class="arithmatex">\(\arg\max_a Q(S, a)\)</span>，以 ε 随机</td>
+<td>两者共用的行为策略</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch16_sarsa_qlearning.py</code>（悬崖在 <code>rl_envs.py</code> 的 <code>cliff_step</code>），测试 <code>tests/test_ch10_16.py</code>。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch16_sarsa_qlearning.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch16_sarsa_qlearning.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>手算一步</td>
+<td><code>r + Q[ns][na]</code> vs <code>r + Q[ns].max()</code></td>
+<td>−6.0 vs −5.0</td>
+</tr>
+<tr>
+<td>悬崖，30 次 × 500 局</td>
+<td><code>run("sarsa")</code> / <code>run("q")</code></td>
+<td>最后 100 局平均 −27.2 / −51.3</td>
+</tr>
+<tr>
+<td>贪心路线经过哪几行</td>
+<td><code>greedy_path(Q)</code></td>
+<td>SARSA [0, 1, 2]，Q-learning [2]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>（两个算法只差这一行）：</p>
+<pre><code class="language-python">if method == &quot;sarsa&quot;:
+    target = r + (0 if done else gamma * Q[ns][na])     # 真正要做的下一个动作
+else:
+    target = r + (0 if done else gamma * Q[ns].max())   # 下一格最好的动作
+Q[s][a] += alpha * (target - Q[s][a])
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>eps_greedy</code> 在并列时用 <code>rng.choice(np.flatnonzero(q == q.max()))</code> 随机挑（第 13 章附录提到的问题）。一开始 Q 全是 0，如果总挑编号最小的"↑"，智能体会在起点一直往上撞墙，学得很慢。</p><nav class="pager"><a href="15-td.html">← 第 15 章 · 时序差分 TD：走一步就更新，拿&quot;下一步的估计&quot;当目标</a><a href="17-function-approx.html">第 17 章 · 函数近似与梯度下降：表格装不下，换成一个会&quot;猜&quot;的函数 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 12 章 · 价值迭代与 GPI：评估只算一轮就改进 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="12-gpi">第 12 章 · 价值迭代与 GPI：评估只算一轮就改进</h1>
+<blockquote>
+<p>本章回答：能不能把"评估"和"改进"合成一步？价值迭代和第 9 章的最优方程是什么关系？为什么说几乎所有 RL 算法都是"广义策略迭代"？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/11-policy-iteration.html">第 11 章 策略改进与策略迭代</a> · 下一章：<a href="../lessons/13-bandit.html">第 13 章 探索与利用</a><br />
+对应原文：Sutton &amp; Barto §4.4 Value Iteration（L6153–L6315，式 4.10，算法框 L6207）、§4.5 Asynchronous DP（L6316–L6371）、§4.6 Generalized Policy Iteration（L6372–L6445）、§4.7–4.8（L6446–L6584）<br />
+本章缩写：VI = Value Iteration（价值 / 迭代）；GPI = Generalized Policy Iteration（广义 / 策略 / 迭代）；DP 见第 10 章。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：把评估和改进合成一个式子（2026-11-13）</h3>
+<p><strong>第 11 章末尾的想法</strong>：评估只算<strong>一轮</strong>就改进。</p>
+<p>评估一轮（第 10 章）：<span class="arithmatex">\(\sum_a \pi(a \mid s)\,[\dots]\)</span>，按策略平均；改进（第 11 章）：挑方括号最大的动作。<strong>两步合起来</strong>：直接取最大，不要中间那份策略了（式 4.10，L6189）：</p>
+<div class="arithmatex">\[v_{k+1}(s) = \max_a \sum_{s', r} p(s', r \mid s, a)\,\big[\,r + \gamma\, v_k(s')\,\big]\]</div>
+<p><strong>认出来了吗</strong>：这就是第 9 章的 <strong>Bellman 最优方程</strong>，只是左边变成了新值、右边用旧值（和第 10 章把期望方程当更新规则是同一个套路）。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>第 10 章 策略评估</th>
+<th>本章 价值迭代</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>套的方程</td>
+<td>Bellman <strong>期望</strong>方程（第 8 章）</td>
+<td>Bellman <strong>最优</strong>方程（第 9 章）</td>
+</tr>
+<tr>
+<td>选动作那一层</td>
+<td>按 π 平均</td>
+<td>取 max</td>
+</tr>
+<tr>
+<td>收敛到</td>
+<td><span class="arithmatex">\(v_\pi\)</span></td>
+<td><span class="arithmatex">\(v_*\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>类比：边走边改路线。</strong> 策略迭代像"把整条路线跑熟了再改"；价值迭代像"每走一段就按目前的了解挑一次最好的方向"。</p>
+<p><strong>一句话</strong>：价值迭代 = 把 Bellman 最优方程当更新规则反复套；评估一轮 + 改进一次合成了一个 max。</p>
+<h3 id="44-4-2026-11-13">第二步：4×4 网格，4 轮就到最优（2026-11-13）</h3>
+<p>还是例 4.1 的 4×4 网格（每步 −1，两角是终点，γ = 1）。从全 0 出发：</p>
+<p><strong>第 1 轮</strong>：每个非终点格子，四个方向都是"−1 + 0"，max 是 −1。</p>
+<p><strong>第 2 轮</strong>：挨着终点的格子，有一个方向是"−1 + 0 = −1"，max 取 −1；不挨着的格子，最好也只能"−1 + (−1) = −2"。</p>
+<pre><code>第 1 轮                         第 2 轮
+ 0  -1  -1  -1                   0  -1  -2  -2
+-1  -1  -1  -1                  -1  -2  -2  -2
+-1  -1  -1  -1                  -2  -2  -2  -1
+-1  -1  -1   0                  -2  -2  -1   0
+</code></pre>
+<p><strong>看出和第 10 章的区别</strong>：第 10 章挨着终点的格子是"四个方向<strong>平均</strong>"（−1.75），这里是"挑<strong>最好</strong>的方向"（−1）。</p>
+<p>再算两轮就不动了（第 4 轮确认没变）：</p>
+<pre><code> 0  -1  -2  -3
+-1  -2  -3  -2
+-2  -3  -2  -1
+-3  -2  -1   0
+</code></pre>
+<p>每格的值 = −（离最近终点的步数）。最后按第 9 章"往前看一步挑最大"读出最优策略，和第 11 章策略迭代得到的一样。</p>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>4×4 网格要几轮</th>
+<th>每轮做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>策略迭代（第 11 章）</td>
+<td>3 次改进，每次里面评估 200 多轮</td>
+<td>评估到底 + 改进</td>
+</tr>
+<tr>
+<td>价值迭代（本章）</td>
+<td>4 轮</td>
+<td>一个 max</td>
+</tr>
+<tr>
+<td>5×5 网格价值迭代</td>
+<td>154 轮（γ = 0.9，阈值 <span class="arithmatex">\(10^{-6}\)</span>）</td>
+<td><span class="arithmatex">\(v_*(A) = 24.4\)</span>，同第 9 章</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：价值迭代每轮每格"挑最好的方向"，4×4 网格 4 轮就停在 <span class="arithmatex">\(v_*\)</span>；最后再贪心一次读出策略。</p>
+<h3 id="dp2026-11-13">第三步：不必每轮扫遍所有格子：异步 DP（2026-11-13）</h3>
+<p><strong>问题</strong>：到现在为止每一轮都要把<strong>所有</strong>状态更新一遍（叫一次 sweep，"扫一遍"）。双陆棋有 <span class="arithmatex">\(10^{20}\)</span> 个状态，扫一遍都要上千年（L6324–L6327）。</p>
+<p><strong>异步 DP asynchronous DP</strong>（§4.5，L6316–L6371）：不按"一轮一轮"来，<strong>想更新哪个状态就更新哪个</strong>，用的是其他状态当前的值（像第 10 章第四步的原地更新）。只要每个状态都<strong>还会被更新到</strong>，就仍然收敛。</p>
+<p><strong>好处</strong>：可以把力气花在<strong>重要的状态</strong>上。比如让智能体边玩边算，只更新它<strong>实际走到</strong>的那些状态（L6354–L6360）。这一点很关键：后面第 14–16 章的学习算法，本质上都是"只更新走到的状态"。</p>
+<p><strong>一句话</strong>：异步 DP 不必每轮扫遍所有状态，挑着更新也收敛；只更新走到的状态，是通往"边玩边学"的桥。</p>
+<h3 id="2026-11-13_1">第四步：广义策略迭代：评估和改进，你推我拉（2026-11-13）</h3>
+<p><strong>回头看第 10–12 章</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>评估做多少</th>
+<th>改进做多少</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>策略迭代</td>
+<td>算到底</td>
+<td>每格都改</td>
+</tr>
+<tr>
+<td>价值迭代</td>
+<td>一轮</td>
+<td>每格都改（藏在 max 里）</td>
+</tr>
+<tr>
+<td>异步 DP</td>
+<td>挑几个状态</td>
+<td>挑几个状态</td>
+</tr>
+</tbody>
+</table>
+<p>它们都在做同一件事：<strong>评估</strong>（让价值跟上当前策略）和<strong>改进</strong>（让策略对当前价值贪心）两个过程来回拉扯。书里把这个总框架叫<strong>广义策略迭代 GPI</strong>（§4.6，L6372–L6445）。</p>
+<p><strong>你推我拉</strong>（L6401–L6417，"competing and cooperating" L6411）：</p>
+<ul>
+<li>评估把价值往"<strong>和策略一致</strong>"推，但策略一改，价值又不一致了；</li>
+<li>改进把策略往"<strong>对价值贪心</strong>"推，但价值一变，策略又不贪心了；</li>
+<li>两股力量来回拉，最后同时满足两条：价值和策略一致、策略对价值贪心，这时就是 <span class="arithmatex">\(v_*\)</span> 和 <span class="arithmatex">\(\pi_*\)</span>。</li>
+</ul>
+<p><strong>类比：两个人拉一根绳调帐篷。</strong> 一人调高度，一人调松紧，互相影响，来回调几次，帐篷就搭正了。</p>
+<p><strong>原文 L6392–L6393</strong>：几乎所有强化学习方法都可以看成 GPI（"Almost all reinforcement learning methods are well described as GPI"）。第 6 章第四步的"评估 → 改进"循环，就是 GPI 的另一种画法。</p>
+<p><strong>DP 的局限</strong>（§4.7，L6446 起）：DP 必须<strong>知道 p</strong>。真实世界通常不知道环境的概率表：下一章开始，智能体只能<strong>自己去试</strong>。</p>
+<p><strong>一句话</strong>：GPI = 评估和改进你推我拉，最后同时满足就是最优；几乎所有 RL 算法都是它；DP 的毛病是要知道 p。</p>
+<h3 id="gpi">动画演示：价值迭代每轮挑最好的方向；GPI 的两股力量</h3>
+<p><img alt="价值迭代与 GPI" src="../animations/l12-value-iteration.gif" /></p>
+<p>可交互版：<a href="../animations/l12-value-iteration.html">animations/l12-value-iteration.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>左右两张 4×4 网格：左边策略评估（随机策略，取平均），右边价值迭代（取 max）；</li>
+<li>每帧两边各更新一轮，高亮挨着终点那格：左边 −1.75，右边 −1（第二步）；</li>
+<li>右边 4 轮就不变了，左边还要很久；</li>
+<li>下方是 GPI 的示意：两条线（"v = v_π"和"π = 贪心(v)"），点在两条线之间来回走，最后到交点（第四步）。</li>
+</ol>
+<h2 id="_2">练习与作答记录</h2>
+<p><strong>题 1</strong>：价值迭代第 2 轮，4×4 网格第 1 行第 3 列那格为什么是 −2？列出它四个方向"−1 + 邻居第 1 轮的值"。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：价值迭代套的是哪个方程？策略评估套的是哪个？两者只差哪一层？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：用 GPI 的说法描述第 11 章的策略迭代：评估做了多少，改进做了多少？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_3">口诀</h2>
+<blockquote>
+<p>评估一轮就改进，合成一个 max；<br />
+价值迭代套最优方程，策略评估套期望方程；<br />
+不必扫遍，挑着更新也收敛；<br />
+评估改进你推我拉，所有方法都是 GPI；DP 要知道 p。</p>
+</blockquote>
+<h2 id="_4">本章复习卡片</h2>
+<ul>
+<li>R20（价值迭代 式 4.10：最优方程当更新规则；和策略评估的区别）</li>
+<li>R21（广义策略迭代 GPI：评估和改进你推我拉；DP 的局限是要知道 p）</li>
+</ul>
+<h2 id="_5">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。L 行号指 <code>materials/text/books/sutton-barto-RLbook2020.txt</code>。</p>
+</blockquote>
+<h3 id="_6">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ Sutton &amp; Barto §4.4</td>
+<td>L6153–L6315（式 4.10，算法框 L6207，例 4.3 赌徒问题）</td>
+<td>价值迭代</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §4.5</td>
+<td>L6316–L6371</td>
+<td>异步 DP：不必每轮扫遍</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto §4.6</td>
+<td>L6372–L6445</td>
+<td>GPI 的图和"你推我拉"的解释</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §4.7–4.8</td>
+<td>L6446–L6584</td>
+<td>DP 的效率、维度灾难、本章总结</td>
+</tr>
+<tr>
+<td>CS 285 第 7 讲</td>
+<td><code>lec-07.txt</code> L120–L180（Fitted Q-iteration）</td>
+<td>价值迭代换成神经网络就是 fitted Q-iteration，接第 17–18 章</td>
+</tr>
+<tr>
+<td>Hands-on-RL 第 4 章</td>
+<td><code>chinese/Hands-on-RL/第4章-动态规划算法.ipynb</code></td>
+<td>中文：策略迭代和价值迭代的对比代码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">数学原理</h3>
+<ul>
+<li><strong>最优 Bellman 算子是压缩映射</strong>：<span class="arithmatex">\(T_* v(s) = \max_a \sum p\,[r + \gamma v(s')]\)</span> 满足 <span class="arithmatex">\(\lVert T_* u - T_* w\rVert_\infty \le \gamma \lVert u - w\rVert_\infty\)</span>（因为 <span class="arithmatex">\(|\max f - \max g| \le \max |f - g|\)</span>），所以 <span class="arithmatex">\(v_k \to v_*\)</span>。</li>
+<li><strong>停止和误差</strong>：若 <span class="arithmatex">\(\lVert v_{k+1} - v_k\rVert_\infty &lt; \theta\)</span>，则 <span class="arithmatex">\(\lVert v_{k+1} - v_*\rVert_\infty &lt; \frac{\gamma\theta}{1-\gamma}\)</span>；γ 越接近 1，阈值要设得越小。</li>
+<li><strong>截断的策略迭代</strong>：评估做 m 轮再改进。m = 1 是价值迭代，m = ∞ 是策略迭代，中间的都收敛（截断策略迭代，L6229–L6242）。</li>
+<li><strong>维度灾难 curse of dimensionality</strong>：状态数随变量个数指数增长（L6464）；这是第 17 章要用函数近似的原因。</li>
+</ul>
+<h3 id="_8">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(v_{k+1}(s) = \max_a \sum_{s', r} p\,[r + \gamma v_k(s')]\)</span></td>
+<td>价值迭代（式 4.10）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\pi(s) = \arg\max_a \sum_{s', r} p\,[r + \gamma v(s')]\)</span></td>
+<td>收敛后读出策略</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_k \to v_*\)</span>（γ &lt; 1）</td>
+<td>压缩映射保证收敛</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch12_value_iteration.py</code>，测试 <code>tests/test_ch10_16.py</code>（检查价值迭代和策略迭代结果相同）。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch12_value_iteration.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch12_value_iteration.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4×4 价值迭代</td>
+<td><code>value_iteration(P, 1.0)</code></td>
+<td>4 轮，0、−1、−2、−3 …</td>
+</tr>
+<tr>
+<td>读出策略</td>
+<td><code>greedy_policy(P, v, 1.0)</code></td>
+<td>箭头指向最近终点</td>
+</tr>
+<tr>
+<td>5×5 价值迭代</td>
+<td><code>value_iteration(G, 0.9)</code></td>
+<td>154 轮，<span class="arithmatex">\(v_*(A) = 24.4\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">new = np.array([max(q_from_v(P, v, gamma, s, a) for a in P[s]) for s in P])   # 一个 max 搞定
+</code></pre>
+<p><strong>代码里才看得到的</strong>：和第 10 章 <code>sweep</code> 比，只是把 <code>sum(pa * ...)</code> 换成了 <code>max(...)</code>。5×5 网格要 154 轮是因为 γ = 0.9：误差每轮只缩成 0.9 倍，要从 24 缩到 <span class="arithmatex">\(10^{-6}\)</span>，大约要 <span class="arithmatex">\(\log(24 \times 10^6) / \log(1/0.9) \approx 160\)</span> 轮。</p><nav class="pager"><a href="11-policy-iteration.html">← 第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估</a><a href="13-bandit.html">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

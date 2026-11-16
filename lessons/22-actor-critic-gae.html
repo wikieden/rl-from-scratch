@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 22 章 · Actor-Critic、优势函数与 GAE：演员演，评委打分 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="22-actor-critic-gae">第 22 章 · Actor-Critic、优势函数与 GAE：演员演，评委打分</h1>
+<blockquote>
+<p>本章回答：baseline 换成一个会学的价值网络，会得到什么算法？"优势"是什么意思？TD 误差怎么当成优势用？GAE 的 λ 在调什么？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/21-baseline.html">第 21 章 baseline 与 reward-to-go</a> · 下一章：<a href="../lessons/23-ppo.html">第 23 章 从 TRPO 到 PPO</a><br />
+对应原文：CS 285 第 6 讲（<code>lec-06.txt</code> L22–L47 状态价值与 baseline、L100–L118 basic / online actor-critic、L140–L200 Critics and baselines、GAE）；Sutton &amp; Barto §13.5 Actor–Critic Methods（L25742–L25874，式 13.12–13.14，算法框 L25806）；GAE 论文 Schulman et al. 2016（<code>papers/gae-1506.02438.txt</code> L388–L470，式 16）<br />
+本章缩写：actor：演员（策略 <span class="arithmatex">\(\pi_\theta\)</span>）；critic：评委（价值函数 <span class="arithmatex">\(\hat V\)</span>）；A = Advantage（优势）；<span class="arithmatex">\(A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)\)</span>；GAE = Generalized Advantage Estimation（广义 / 优势 / 估计）；λ：希腊字母 lambda（读"兰姆达"），GAE 的权衡参数；A3C = Asynchronous Advantage Actor-Critic（异步 / 优势 / 演员–评委）。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="as-a2026-11-13">第一步：优势 A(s, a)：这个动作比"平常"好多少（2026-11-13）</h3>
+<p><strong>第 21 章</strong>：用 <span class="arithmatex">\(G - b\)</span> 代替 G，"比平常好多少"。最好的"平常"是什么？</p>
+<p>在状态 s，"平常"就是<strong>按策略走的平均回报</strong> <span class="arithmatex">\(V^\pi(s)\)</span>（第 7 章）；"做了动作 a"的平均回报是 <span class="arithmatex">\(Q^\pi(s, a)\)</span>。两者相减（CS 285 第 6 讲 L22–L47）：</p>
+<div class="arithmatex">\[A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)\]</div>
+<p>这叫<strong>优势 advantage</strong>：在 s 做 a，<strong>比按策略随便做平均好多少</strong>。</p>
+<ul>
+<li>A &gt; 0：这个动作比平常好，该推高；</li>
+<li>A &lt; 0：比平常差，该压低；</li>
+<li>按策略的平均：<span class="arithmatex">\(\sum_a \pi(a \mid s)\,A^\pi(s, a) = V - V = 0\)</span>（第 7 章第四步：v 是 q 的加权平均）。</li>
+</ul>
+<p><strong>用第 7 章的机器人</strong>：低电时 <span class="arithmatex">\(q_\pi(\text{充电}) = 14.245\)</span>，<span class="arithmatex">\(q_\pi(\text{搜索}) = 13.511\)</span>，<span class="arithmatex">\(v_\pi(\text{低电}) = 13.869\)</span>：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>q</th>
+<th>A = q − v</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>充电</td>
+<td>14.245</td>
+<td><strong>+0.376</strong></td>
+</tr>
+<tr>
+<td>搜索</td>
+<td>13.511</td>
+<td><strong>−0.358</strong></td>
+</tr>
+</tbody>
+</table>
+<p>充电比平常好，搜索比平常差：优势直接告诉你该往哪边调策略。</p>
+<p><strong>策略梯度换成优势</strong>：</p>
+<div class="arithmatex">\[\nabla J = \mathbb{E}\big[\,A^\pi(S_t, A_t)\,\nabla\log\pi_\theta(A_t \mid S_t)\,\big]\]</div>
+<p>这是"理想情况"：真实的 A 方差最小。问题是 A 不知道，要估。</p>
+<p><strong>一句话</strong>：优势 <span class="arithmatex">\(A = Q - V\)</span> 是"这个动作比平常好多少"，按策略平均为 0；策略梯度乘 A 最理想，但 A 要估出来。</p>
+<h3 id="td-2026-11-13">第二步：评委来打分：TD 误差就是优势的估计（2026-11-13）</h3>
+<p><strong>要估 A，先要有 V</strong>。用第 17 章的方法，训练一个<strong>价值网络</strong> <span class="arithmatex">\(\hat V_\phi(s)\)</span>（参数 φ，读"phi"）：这就是<strong>评委 critic</strong>。策略 <span class="arithmatex">\(\pi_\theta\)</span> 是<strong>演员 actor</strong>。</p>
+<p><strong>类比：演员和评委。</strong> 演员上台表演（按策略做动作），评委看完打分（这一步比预期好还是差）；演员根据评委的反馈改进表演，评委也在不断校准自己的打分标准。</p>
+<p><strong>怎么用 V 估 A</strong>：<span class="arithmatex">\(Q(s, a)\)</span> 是"这一步的奖励 + 下一个状态的价值"的平均（第 7 章第四步），用<strong>一个样本</strong>代替：</p>
+<div class="arithmatex">\[\hat A_t \approx r_t + \gamma\hat V(s_{t+1}) - \hat V(s_t) = \delta_t\]</div>
+<p><strong>这正是第 15 章的 TD 误差 δ</strong>！它回答的是"走了一步以后，发现比评委原来预期的好了多少"，正好就是"优势"的意思。</p>
+<p><strong>一步 actor-critic</strong>（式 13.12–13.14，L25793–L25795；算法框 L25806）：每走一步：</p>
+<ol>
+<li>算 <span class="arithmatex">\(\delta = r + \gamma\hat V(s') - \hat V(s)\)</span>；</li>
+<li>评委更新：<span class="arithmatex">\(\phi \leftarrow \phi + \alpha_\phi\,\delta\,\nabla\hat V_\phi(s)\)</span>（第 17 章的半梯度 TD，让 V 更准）；</li>
+<li>演员更新：<span class="arithmatex">\(\theta \leftarrow \theta + \alpha_\theta\,\delta\,\nabla\log\pi_\theta(a \mid s)\)</span>（第 20 章，把 G 换成 δ）。</li>
+</ol>
+<p><strong>和 REINFORCE 比</strong>（CS 285 第 6 讲 L140–L158）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>REINFORCE + baseline</th>
+<th>Actor-Critic（用 δ）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>乘子</td>
+<td><span class="arithmatex">\(G_t - b\)</span></td>
+<td><span class="arithmatex">\(\delta_t = r + \gamma\hat V(s') - \hat V(s)\)</span></td>
+</tr>
+<tr>
+<td>要等终局吗</td>
+<td>要</td>
+<td><strong>不要</strong>，走一步就能更新</td>
+</tr>
+<tr>
+<td>方差</td>
+<td>大</td>
+<td><strong>小</strong></td>
+</tr>
+<tr>
+<td>偏差</td>
+<td>无</td>
+<td>有（评委不准时）</td>
+</tr>
+</tbody>
+</table>
+<p>又是第 15 章那个 MC vs TD 的权衡：用整局回报无偏但抖，用一步 TD 稳但偏。</p>
+<p><strong>一句话</strong>：评委 <span class="arithmatex">\(\hat V\)</span> 给每一步打分，TD 误差 δ 就是优势的估计；演员按 δ 调策略、评委按 δ 调自己；不用等终局、方差小，但评委不准时有偏。</p>
+<h3 id="n-gae2026-11-13">第三步：在两个极端之间：n 步与 GAE（2026-11-13）</h3>
+<p><strong>两个极端</strong>（CS 285 第 6 讲 L159–L166）：</p>
+<ul>
+<li><strong>一步 TD</strong>：<span class="arithmatex">\(\hat A_t = \delta_t\)</span>。方差小，但完全依赖评委 <span class="arithmatex">\(\hat V\)</span> 准不准；</li>
+<li><strong>MC</strong>：<span class="arithmatex">\(\hat A_t = G_t - \hat V(s_t)\)</span>。无偏，但方差大。</li>
+</ul>
+<p><strong>能不能在中间</strong>？先看一个事实（第 15 章附录：MC 误差 = TD 误差之和）：</p>
+<div class="arithmatex">\[G_t - \hat V(s_t) = \delta_t + \gamma\delta_{t+1} + \gamma^2\delta_{t+2} + \cdots\]</div>
+<p>MC 的优势 = <strong>把后面所有 δ 打着折加起来</strong>；一步 TD 只取第一个 δ。中间的做法：<strong>越远的 δ 权重越小</strong>。</p>
+<p><strong>GAE</strong>（GAE 论文式 16，L388–L437；CS 285 第 6 讲 L167–L187）：再乘一个 λ（0 到 1 之间）：</p>
+<div class="arithmatex">\[\hat A_t^{\text{GAE}} = \delta_t + (\gamma\lambda)\,\delta_{t+1} + (\gamma\lambda)^2\,\delta_{t+2} + \cdots = \sum_{l=0}^{\infty}(\gamma\lambda)^l\,\delta_{t+l}\]</div>
+<ul>
+<li><strong>λ = 0</strong>：只剩 <span class="arithmatex">\(\delta_t\)</span>，就是一步 TD（L447："GAE(γ, 0)"）；</li>
+<li><strong>λ = 1</strong>：<span class="arithmatex">\(\sum\gamma^l\delta_{t+l}\)</span>，就是 MC 优势（L448："GAE(γ, 1)"）；</li>
+<li><strong>λ 在中间</strong>（常用 0.95）：近处的 δ 多算一点，远处的少算一点，"大部分时候早点截断"（L177："Mostly prefer cutting earlier (less variance)"）。</li>
+</ul>
+<p><strong>倒着算最方便</strong>（又是第 3 章那个循环）：<span class="arithmatex">\(\hat A_t = \delta_t + \gamma\lambda\,\hat A_{t+1}\)</span>。</p>
+<p><strong>用数字走一遍</strong>：一局 3 步，奖励 [0, 0, 1]，评委的估计 <span class="arithmatex">\(\hat V\)</span> = [0.5, 0.6, 0.8]，结束后是 0，γ = 0.9。</p>
+<p><strong>先算 δ</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>t</th>
+<th><span class="arithmatex">\(r_t + \gamma\hat V(s_{t+1}) - \hat V(s_t)\)</span></th>
+<th>δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><span class="arithmatex">\(0 + 0.9 \times 0.6 - 0.5\)</span></td>
+<td>0.04</td>
+</tr>
+<tr>
+<td>1</td>
+<td><span class="arithmatex">\(0 + 0.9 \times 0.8 - 0.6\)</span></td>
+<td>0.12</td>
+</tr>
+<tr>
+<td>2</td>
+<td><span class="arithmatex">\(1 + 0 - 0.8\)</span></td>
+<td>0.20</td>
+</tr>
+</tbody>
+</table>
+<p><strong>再按不同 λ 倒着加</strong>：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><span class="arithmatex">\(\hat A_0\)</span></th>
+<th><span class="arithmatex">\(\hat A_1\)</span></th>
+<th><span class="arithmatex">\(\hat A_2\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>λ = 0（一步 TD）</td>
+<td>0.04</td>
+<td>0.12</td>
+<td>0.20</td>
+</tr>
+<tr>
+<td>λ = 0.95</td>
+<td>0.289</td>
+<td>0.291</td>
+<td>0.20</td>
+</tr>
+<tr>
+<td>λ = 1</td>
+<td>0.31</td>
+<td>0.30</td>
+<td>0.20</td>
+</tr>
+<tr>
+<td>MC：<span class="arithmatex">\(G_t - \hat V(s_t)\)</span></td>
+<td>0.81 − 0.5 = 0.31</td>
+<td>0.9 − 0.6 = 0.30</td>
+<td>1 − 0.8 = 0.20</td>
+</tr>
+</tbody>
+</table>
+<p>λ = 1 那一行和 MC 那一行<strong>完全一样</strong>，验证了上面的公式。λ = 0 时第 0 步的优势只有 0.04（评委觉得这一步没什么），λ = 1 时是 0.31（最后赢了，功劳也分给第 0 步）。</p>
+<p><strong>一句话</strong>：GAE = 把后面的 δ 按 <span class="arithmatex">\((\gamma\lambda)^l\)</span> 加权求和；λ = 0 是一步 TD（稳但偏），λ = 1 是 MC（无偏但抖），常用 0.95。</p>
+<h3 id="actor-critic2026-11-13">第四步：实践中的 actor-critic：一批数据、两个网络（2026-11-13）</h3>
+<p><strong>CS 285 第 6 讲 Part 4（L121–L139）把实际能用的版本叫"on-policy actor-critic，也就是真正能用的策略梯度"</strong>：</p>
+<pre><code>循环：
+  1. 用当前策略 π_θ 跑一批轨迹（比如 N 局）
+  2. 评委：用这批数据训练 V̂_φ（回归目标：reward-to-go 或 bootstrapped 目标）
+  3. 用 V̂ 算每一步的 δ，再按 GAE 算优势 Â
+  4. 优势归一化：一批 Â 减均值、除标准差（L194–L195：&quot;center the advantages&quot;）
+  5. 演员：θ ← θ + α · 平均[Â · ∇log π_θ(a|s)]
+</code></pre>
+<p><strong>L199–L201 的预告</strong>："This is the first part of implementing PPO"：PPO 的第一半就是这个，另一半是下一章要讲的"稍微不同的梯度估计"。</p>
+<p><strong>几个实践要点</strong>：</p>
+<ol>
+<li><strong>两个网络</strong>：演员和评委可以是两个独立网络，也可以共享前面几层、各接一个"头"；</li>
+<li><strong>并行采样</strong>：一步 actor-critic 只用一条经历更新，太抖；A3C（<code>papers/a3c-1602.01783.txt</code>）让很多个环境副本并行跑，凑成一批再更新（<code>lec-06.txt</code> L114–L118）；</li>
+<li><strong>CS 285 HW2 §5</strong> 就是在第 21 章的代码上加 GAE，扫 λ = 0、0.95、0.98、0.99、1，在 LunarLander 上比较。</li>
+</ol>
+<p><strong>一句话</strong>：实用的 actor-critic = 跑一批 → 训练评委 → GAE 算优势 → 归一化 → 演员走一步；这就是 PPO 的前一半。</p>
+<h3 id="_2">动画演示：δ 一个个算出来，λ 决定往后看多远</h3>
+<p><img alt="Actor-Critic 与 GAE" src="../animations/l22-actor-critic-gae.gif" /></p>
+<p>可交互版：<a href="../animations/l22-actor-critic-gae.html">animations/l22-actor-critic-gae.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>一局 3 步，上面是奖励，中间是评委的打分 <span class="arithmatex">\(\hat V\)</span>，每帧算出一个 δ（第三步的表）；</li>
+<li>然后从右往左倒着累加 <span class="arithmatex">\(\hat A_t = \delta_t + \gamma\lambda\hat A_{t+1}\)</span>，箭头上标着权重 γλ；</li>
+<li>滑块拖 λ：0 时每一步只看自己的 δ，1 时和 MC 那一行重合（第三步）；</li>
+<li>右边是"演员 / 评委"示意图：δ 同时送给两边，演员调 π，评委调 V（第二步）。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：某状态 <span class="arithmatex">\(V = 5\)</span>，三个动作的 Q 是 7、5、2，策略各选 1/3。写出三个优势，并验证按策略的平均是 0。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：奖励 r = 1，<span class="arithmatex">\(\hat V(s) = 2\)</span>，<span class="arithmatex">\(\hat V(s') = 3\)</span>，γ = 0.5。算 δ。按这个 δ，演员会把刚才的动作推高还是压低？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：GAE 的 λ 取 0 和取 1 分别相当于什么？各自的优缺点是什么？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>优势 = Q − V：比平常好多少，按策略平均为零；<br />
+演员做动作，评委打分；TD 误差 δ 就是优势的估计；<br />
+GAE：后面的 δ 按 γλ 打折相加；λ = 0 是一步 TD，λ = 1 是 MC；<br />
+跑一批、训评委、算 GAE、归一化、演员走一步：PPO 的前一半。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R38（优势 <span class="arithmatex">\(A = Q - V\)</span>；TD 误差 δ 是优势的估计；actor-critic 的两个更新）</li>
+<li>R39（GAE：<span class="arithmatex">\(\hat A_t = \sum_l(\gamma\lambda)^l\delta_{t+l}\)</span>，倒着算 <span class="arithmatex">\(\hat A_t = \delta_t + \gamma\lambda\hat A_{t+1}\)</span>；λ = 0 / 1 的含义）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ CS 285 第 6 讲</td>
+<td><code>cs285-slides/lec-06.txt</code> L22–L200</td>
+<td>状态价值与 baseline、basic / online actor-critic、Critics and baselines、GAE、"first part of PPO"</td>
+</tr>
+<tr>
+<td>★ GAE 论文</td>
+<td><code>papers/gae-1506.02438.txt</code> L388–L470（式 16，GAE(γ, 0) 与 GAE(γ, 1) 在 L447–L448）</td>
+<td>GAE 原文；§6 在 3D 机器人行走上的实验</td>
+</tr>
+<tr>
+<td>Sutton &amp; Barto §13.5</td>
+<td><code>books/sutton-barto-RLbook2020.txt</code> L25742–L25874（式 13.12–13.14，算法框 L25806）</td>
+<td>一步 actor-critic 的原文</td>
+</tr>
+<tr>
+<td>A3C 论文</td>
+<td><code>papers/a3c-1602.01783.txt</code> §4</td>
+<td>并行 actor-critic（第四步第 2 点）</td>
+</tr>
+<tr>
+<td>CS 285 HW2 §5</td>
+<td><code>cs285-homeworks/hw2.txt</code> L383–L411</td>
+<td>实现 GAE、扫 λ 的实验</td>
+</tr>
+<tr>
+<td>CS 285 第 6 讲 Part 5</td>
+<td><code>lec-06.txt</code> L202–L266</td>
+<td>off-policy actor-critic 与重参数化（SAC 的前身，HW3 第二部分）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>δ 是优势的无偏估计</strong>（若评委准确）：<span class="arithmatex">\(\mathbb{E}[\delta_t \mid s_t, a_t] = \mathbb{E}[r_t + \gamma V^\pi(s_{t+1}) \mid s_t, a_t] - V^\pi(s_t) = Q^\pi(s_t, a_t) - V^\pi(s_t) = A^\pi(s_t, a_t)\)</span>。</li>
+<li><strong>GAE 的两个端点</strong>：<span class="arithmatex">\(\text{GAE}(\gamma, 0) = \delta_t\)</span>；<span class="arithmatex">\(\text{GAE}(\gamma, 1) = \sum_l\gamma^l\delta_{t+l} = \sum_l\gamma^l r_{t+l} - \hat V(s_t)\)</span>（中间的 <span class="arithmatex">\(\hat V\)</span> 两两抵消，望远镜求和 telescoping）。</li>
+<li><strong>λ 的作用和 γ 很像</strong>（<code>lec-06.txt</code> L182："similar effect as discount!"）：都是让远处的信号权重变小、降低方差、引入偏差；γ 改变的是"目标"本身，λ 只改变"怎么估"。</li>
+<li><strong>评委的训练</strong>：最小化 <span class="arithmatex">\(\sum_t(\hat V_\phi(s_t) - y_t)^2\)</span>，y 可以是 reward-to-go（MC）或 <span class="arithmatex">\(r_t + \gamma\hat V(s_{t+1})\)</span>（bootstrapped），也可以是 <span class="arithmatex">\(\hat A_t + \hat V(s_t)\)</span>（"GAE 回报"，PPO 常用）。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)\)</span></td>
+<td>优势</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\delta_t = r_t + \gamma\hat V(s_{t+1}) - \hat V(s_t)\)</span></td>
+<td>TD 误差 = 一步优势估计</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\theta \leftarrow \theta + \alpha\,\delta\,\nabla\log\pi_\theta(a \mid s)\)</span>；<span class="arithmatex">\(\phi \leftarrow \phi + \alpha\,\delta\,\nabla\hat V_\phi(s)\)</span></td>
+<td>一步 actor-critic（式 13.12–13.14）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\hat A_t^{\text{GAE}} = \sum_{l\ge0}(\gamma\lambda)^l\delta_{t+l}\)</span></td>
+<td>GAE（论文式 16）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\hat A_t = \delta_t + \gamma\lambda\hat A_{t+1}\)</span></td>
+<td>倒着算</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch22_actor_critic_gae.py</code>，测试 <code>tests/test_ch17_24.py</code>（检查 λ = 0 等于 δ、λ = 1 等于 MC 优势）。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch22_actor_critic_gae.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch22_actor_critic_gae.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>δ</td>
+<td><code>td_errors([0, 0, 1], [0.5, 0.6, 0.8, 0.0], 0.9)</code></td>
+<td>[0.04, 0.12, 0.2]</td>
+</tr>
+<tr>
+<td>GAE λ = 0 / 0.95 / 1</td>
+<td><code>gae(r, v, 0.9, lam)</code></td>
+<td>[0.04, 0.12, 0.2] / [0.289, 0.291, 0.2] / [0.31, 0.3, 0.2]</td>
+</tr>
+<tr>
+<td>MC 优势</td>
+<td><code>mc_advantage(r, v, 0.9)</code></td>
+<td>[0.31, 0.3, 0.2]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">delta = r + gamma * v[1:] - v[:-1]       # 一次算出所有 δ（v 比 r 多一个：结束后的 0）
+for d in reversed(delta):
+    A = d + gamma * lam * A              # 倒着累加
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>values</code> 要比 <code>rewards</code> 多一个元素：最后一个状态之后的价值（结束了就是 0，没结束是被截断时评委的估计）。HW2 的 <code>_estimate_advantage</code> 里，这个"结束了填 0"由 <code>terminals</code> 数组控制，弄错会让最后一步的 δ 错得离谱。</p><nav class="pager"><a href="21-baseline.html">← 第 21 章 · baseline 与 reward-to-go：给策略梯度降噪</a><a href="23-ppo.html">第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>

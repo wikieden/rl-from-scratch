@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略 · 从零学强化学习</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1f2328;--mute:#5d6470;--line:#e3e5e8;--card:#fff;--acc:#2f6fdf;--code:#f2f3f5;--quote:#f4f6fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}}
+:root[data-theme="dark"]{--bg:#15181d;--fg:#e4e7ec;--mute:#9aa3b2;--line:#2c323b;--card:#1c2026;--acc:#7aa7ff;--code:#22272f;--quote:#1b2029}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif}
+a{color:var(--acc)}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+header.top .brand{font-weight:600;color:var(--fg);text-decoration:none;margin-right:auto}
+header.top a{text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:24px 16px 72px;overflow-wrap:anywhere}
+h1{font-size:28px;line-height:1.35;margin:8px 0 16px} h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)} h3{font-size:18px;margin:28px 0 8px}
+img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:#fff}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote);border-left:3px solid var(--acc);border-radius:4px;color:var(--mute)}
+blockquote p{margin:4px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto} pre code{padding:0;background:none}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top} th{background:var(--code)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--card)}
+details[open]{padding-bottom:10px} summary{cursor:pointer;color:var(--acc);font-weight:500}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.btn{display:inline-block;margin:4px 8px 4px 0;padding:6px 14px;border:1px solid var(--acc);border-radius:999px;text-decoration:none;font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)} .card img{border:0;border-bottom:1px solid var(--line);border-radius:0;aspect-ratio:16/10;object-fit:contain;width:100%}
+.card .no{color:var(--mute);font-size:13px;padding:8px 12px 0} .card .t{padding:0 12px 12px;font-weight:500;line-height:1.5}
+.lead{font-size:17px;color:var(--mute)}
+footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}
+</style>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:true,processEnvironments:true}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+</head><body>
+<header class="top"><div class="in">
+<a class="brand" href="../index.html">从零学强化学习</a>
+<a href="../lessons/index.html">讲义目录</a>
+<a href="../animations/index.html">动画</a>
+<a href="../review.html">复习卡片</a>
+<a href="../lessons/appendix-glossary.html">缩写表</a>
+</div></header>
+<main>
+<h1 id="20-reinforce">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略</h1>
+<blockquote>
+<p>本章回答：能不能跳过 Q，直接把策略本身调好？"让好动作更常出现"怎么写成数学？log 和那个"方便的恒等式"是干什么的？<br />
+讲解日期：2026-11-13 · 上一章：<a href="../lessons/19-double-dqn.html">第 19 章 过估计与 Double DQN</a> · 下一章：<a href="../lessons/21-baseline.html">第 21 章 baseline 与 reward-to-go</a><br />
+对应原文：Sutton &amp; Barto §13.1–13.3（L24994–L25594：softmax 策略式 13.2、策略梯度定理式 13.5、REINFORCE 式 13.8、算法框 L25503）；CS 285 第 5 讲 Part 1–2（<code>lec-05.txt</code> L7–L58："a convenient identity" L27）<br />
+本章缩写：PG = Policy Gradient（策略 / 梯度）；<span class="arithmatex">\(\pi_\theta\)</span>：参数为 θ 的策略；<span class="arithmatex">\(J(\theta)\)</span>：J 是目标函数（objective）的常用字母，策略的"总得分"；log：对数（这里都是以 e 为底的自然对数，也写 ln = natural logarithm）；REINFORCE：Williams 1992 起的名字，是一串英文首字母的缩写（REward Increment = Nonnegative Factor × Offset Reinforcement × Characteristic Eligibility），记住它就是"最基础的策略梯度算法"即可。全部缩写见 <a href="../lessons/appendix-glossary.html">附录 · 缩写与术语表</a></p>
+</blockquote>
+<h2 id="_1">讲解</h2>
+<h3 id="2026-11-13">第一步：换个思路：策略本身就是一个可以调的函数（2026-11-13）</h3>
+<p><strong>到目前为止</strong>（第 7–19 章）都是"先学价值，再从价值里挑动作"（value-based）。</p>
+<p><strong>另一条路</strong>（§13.1，L24994 起）：把策略本身写成一个带参数的函数 <span class="arithmatex">\(\pi_\theta(a \mid s)\)</span>，<strong>直接调 θ 让策略变好</strong>，不经过 Q。这叫<strong>策略梯度 policy gradient</strong>。</p>
+<p><strong>最常见的写法：softmax 策略</strong>（式 13.2，L25017–L25033）：每个动作算一个"偏好分数"<span class="arithmatex">\(h(s, a, \theta)\)</span>，再用 softmax 变成概率（Transformer 讲义第 6 章）：</p>
+<div class="arithmatex">\[\pi_\theta(a \mid s) = \frac{e^{h(s, a, \theta)}}{\sum_b e^{h(s, b, \theta)}}\]</div>
+<p><strong>最小的例子：两台老虎机</strong>（第 13 章，只有一个状态）。θ = [θ₀, θ₁] 就是两台机器的偏好分数：</p>
+<table>
+<thead>
+<tr>
+<th>θ</th>
+<th>π(机器 0)</th>
+<th>π(机器 1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0, 0]</td>
+<td>0.5</td>
+<td>0.5</td>
+</tr>
+<tr>
+<td>[0, 1]</td>
+<td>0.27</td>
+<td>0.73</td>
+</tr>
+<tr>
+<td>[−0.1, 0.1]</td>
+<td>0.45</td>
+<td>0.55</td>
+</tr>
+</tbody>
+</table>
+<p>θ₁ 调大一点，选机器 1 的概率就大一点。</p>
+<p><strong>为什么要这样做</strong>（L25040–L25100、<code>lec-09.txt</code> L8–L24）：</p>
+<ol>
+<li><strong>动作是连续的也能用</strong>（机器人关节力矩）：Q-learning 要对所有动作取 max，连续动作没法挨个比；策略直接输出一个分布（比如高斯分布），抽样就行；</li>
+<li><strong>策略可以是随机的</strong>：有些问题最优策略本身就是随机的（第 6 章石头剪刀布）；</li>
+<li><strong>稳</strong>：CS 285 第 9 讲说策略梯度是"稳定、可靠"的选择，LLM 训练和机器人 sim-to-real 几乎都用它。</li>
+</ol>
+<p><strong>目标</strong>：让策略的期望回报最大：</p>
+<div class="arithmatex">\[J(\theta) = \mathbb{E}_{\pi_\theta}[G_0]\]</div>
+<p>要用<strong>梯度上升</strong>（第 17 章的梯度下降反过来：要变大，就<strong>沿</strong>梯度走）：<span class="arithmatex">\(\theta \leftarrow \theta + \alpha\,\nabla J(\theta)\)</span>。难点是：<span class="arithmatex">\(\nabla J\)</span> 怎么算？</p>
+<p><strong>一句话</strong>：策略梯度把策略写成 <span class="arithmatex">\(\pi_\theta\)</span>（常用 softmax），直接调 θ 让期望回报 <span class="arithmatex">\(J(\theta)\)</span> 变大；关键是算出 <span class="arithmatex">\(\nabla J\)</span>。</p>
+<h3 id="log-2026-11-13">第二步：先补一个工具：log 和它的导数（2026-11-13）</h3>
+<p><strong>log 是 e 的次方的反过来</strong>（Transformer 讲义第 5 章讲过 <span class="arithmatex">\(e^x\)</span>）：<span class="arithmatex">\(\log x\)</span> = "e 的几次方等于 x"。</p>
+<table>
+<thead>
+<tr>
+<th>x</th>
+<th>1</th>
+<th>e ≈ 2.718</th>
+<th>2</th>
+<th>0.5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\log x\)</span></td>
+<td>0</td>
+<td>1</td>
+<td>0.693</td>
+<td>−0.693</td>
+</tr>
+</tbody>
+</table>
+<p><strong>log 的导数是 <span class="arithmatex">\(\frac1x\)</span></strong>。用第 17 章的办法验证：在 x = 2 处往右挪 0.0001，<span class="arithmatex">\(\log 2.0001 - \log 2 \approx 0.00005\)</span>，斜率 ≈ 0.00005 / 0.0001 = <strong>0.5</strong> = <span class="arithmatex">\(\frac12\)</span> ✓。</p>
+<p><strong>链式法则给出一个很有用的式子</strong>：<span class="arithmatex">\(\log \pi\)</span> 对 θ 求导：</p>
+<div class="arithmatex">\[\nabla \log \pi_\theta = \frac{\nabla \pi_\theta}{\pi_\theta}\qquad\Longleftrightarrow\qquad \nabla \pi_\theta = \pi_\theta\,\nabla \log \pi_\theta\]</div>
+<p>CS 285 第 5 讲 L27 把右边这个叫 <strong>"a convenient identity"（一个方便的恒等式）</strong>，Sutton &amp; Barto 也用它（L25491–L25495："<span class="arithmatex">\(\nabla \ln x = \frac{\nabla x}{x}\)</span>"）。</p>
+<p><strong>softmax 的 <span class="arithmatex">\(\nabla\log\pi\)</span> 有现成答案</strong>：选了动作 a 时，</p>
+<div class="arithmatex">\[\nabla_\theta \log \pi_\theta(a) = \text{one-hot}(a) - \pi_\theta\]</div>
+<p>（one-hot(a)：第 a 位是 1、其余是 0 的向量。）θ = [0, 0]、选了机器 1：<span class="arithmatex">\([0, 1] - [0.5, 0.5] = [-0.5,\ +0.5]\)</span>。读法：<strong>想让"选机器 1"更可能，就把 θ₁ 调高、θ₀ 调低</strong>。附录用 PyTorch 自动求导核对过。</p>
+<p><strong>一句话</strong>：log 是 e 的次方反过来，导数是 1/x；<span class="arithmatex">\(\nabla\pi = \pi\nabla\log\pi\)</span> 是"方便的恒等式"；softmax 的 <span class="arithmatex">\(\nabla\log\pi(a) = \text{one-hot}(a) - \pi\)</span>。</p>
+<h3 id="nabla-j-mathbbeg-cdot-nablalogpi2026-11-13">第三步：策略梯度定理：<span class="arithmatex">\(\nabla J = \mathbb{E}[\,G \cdot \nabla\log\pi\,]\)</span>（2026-11-13）</h3>
+<p><strong>老虎机版本的推导</strong>（只有一步，回报 G 就是这一步的奖励）：</p>
+<div class="arithmatex">\[J(\theta) = \sum_a \pi_\theta(a)\,q(a)\]</div>
+<p>（期望 = 每个动作的平均奖励 × 选它的概率，第 4 章。）对 θ 求导，q(a) 不依赖 θ：</p>
+<div class="arithmatex">\[\nabla J = \sum_a q(a)\,\nabla\pi_\theta(a) = \sum_a q(a)\,\pi_\theta(a)\,\nabla\log\pi_\theta(a) = \mathbb{E}_{a \sim \pi_\theta}\big[\,q(a)\,\nabla\log\pi_\theta(a)\,\big]\]</div>
+<p>中间那一步用的正是第二步的"方便恒等式"：它把 <span class="arithmatex">\(\sum_a \pi(a)[\dots]\)</span> 凑了出来，于是<strong>梯度变成了一个期望</strong>。</p>
+<p><strong>为什么这很重要</strong>：期望可以<strong>用样本来估</strong>（第 4 章第三步）。你不知道 q(a)，但你能抽一个动作 a、拿到奖励 G，算一个 <span class="arithmatex">\(G\,\nabla\log\pi(a)\)</span>，它的平均就是 <span class="arithmatex">\(\nabla J\)</span>。<strong>不需要知道环境的 p，也不需要对奖励求导</strong>。</p>
+<p><strong>多步、多状态的一般情况</strong>（策略梯度定理，式 13.5，L25368；CS 285 第 5 讲 L26–L29）：</p>
+<div class="arithmatex">\[\nabla J(\theta) = \mathbb{E}_{\pi_\theta}\Big[\sum_t G_t\,\nabla\log\pi_\theta(A_t \mid S_t)\Big]\]</div>
+<p><strong>白话</strong>（<code>lec-05.txt</code> L51–L58）："好东西变得更可能，坏东西变得更不可能"，就是把"试错"写成了数学：</p>
+<ul>
+<li>G 大（这次结果好）：沿 <span class="arithmatex">\(\nabla\log\pi(a)\)</span> 走得多，a 的概率涨得多；</li>
+<li>G 小或负：涨得少或反而降；</li>
+<li>和监督学习的区别（L49）：监督学习是"让标准答案的 log 概率变大"；策略梯度是"让每个动作的 log 概率按回报加权变大"。</li>
+</ul>
+<p><strong>一句话</strong>：策略梯度定理把 <span class="arithmatex">\(\nabla J\)</span> 写成期望 <span class="arithmatex">\(\mathbb{E}[G\,\nabla\log\pi]\)</span>，可以用样本估；回报大的动作被推得更可能。</p>
+<h3 id="reinforce2026-11-13">第四步：REINFORCE：抽一局，按回报推一把（2026-11-13）</h3>
+<p><strong>REINFORCE</strong>（Williams 1992；式 13.8，L25471；算法框 L25503）：用<strong>一个样本</strong>估梯度，马上走一步：</p>
+<div class="arithmatex">\[\theta \leftarrow \theta + \alpha\,G_t\,\nabla\log\pi_\theta(A_t \mid S_t)\]</div>
+<p><strong>老虎机上手算一步</strong>：两台机器真实平均 1.0 和 2.0（机器 1 更好）。θ = [0, 0]，α = 0.1。抽到机器 1，拿到 G = 2：</p>
+<div class="arithmatex">\[\theta \leftarrow [0, 0] + 0.1 \times 2 \times [-0.5,\ 0.5] = [-0.1,\ 0.1]\]</div>
+<p>新的 π(机器 1) = softmax([−0.1, 0.1]) 的第 2 个 = <span class="arithmatex">\(\frac{e^{0.1}}{e^{-0.1} + e^{0.1}} \approx 0.550\)</span>。一次就从 0.5 涨到 0.55。</p>
+<p><strong>原文 L25473–L25482 的直觉</strong>：更新方向是"让刚才这个动作更可能"的方向，大小正比于回报 G、<strong>反比于这个动作原来的概率</strong>（<span class="arithmatex">\(\nabla\log\pi = \nabla\pi / \pi\)</span>）：常被选的动作不会因为"出现得多"就占便宜。</p>
+<p><strong>跑 500 步</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>步数</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>…</th>
+<th>500</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>π(好机器)</td>
+<td>0.5</td>
+<td>0.547</td>
+<td>0.516</td>
+<td>0.573</td>
+<td>…</td>
+<td><strong>0.992</strong></td>
+</tr>
+</tbody>
+</table>
+<p>前几步上上下下（有时抽到差机器、奖励也是正的，它也被推高了），但总趋势是好机器越来越常被选。</p>
+<p><strong>REINFORCE 的两个特点</strong>：</p>
+<ol>
+<li>它是<strong>蒙特卡洛</strong>的（L25483–L25487）：要用整局的回报 <span class="arithmatex">\(G_t\)</span>，所以要等一局结束（同第 14 章）；</li>
+<li><strong>方差很大</strong>：注意上面"抽到差机器也被推高"：两台机器奖励都是正的，<strong>不管选哪个都会被推高</strong>，只是好的推得多一点。信号被淹没在噪声里，学得慢。下一章专门解决这个问题。</li>
+</ol>
+<p><strong>一句话</strong>：REINFORCE = 抽一个动作，θ 沿 <span class="arithmatex">\(G\,\nabla\log\pi\)</span> 走一步；手算一步 π 从 0.5 到 0.55，500 步到 0.99；缺点是要等终局、方差大。</p>
+<h3 id="_2">动画演示：好结果把概率推高，坏结果把概率压低</h3>
+<p><img alt="策略梯度" src="../animations/l20-policy-gradient.gif" /></p>
+<p>可交互版：<a href="../animations/l20-policy-gradient.html">animations/l20-policy-gradient.html</a>（要能点按钮、拖滑块，需要用本地服务打开，见 <a href="../animations/index.html">animations/README.md</a>"跑起来看"）。</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>上面是两台机器的概率条 π(0)、π(1)，下面是偏好分数 θ₀、θ₁；</li>
+<li>开头先演示第四步的手算：抽到机器 1、G = 2，θ → [−0.1, 0.1]，π(1) → 0.55；</li>
+<li>之后每帧抽一次：箭头显示 <span class="arithmatex">\(G \times \nabla\log\pi\)</span> 往哪推、推多大；</li>
+<li>右边曲线是 π(好机器)，抖着往上走到接近 1；滑块调步长 α。</li>
+</ol>
+<h2 id="_3">练习与作答记录</h2>
+<p><strong>题 1</strong>：θ = [0, 0]，抽到<strong>机器 0</strong>，拿到 G = 1，α = 0.1。写出 <span class="arithmatex">\(\nabla\log\pi(\text{机器 0})\)</span>，算更新后的 θ。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 2</strong>：用自己的话解释"方便的恒等式"<span class="arithmatex">\(\nabla\pi = \pi\nabla\log\pi\)</span> 在第三步起了什么作用（提示：它让梯度变成了什么）。</p>
+<p><strong>作答</strong>：（待作答）</p>
+<p><strong>题 3</strong>：两台机器奖励都是正的。REINFORCE 每次不管抽到哪台都会把它的概率推高。那为什么最后好机器还是能胜出？</p>
+<p><strong>作答</strong>：（待作答）</p>
+<h2 id="_4">口诀</h2>
+<blockquote>
+<p>不学价值直接调策略：<span class="arithmatex">\(\pi_\theta\)</span> 用 softmax，目标 <span class="arithmatex">\(J(\theta)\)</span> 要变大；<br />
+log 是 e 次方反过来，导数 1/x；<span class="arithmatex">\(\nabla\pi = \pi\nabla\log\pi\)</span> 把梯度变成期望；<br />
+<span class="arithmatex">\(\nabla J = \mathbb{E}[G\,\nabla\log\pi]\)</span>：好的推高，坏的压低；<br />
+REINFORCE：抽一局，按回报推一把；等终局、方差大。</p>
+</blockquote>
+<h2 id="_5">本章复习卡片</h2>
+<ul>
+<li>R34（策略梯度定理 <span class="arithmatex">\(\nabla J = \mathbb{E}[G\,\nabla\log\pi_\theta(A \mid S)]\)</span>；"方便的恒等式"<span class="arithmatex">\(\nabla\pi = \pi\nabla\log\pi\)</span>）</li>
+<li>R35（softmax 的 <span class="arithmatex">\(\nabla\log\pi(a) = \text{one-hot}(a) - \pi\)</span>；REINFORCE 更新式 13.8 与手算 0.5 → 0.55）</li>
+</ul>
+<h2 id="_6">附录 · 延伸阅读</h2>
+<blockquote>
+<p>留给以后深入学习用，不影响本章主线。★ 是建议先读的。</p>
+</blockquote>
+<h3 id="_7">推荐阅读</h3>
+<table>
+<thead>
+<tr>
+<th>读什么</th>
+<th>读哪里</th>
+<th>读它为了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>★ CS 285 第 5 讲 Part 1–2</td>
+<td><code>cs285-slides/lec-05.txt</code> L7–L58</td>
+<td>课程版推导：轨迹分布、"a convenient identity"、和最大似然的对比、高斯策略</td>
+</tr>
+<tr>
+<td>★ Sutton &amp; Barto §13.1–13.3</td>
+<td><code>books/sutton-barto-RLbook2020.txt</code> L24994–L25594（式 13.2、13.5、13.8，算法框 L25503）</td>
+<td>本章原文；§13.2 策略梯度定理的完整证明在 L25180 的框里</td>
+</tr>
+<tr>
+<td>★ Spinning Up "Intro to Policy Optimization"</td>
+<td><code>spinningup/docs/spinningup/rl_intro3.rst</code></td>
+<td>最清楚的一份推导："Deriving the Simplest Policy Gradient"，配最短的 PyTorch 代码</td>
+</tr>
+<tr>
+<td>Spinning Up 补充证明</td>
+<td><code>spinningup/docs/spinningup/extra_pg_proof1.rst</code></td>
+<td>为什么"过去的奖励"可以去掉（接第 21 章 reward-to-go）</td>
+</tr>
+<tr>
+<td>CS 285 HW2</td>
+<td><code>cs285-homeworks/hw2.txt</code> §2.1（L21–L69）、§3（L240–L330）</td>
+<td>要实现的 vanilla policy gradient</td>
+</tr>
+<tr>
+<td>王树森 slides</td>
+<td><code>chinese/wangshusen-DRL/Slides/4_Policy_1.pdf</code></td>
+<td>中文：策略梯度推导</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">数学原理</h3>
+<ul>
+<li><strong>对数导数技巧 log-derivative trick</strong>：<span class="arithmatex">\(\nabla_\theta\pi_\theta = \pi_\theta\nabla_\theta\log\pi_\theta\)</span>；于是 <span class="arithmatex">\(\nabla_\theta\mathbb{E}_{x\sim\pi_\theta}[f(x)] = \mathbb{E}_{x\sim\pi_\theta}[f(x)\nabla_\theta\log\pi_\theta(x)]\)</span>。f 不需要可导，也不需要知道 f 的表达式。</li>
+<li><strong>轨迹版本</strong>（CS 285）：<span class="arithmatex">\(\pi_\theta(\tau) = p(s_0)\prod_t \pi_\theta(a_t \mid s_t)p(s_{t+1} \mid s_t, a_t)\)</span>，取 log 以后环境的 p 和 θ 无关，求导时消失：<span class="arithmatex">\(\nabla\log\pi_\theta(\tau) = \sum_t\nabla\log\pi_\theta(a_t \mid s_t)\)</span>。这就是"不需要知道 p"的原因。</li>
+<li><strong>softmax 的梯度</strong>：<span class="arithmatex">\(\log\pi(a) = h_a - \log\sum_b e^{h_b}\)</span>，对 <span class="arithmatex">\(h_c\)</span> 求导得 <span class="arithmatex">\(\mathbb 1[a = c] - \pi(c)\)</span>。</li>
+<li><strong>梯度上升</strong>：最大化 J 时 <span class="arithmatex">\(\theta \leftarrow \theta + \alpha\nabla J\)</span>；代码里常写成最小化 <span class="arithmatex">\(-J\)</span>（loss = −log π × G），再用普通的梯度下降。</li>
+</ul>
+<h3 id="_9">公式清单</h3>
+<table>
+<thead>
+<tr>
+<th>公式</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\pi_\theta(a \mid s) = \frac{e^{h(s,a,\theta)}}{\sum_b e^{h(s,b,\theta)}}\)</span></td>
+<td>softmax 策略（式 13.2）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(J(\theta) = \mathbb{E}_{\pi_\theta}[G_0]\)</span></td>
+<td>目标：期望回报</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\nabla\pi = \pi\nabla\log\pi\)</span></td>
+<td>方便的恒等式</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\nabla J = \mathbb{E}_{\pi_\theta}[\sum_t G_t\nabla\log\pi_\theta(A_t \mid S_t)]\)</span></td>
+<td>策略梯度定理（式 13.5 的样本形式）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\theta \leftarrow \theta + \alpha G_t\nabla\log\pi_\theta(A_t \mid S_t)\)</span></td>
+<td>REINFORCE（式 13.8）</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\nabla\log\pi(a) = \text{one-hot}(a) - \pi\)</span></td>
+<td>softmax 策略的梯度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">代码对照：把本章的数字用代码算一遍</h3>
+<blockquote>
+<p>代码在 <code>cs285-deep-rl/solutions/chapter-code/ch20_policy_gradient.py</code>，测试 <code>tests/test_ch17_24.py</code>（用 autograd 核对 softmax 梯度公式）。<br />
+同一章的 Jupyter notebook：<code>cs285-deep-rl/solutions/chapter-code/notebooks/ch20_policy_gradient.ipynb</code>（讲解和代码放在一起，一格一格边读边跑；代码都写在格子里，Colab 也能直接打开）。</p>
+<p><code>bash  
+cd cs285-deep-rl/solutions/chapter-code  
+uv run python ch20_policy_gradient.py</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>讲义</th>
+<th>代码</th>
+<th>跑出来</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>θ = [0, 0] 的策略</td>
+<td><code>softmax(theta)</code></td>
+<td>[0.5, 0.5]</td>
+</tr>
+<tr>
+<td>∇log π(机器 1)</td>
+<td><code>grad_log_softmax(theta, 1)</code></td>
+<td>[−0.5, 0.5]</td>
+</tr>
+<tr>
+<td>autograd 核对</td>
+<td><code>torch.log_softmax(t, 0)[a].backward()</code></td>
+<td>[−0.5, 0.5]</td>
+</tr>
+<tr>
+<td>REINFORCE 500 步</td>
+<td><code>reinforce_bandit()</code></td>
+<td>0.547、0.516、0.573 … 0.992</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">g = -softmax(theta); g[a] += 1                # ∇log π(a) = one-hot(a) − π
+theta += alpha * G * grad_log_softmax(theta, a)   # REINFORCE
+</code></pre>
+<p><strong>代码里才看得到的</strong>：真正的深度 RL 代码不手写梯度，而是写一个"假的 loss"让 PyTorch 求导：<code>loss = -(log_prob * G).mean()</code>，<code>loss.backward()</code> 得到的正好是 <span class="arithmatex">\(-G\nabla\log\pi\)</span>。CS 285 HW2 的 <code>update</code> 函数就是这样写的；这个 loss 的数值本身没有意义，只有它的梯度有意义。</p><nav class="pager"><a href="19-double-dqn.html">← 第 19 章 · 过估计与 Double DQN：max 会挑到&quot;运气好&quot;的那个</a><a href="21-baseline.html">第 21 章 · baseline 与 reward-to-go：给策略梯度降噪 →</a></nav>
+</main>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+</body></html>
