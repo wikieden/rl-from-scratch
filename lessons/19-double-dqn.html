@@ -42,6 +42,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <a href="../animations/index.html">动画</a>
 <a href="../review.html">复习卡片</a>
 <a href="../lessons/appendix-glossary.html">缩写表</a>
+<a href="https://wikieden.github.io/ai-books/">← 全部讲义书</a>
 </div></header>
 <main>
 <h1 id="19-double-dqnmax">第 19 章 · 过估计与 Double DQN：max 会挑到"运气好"的那个</h1>
@@ -327,5 +328,5 @@ double.append(Q2[np.argmax(Q1)])    # Q1 挑动作，Q2 打分
 </code></pre>
 <p><strong>代码里才看得到的</strong>：在第 18 章的 DQN 代码里改成 Double DQN，只要把 <code>target(NS).max(dim=1).values</code> 换成 <code>target(NS).gather(1, q(NS).argmax(dim=1, keepdim=True)).squeeze(1)</code>：用主网络 <code>q</code> 的 argmax 去目标网络 <code>target</code> 里取值。</p><nav class="pager"><a href="18-dqn.html">← 第 18 章 · DQN：神经网络 + 经验回放 + 目标网络</a><a href="20-policy-gradient.html">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略 →</a></nav>
 </main>
-<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

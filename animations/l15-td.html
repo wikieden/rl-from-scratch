@@ -30,4 +30,5 @@ function next(){if(k>=60)return false;k++;
   const[s,r,ns]=ep[ep.i++];const d=td(V,s,r,ns,A);pos=ns;hi=[s];msg=`${WN[s]} → ${ns<0?(r?'右出 +1':'左出 0'):WN[ns]}：δ = ${d>=0?'+':''}${d.toFixed(3)}，V(${WN[s]}) = ${V[s].toFixed(3)}`;draw();return true}
 $('a').oninput=e=>{A=+e.target.value;$('av').textContent=A.toFixed(2);ANIM.stop();reset(3)};
 setupPlayer({captureSeed:3,reset,next},700);
-</script></body></html>
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

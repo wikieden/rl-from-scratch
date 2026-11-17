@@ -27,4 +27,5 @@ function reset(){p1=1;p2=1;p3=null;k=0;draw()}
 function next(){if(k>=26)return false;k++;if(k<16){p1=Math.min(p1+0.05,1+E);p2=Math.max(p2-0.05,1-E)}else{if(p3===null)p3=0.5;else p3=Math.min(p3+0.1,1)}draw();return true}
 $('e').oninput=e=>{E=+e.target.value;$('ev').textContent=E.toFixed(2);ANIM.stop();reset()};
 setupPlayer({captureSeed:1,reset,next},450);
-</script></body></html>
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

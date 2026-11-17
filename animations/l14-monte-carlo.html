@@ -24,4 +24,5 @@ function next(){if(k>=70)return false;k++;
   draw('更新：'+hi.map(s=>`${WN[s]} 记 ${ret[s]}`).join('，'));return true}
 $('n').oninput=e=>{ANIM.stop();const n=+e.target.value;reset(7);for(let i=0;i<n;i++)update(walkEpisode());eps=n;$('nv').textContent=n;pos=null;draw(`玩了 ${n} 局`)};
 setupPlayer({captureSeed:7,reset,next},450);
-</script></body></html>
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

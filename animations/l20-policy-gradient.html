@@ -29,4 +29,5 @@ function reset(sd){seed(sd);th=[0,0];last=null;hist=[0.5];k=0;draw()}
 function next(){if(hist.length>300)return false;k++;if(k===1)stepOnce([1,2]);else{const m=k<=15?1:15;for(let i=0;i<m;i++)stepOnce()}draw();return true}
 $('a').oninput=e=>{A=+e.target.value;$('av').textContent=A.toFixed(2);ANIM.stop();reset(4)};
 setupPlayer({captureSeed:4,reset,next},600);
-</script></body></html>
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

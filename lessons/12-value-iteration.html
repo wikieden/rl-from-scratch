@@ -42,6 +42,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <a href="../animations/index.html">动画</a>
 <a href="../review.html">复习卡片</a>
 <a href="../lessons/appendix-glossary.html">缩写表</a>
+<a href="https://wikieden.github.io/ai-books/">← 全部讲义书</a>
 </div></header>
 <main>
 <h1 id="12-gpi">第 12 章 · 价值迭代与 GPI：评估只算一轮就改进</h1>
@@ -318,5 +319,5 @@ uv run python ch12_value_iteration.py</code></p>
 </code></pre>
 <p><strong>代码里才看得到的</strong>：和第 10 章 <code>sweep</code> 比，只是把 <code>sum(pa * ...)</code> 换成了 <code>max(...)</code>。5×5 网格要 154 轮是因为 γ = 0.9：误差每轮只缩成 0.9 倍，要从 24 缩到 <span class="arithmatex">\(10^{-6}\)</span>，大约要 <span class="arithmatex">\(\log(24 \times 10^6) / \log(1/0.9) \approx 160\)</span> 轮。</p><nav class="pager"><a href="11-policy-iteration.html">← 第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估</a><a href="13-bandit.html">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy →</a></nav>
 </main>
-<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

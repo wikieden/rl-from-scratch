@@ -42,6 +42,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <a href="../animations/index.html">动画</a>
 <a href="../review.html">复习卡片</a>
 <a href="../lessons/appendix-glossary.html">缩写表</a>
+<a href="https://wikieden.github.io/ai-books/">← 全部讲义书</a>
 </div></header>
 <main>
 <h1 id="16-sarsa-q-learning-td-q">第 16 章 · SARSA 与 Q-learning：用 TD 学 q，学会怎么做</h1>
@@ -303,5 +304,5 @@ Q[s][a] += alpha * (target - Q[s][a])
 </code></pre>
 <p><strong>代码里才看得到的</strong>：<code>eps_greedy</code> 在并列时用 <code>rng.choice(np.flatnonzero(q == q.max()))</code> 随机挑（第 13 章附录提到的问题）。一开始 Q 全是 0，如果总挑编号最小的"↑"，智能体会在起点一直往上撞墙，学得很慢。</p><nav class="pager"><a href="15-td.html">← 第 15 章 · 时序差分 TD：走一步就更新，拿&quot;下一步的估计&quot;当目标</a><a href="17-function-approx.html">第 17 章 · 函数近似与梯度下降：表格装不下，换成一个会&quot;猜&quot;的函数 →</a></nav>
 </main>
-<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

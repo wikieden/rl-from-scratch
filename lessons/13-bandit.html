@@ -42,6 +42,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <a href="../animations/index.html">动画</a>
 <a href="../review.html">复习卡片</a>
 <a href="../lessons/appendix-glossary.html">缩写表</a>
+<a href="https://wikieden.github.io/ai-books/">← 全部讲义书</a>
 </div></header>
 <main>
 <h1 id="13-greedy">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy</h1>
@@ -388,5 +389,5 @@ Q[a] += (r - Q[a]) / N[a]                                                    # �
 </code></pre>
 <p><strong>代码里才看得到的</strong>：<code>np.argmax</code> 遇到并列时总是返回<strong>编号最小</strong>的那个，所以全 0 时贪心第一次一定拉 1 号机器，后面就可能一直困在 1 号。更公平的做法是在并列的里面随机挑（第 16 章的代码就是这样写的）。</p><nav class="pager"><a href="12-value-iteration.html">← 第 12 章 · 价值迭代与 GPI：评估只算一轮就改进</a><a href="14-monte-carlo.html">第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值 →</a></nav>
 </main>
-<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

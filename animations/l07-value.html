@@ -35,4 +35,5 @@ function next(){if(k>=60)return false;k++;if(CAPTURE&&k===26)setMode(1);if(CAPTU
   const m=pts.length<10?1:5;for(let i=0;i<m&&pts.length<MAX;i++)pts.push(episode(FIRST[mode]));draw();return true}
 ['m0','m1','m2'].forEach((id,i)=>$(id).onclick=()=>{setMode(i)});
 setupPlayer({captureSeed:4,reset,next},500);
-</script></body></html>
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

@@ -1,6 +1,6 @@
 # 从零学强化学习
 
-**在线阅读：<https://wikieden.github.io/rl-from-scratch/>** · [讲义目录](https://wikieden.github.io/rl-from-scratch/lessons/index.html) · [全部动画](https://wikieden.github.io/rl-from-scratch/animations/index.html) · [复习卡片](https://wikieden.github.io/rl-from-scratch/review.html)
+**在线阅读：<https://wikieden.github.io/rl-from-scratch/>** · [讲义目录](https://wikieden.github.io/rl-from-scratch/lessons/index.html) · [全部动画](https://wikieden.github.io/rl-from-scratch/animations/index.html) · [复习卡片](https://wikieden.github.io/rl-from-scratch/review.html) · [全部讲义书](https://wikieden.github.io/ai-books/)
 
 > 24 章 · 24 个动画（GIF + 可交互页面）· 42 张复习卡片 · 覆盖 Sutton & Barto 第 2–6、9、13 章与 CS 285 第 4–10、14 讲的主线
 

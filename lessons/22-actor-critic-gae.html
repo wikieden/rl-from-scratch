@@ -42,6 +42,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <a href="../animations/index.html">动画</a>
 <a href="../review.html">复习卡片</a>
 <a href="../lessons/appendix-glossary.html">缩写表</a>
+<a href="https://wikieden.github.io/ai-books/">← 全部讲义书</a>
 </div></header>
 <main>
 <h1 id="22-actor-critic-gae">第 22 章 · Actor-Critic、优势函数与 GAE：演员演，评委打分</h1>
@@ -390,5 +391,5 @@ for d in reversed(delta):
 </code></pre>
 <p><strong>代码里才看得到的</strong>：<code>values</code> 要比 <code>rewards</code> 多一个元素：最后一个状态之后的价值（结束了就是 0，没结束是被截断时评委的估计）。HW2 的 <code>_estimate_advantage</code> 里，这个"结束了填 0"由 <code>terminals</code> 数组控制，弄错会让最后一步的 δ 错得离谱。</p><nav class="pager"><a href="21-baseline.html">← 第 21 章 · baseline 与 reward-to-go：给策略梯度降噪</a><a href="23-ppo.html">第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多 →</a></nav>
 </main>
-<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

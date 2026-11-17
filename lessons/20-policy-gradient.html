@@ -42,6 +42,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <a href="../animations/index.html">动画</a>
 <a href="../review.html">复习卡片</a>
 <a href="../lessons/appendix-glossary.html">缩写表</a>
+<a href="https://wikieden.github.io/ai-books/">← 全部讲义书</a>
 </div></header>
 <main>
 <h1 id="20-reinforce">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略</h1>
@@ -342,5 +343,5 @@ theta += alpha * G * grad_log_softmax(theta, a)   # REINFORCE
 </code></pre>
 <p><strong>代码里才看得到的</strong>：真正的深度 RL 代码不手写梯度，而是写一个"假的 loss"让 PyTorch 求导：<code>loss = -(log_prob * G).mean()</code>，<code>loss.backward()</code> 得到的正好是 <span class="arithmatex">\(-G\nabla\log\pi\)</span>。CS 285 HW2 的 <code>update</code> 函数就是这样写的；这个 loss 的数值本身没有意义，只有它的梯度有意义。</p><nav class="pager"><a href="19-double-dqn.html">← 第 19 章 · 过估计与 Double DQN：max 会挑到&quot;运气好&quot;的那个</a><a href="21-baseline.html">第 21 章 · baseline 与 reward-to-go：给策略梯度降噪 →</a></nav>
 </main>
-<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

@@ -39,4 +39,5 @@ function reset(sd){seed(sd);ag=[mk('sarsa'),mk('q')];k=0;draw()}
 function next(){if(ag[0].hist.length>=500)return false;k++;const m=k<=5?2:k<=15?10:25;for(let i=0;i<m&&ag[0].hist.length<500;i++){episode(ag[0]);episode(ag[1])}draw();return true}
 $('e').oninput=e=>{EPS=+e.target.value;$('ev').textContent=EPS.toFixed(2);ANIM.stop();reset(5)};
 setupPlayer({captureSeed:5,reset,next},700);
-</script></body></html>
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

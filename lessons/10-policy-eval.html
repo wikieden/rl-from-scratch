@@ -42,6 +42,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <a href="../animations/index.html">动画</a>
 <a href="../review.html">复习卡片</a>
 <a href="../lessons/appendix-glossary.html">缩写表</a>
+<a href="https://wikieden.github.io/ai-books/">← 全部讲义书</a>
 </div></header>
 <main>
 <h1 id="10-policy-evaluation-0-bellman">第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程</h1>
@@ -315,5 +316,5 @@ if np.max(np.abs(new - v)) &lt; theta:   # Δ &lt; θ 就停
 </code></pre>
 <p><strong>代码里才看得到的</strong>：终点在代码里写成"做什么都留在原地、奖励 0、<code>done=True</code>"，<code>q_from_v</code> 遇到 <code>done</code> 就不加 <span class="arithmatex">\(\gamma v(s')\)</span>，所以终点的价值一直是 0。把 <code>sweep</code> 改成"算一格马上写回 v"就是原地版本，可以自己试试它要几轮收敛。</p><nav class="pager"><a href="09-optimal.html">← 第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot;</a><a href="11-policy-iteration.html">第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估 →</a></nav>
 </main>
-<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a></footer>
+<footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>
