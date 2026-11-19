@@ -446,7 +446,12 @@ uv run pytest            # 全书 24 章的测试一起跑</code></p>
 <pre><code class="language-python">r = np.asarray(rewards, float)
 (r - r.mean()) / (r.std() + eps)     # eps 防止全对时除以 0
 </code></pre>
-<p><strong>代码里才看得到的</strong>：全对时标准差是 0，直接除会得到 0 / 0 = nan（not a number，不是一个数），一个 nan 就能把整个模型的参数全变成 nan。所以分母一定要加一个很小的 eps（这里 <span class="arithmatex">\(10^{-8}\)</span>）：分子也是 0，结果正好是 0。</p><nav class="pager"><a href="23-ppo.html">← 第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多</a><span></span></nav>
+<p><strong>代码里才看得到的</strong>：全对时标准差是 0，直接除会得到 0 / 0 = nan（not a number，不是一个数），一个 nan 就能把整个模型的参数全变成 nan。所以分母一定要加一个很小的 eps（这里 <span class="arithmatex">\(10^{-8}\)</span>）：分子也是 0，结果正好是 0。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>8 个回答里 2 个对：<code>group_advantage([1, 1, 0, 0, 0, 0, 0, 0])</code> → 对的 1.732，错的 −0.577。对的越少，答对的那几个优势越大。</li>
+<li>奖励不只是 0 / 1：<code>[5, 3, 1, 1]</code> → [1.508, 0.302, −0.905, −0.905]；把 [1, 0, 0, 1] 放大成 <code>[10, 0, 0, 10]</code>，结果还是 [1, −1, −1, 1]：除以标准差以后，奖励的单位不影响优势。</li>
+</ol><nav class="pager"><a href="23-ppo.html">← 第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多</a><span></span></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

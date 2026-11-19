@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>actor-critic 一圈</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 22 章 · 实用的 actor-critic：一圈五步</h1>
+<p class="sub">配套讲义：<a href="../lessons/22-actor-critic-gae.html">第 22 章 · Actor-Critic、优势函数与 GAE：演员演，评委打分</a>。用附录代码对照里的那一小段：奖励 [0, 0, 1]，评委估计 V̂ = [0.5, 0.6, 0.8]，结束时 0，γ = 0.9，λ = 0.95。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<p class="note">看点：① 第 1 框：拿到一段轨迹；② 第 2 框：评委的回归目标（这里用 reward-to-go 0.81、0.9、1）；③ 第 3 框：δ 再按 GAE 合成优势；④ 第 4 框：一批优势减均值、除标准差，有正有负；⑤ 第 5 框：优势为正的动作被推高，为负的被压低。这就是 PPO 的前一半。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');
+
+const r=[0,0,1],V=[0.5,0.6,0.8,0],g=0.9,lam=0.95;let k=0;
+const d=r.map((x,t)=>x+g*V[t+1]-V[t]),A=[0,0,0];{let a=0;for(let t=2;t>=0;t--){a=d[t]+g*lam*a;A[t]=a}}
+const tg=[0,0,0];{let G=0;for(let t=2;t>=0;t--){G=r[t]+g*G;tg[t]=G}}
+const mu=A.reduce((x,y)=>x+y,0)/3,sd=Math.sqrt(A.reduce((x,y)=>x+(y-mu)**2,0)/3),N=A.map(a=>(a-mu)/sd);
+const STEP=['1. 跑一批轨迹','2. 训练评委 V̂','3. δ → GAE 优势','4. 优势归一化','5. 演员走一步'];
+const f=v=>fmt(v,3);
+function draw(){clear(sv);
+  STEP.forEach((s,i)=>{const x=10+i*134,on=i===k;el('rect',{x,y:40,width:124,height:44,rx:8,fill:on?'var(--accent-bg)':'var(--bg)',stroke:on?'var(--accent)':'var(--line)','stroke-width':on?2.5:1},sv);
+    txt(s,{x:x+62,y:67,'text-anchor':'middle',class:'c'},sv)});
+  txt('一圈做完再回到第 1 步',{x:340,y:24,'text-anchor':'middle',class:'m'},sv);
+  const L=[];
+  if(k>=0)L.push(['奖励 r',r.join('，'),'评委现在的 V̂',V.slice(0,3).join('，')]);
+  if(k>=1)L.push(['评委的目标（reward-to-go）',tg.map(f).join('，'),'V̂ 往这些数回归','']);
+  if(k>=2)L.push(['δ = r + γV̂(s′) − V̂(s)',d.map(f).join('，'),'GAE（λ = 0.95）',A.map(f).join('，')]);
+  if(k>=3)L.push(['均值、标准差',`${f(mu)}，${f(sd)}`,'归一化后',N.map(v=>fmt(v,2)).join('，')]);
+  L.forEach((row,i)=>{const y=125+i*58;txt(row[0],{x:30,y,class:'m'},sv);txt(row[1],{x:30,y:y+22,class:'big'},sv);txt(row[2],{x:360,y,class:'m'},sv);
+    const t=txt(row[3],{x:360,y:y+22,class:'big'},sv);if(i===k)t.style.fill='var(--warm)'});
+  if(k>=4)N.forEach((v,t)=>{const x=120+t*170,y=375;txt(`t = ${t}`,{x,y,'text-anchor':'middle',class:'c'},sv);
+    const up=v>0,tt=txt(up?'↑ 推高':'↓ 压低',{x:x+50,y,'text-anchor':'middle',class:'big'},sv);tt.style.fill=up?'var(--good)':'var(--bad)'})}
+function reset(){k=0;draw()}
+function next(){if(k>=4)return false;k++;draw();return true}
+setupPlayer({captureSeed:1,reset,next},1500);
+
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

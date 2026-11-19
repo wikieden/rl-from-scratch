@@ -326,7 +326,12 @@ uv run python ch19_double_dqn.py</code></p>
 <pre><code class="language-python">single.append(Q1.max())             # 同一组估计既挑又打分
 double.append(Q2[np.argmax(Q1)])    # Q1 挑动作，Q2 打分
 </code></pre>
-<p><strong>代码里才看得到的</strong>：在第 18 章的 DQN 代码里改成 Double DQN，只要把 <code>target(NS).max(dim=1).values</code> 换成 <code>target(NS).gather(1, q(NS).argmax(dim=1, keepdim=True)).squeeze(1)</code>：用主网络 <code>q</code> 的 argmax 去目标网络 <code>target</code> 里取值。</p><nav class="pager"><a href="18-dqn.html">← 第 18 章 · DQN：神经网络 + 经验回放 + 目标网络</a><a href="20-policy-gradient.html">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略 →</a></nav>
+<p><strong>代码里才看得到的</strong>：在第 18 章的 DQN 代码里改成 Double DQN，只要把 <code>target(NS).max(dim=1).values</code> 换成 <code>target(NS).gather(1, q(NS).argmax(dim=1, keepdim=True)).squeeze(1)</code>：用主网络 <code>q</code> 的 argmax 去目标网络 <code>target</code> 里取值。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>换动作个数：<code>max_bias(n_actions=2 / 10 / 100)</code> → 单估计偏 0.254、0.691、1.121，双估计都在 0 附近。动作越多，挑出来的最大值偏得越高。</li>
+<li>换每个估计用的样本数：<code>n_samples=1</code> → 偏 1.546；<code>n_samples=50</code> → 偏 0.217。估计越准，偏差越小，但不会消失。</li>
+</ol><nav class="pager"><a href="18-dqn.html">← 第 18 章 · DQN：神经网络 + 经验回放 + 目标网络</a><a href="20-policy-gradient.html">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

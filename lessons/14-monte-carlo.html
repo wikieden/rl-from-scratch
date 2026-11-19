@@ -227,6 +227,15 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <li>下面柱状图是当前估计，虚线是真实值 1/6 … 5/6，局数越多越贴近；</li>
 <li>滑块调要玩几局，右上角显示 RMS 误差。</li>
 </ol>
+<h3 id="2">动画演示 2：倒着走，最后写入的就是第一次（第三步）</h3>
+<p><img alt="first-visit 记账" src="../animations/l14b-first-visit.gif" /></p>
+<p>可交互版：<a href="../animations/l14b-first-visit.html">animations/l14b-first-visit.html</a>（按钮切换 γ = 1 / 0.9）</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>用的是第二步那一局：C → D → E → D → C → D → E → 右出 +1。默认 γ = 0.9，只为看清每一步的 G 不一样；切到 γ = 1 就是书上的情况，G 全是 1。</li>
+<li>从最后一步往前，每步 G ← R + γG（第 3 章第四步），并把当前 G 写进这个状态的格子；后写的盖掉先写的。</li>
+<li>走到开头，格子里留下的正好是每个状态第一次出现时的回报：first-visit。灰色划掉的几笔，every-visit 会也记上。</li>
+</ol>
 <h2 id="_2">练习与作答记录</h2>
 <p><strong>题 1</strong>：一局随机游走是 C → B → A → 走出左边。按 first-visit MC，哪些状态记账、各记多少？</p>
 <p><strong>作答</strong>：（待作答）</p>
@@ -365,7 +374,12 @@ for s, r, _ in reversed(episode):   # 倒着走
     G = r + gamma * G
     returns[s] = G                  # 后写的覆盖先写的 → 留下的是第一次出现时的回报
 </code></pre>
-<p><strong>代码里才看得到的</strong>：用字典 <code>returns[s] = G</code> 倒着覆盖，一行就实现了 first-visit：倒着走时最后一次写入 s 的，正是正着数第一次出现的那一步。改成"每次都更新"就是 every-visit。</p><nav class="pager"><a href="13-bandit.html">← 第 13 章 · 探索与利用：多臂老虎机与 ε-greedy</a><a href="15-td.html">第 15 章 · 时序差分 TD：走一步就更新，拿&quot;下一步的估计&quot;当目标 →</a></nav>
+<p><strong>代码里才看得到的</strong>：用字典 <code>returns[s] = G</code> 倒着覆盖，一行就实现了 first-visit：倒着走时最后一次写入 s 的，正是正着数第一次出现的那一步。改成"每次都更新"就是 every-visit。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li><code>rms(mc_prediction(n))</code>，n = 10 / 100 / 1000 / 10000 → 0.178、0.088、0.0084、0.0031。局数越多越准。</li>
+<li><code>mc_prediction(1000, alpha=0.1)</code> 改成固定步长，看误差还会不会一直下降。</li>
+</ol><nav class="pager"><a href="13-bandit.html">← 第 13 章 · 探索与利用：多臂老虎机与 ε-greedy</a><a href="15-td.html">第 15 章 · 时序差分 TD：走一步就更新，拿&quot;下一步的估计&quot;当目标 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

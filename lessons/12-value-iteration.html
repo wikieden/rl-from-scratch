@@ -317,7 +317,12 @@ uv run python ch12_value_iteration.py</code></p>
 <p><strong>关键几行</strong>：</p>
 <pre><code class="language-python">new = np.array([max(q_from_v(P, v, gamma, s, a) for a in P[s]) for s in P])   # 一个 max 搞定
 </code></pre>
-<p><strong>代码里才看得到的</strong>：和第 10 章 <code>sweep</code> 比，只是把 <code>sum(pa * ...)</code> 换成了 <code>max(...)</code>。5×5 网格要 154 轮是因为 γ = 0.9：误差每轮只缩成 0.9 倍，要从 24 缩到 <span class="arithmatex">\(10^{-6}\)</span>，大约要 <span class="arithmatex">\(\log(24 \times 10^6) / \log(1/0.9) \approx 160\)</span> 轮。</p><nav class="pager"><a href="11-policy-iteration.html">← 第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估</a><a href="13-bandit.html">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy →</a></nav>
+<p><strong>代码里才看得到的</strong>：和第 10 章 <code>sweep</code> 比，只是把 <code>sum(pa * ...)</code> 换成了 <code>max(...)</code>。5×5 网格要 154 轮是因为 γ = 0.9：误差每轮只缩成 0.9 倍，要从 24 缩到 <span class="arithmatex">\(10^{-6}\)</span>，大约要 <span class="arithmatex">\(\log(24 \times 10^6) / \log(1/0.9) \approx 160\)</span> 轮。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>同一个 5×5 网格做价值迭代：γ = 0.5 只要 25 轮，γ = 0.99 要 1605 轮，算出的 <span class="arithmatex">\(v_*(A)\)</span> 和第 11 章一样（10.323、204.04）。价值迭代的轮数随 γ 涨得很快，策略迭代不会。</li>
+<li>把 <code>theta</code> 调大到 <code>1e-2</code>，看轮数和 <span class="arithmatex">\(v_*(A)\)</span> 各变了多少。</li>
+</ol><nav class="pager"><a href="11-policy-iteration.html">← 第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估</a><a href="13-bandit.html">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

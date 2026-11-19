@@ -315,7 +315,17 @@ uv run python ch01_agent_environment.py</code></p>
 </tr>
 </tbody>
 </table>
-<p><strong>代码里才看得到的</strong>：<code>step()</code> 这个函数名就是后面所有 RL 代码库（Gymnasium、CS 285 作业）的标准接口：智能体把动作交给 <code>env.step(a)</code>，环境回给它奖励和新状态。第 2 个动作"乱跑"之后 <code>R2 = 0</code>，下标正好比动作大 1。</p><nav class="pager"><span></span><a href="02-return.html">第 2 章 · 奖励与回报 reward &amp; return：把一路的奖励加起来 →</a></nav>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">reward = 1 if (self.state == &quot;主人举手&quot; and action == &quot;坐下&quot;) else 0  # 环境按规则给奖励
+self.state = &quot;主人放下手&quot; if self.state == &quot;主人举手&quot; else &quot;主人举手&quot;  # 环境换到下一个状态
+traj.append((f&quot;R{t + 1}&quot;, r))  # 奖励的下标比动作大 1
+</code></pre>
+<p><strong>代码里才看得到的</strong>：<code>step()</code> 这个函数名就是后面所有 RL 代码库（Gymnasium、CS 285 作业）的标准接口：智能体把动作交给 <code>env.step(a)</code>，环境回给它奖励和新状态。第 2 个动作"乱跑"之后 <code>R2 = 0</code>，下标正好比动作大 1。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>换一串动作：<code>rollout(DogEnv(), ["乱跑", "坐下", "坐下"])</code>。第一次坐下时主人已经放下手，<code>R2 = 0</code>；第二次坐下赶上举手，<code>R3 = 1</code>。同一个动作拿不拿奖励，要看当时的状态。</li>
+<li>在 <code>DogEnv.step</code> 里把奖励改成 <code>2</code>，再跑一遍：轨迹的形状不变，只是 R 的数字变了。环境定规则，智能体只能选动作。</li>
+</ol><nav class="pager"><span></span><a href="02-return.html">第 2 章 · 奖励与回报 reward &amp; return：把一路的奖励加起来 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

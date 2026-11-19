@@ -47,7 +47,8 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <main>
 <h1 id="_1">从零学强化学习 · 讲义目录</h1>
 <blockquote>
-<p>24 章 · 24 个动画（GIF + 可交互页面）· 42 张复习卡片 · 覆盖 Sutton &amp; Barto 第 2–6、9、13 章与 CS 285 第 4–10、14 讲的主线</p>
+<p>在线阅读：<a href="https://wikieden.github.io/rl-from-scratch/">https://wikieden.github.io/rl-from-scratch/</a> · 全部讲义书：<a href="https://wikieden.github.io/ai-books/">https://wikieden.github.io/ai-books/</a><br />
+24 章 · 33 个动画（GIF + 可交互页面）· 42 张复习卡片 · 覆盖 Sutton &amp; Barto 第 2–6、9、13 章与 CS 285 第 4–10、14 讲的主线</p>
 </blockquote>
 <h2 id="_2">这本书讲什么</h2>
 <p>从"小狗看到主人举手、坐下、拿到零食"讲起，一步步走到今天训练机器人和大语言模型用的 PPO、GRPO：回报和折扣、马尔可夫决策过程、价值函数和 Bellman 方程、动态规划、蒙特卡洛和时序差分、Q-learning、DQN、策略梯度、Actor-Critic 与 GAE、TRPO / PPO，最后接到 LLM 训练里的 GRPO。</p>
@@ -60,7 +61,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <ul>
 <li><strong>一次一小步</strong>：每个概念按"白话类比 → 公式（每个符号说清楚怎么读）→ 小数字亲手算一遍"讲，算例都能在纸上验证，而且全部用代码核对过（测试 22 个，全部通过）。</li>
 <li><strong>几个例子贯穿全书</strong>：训练小狗（第 1 章）、扫地机器人（第 5–9 章，书里的回收机器人）、书上的 5×5 和 4×4 网格世界（第 8–12 章，数字和图 3.2、3.5、4.1 一模一样）、随机游走 A–E（第 14–15、17 章）、悬崖行走（第 16 章）、走廊（第 18 章）、两台老虎机（第 13、20–21 章）。</li>
-<li><strong>每章一个动画</strong>：关键原理做成可交互页面，▶ 播放、→ 单步、↺ 从头开始，有滑块的可以拖动参数看结果怎么变；GIF 版直接嵌在正文里。</li>
+<li><strong>每章至少一个动画</strong>（9 章配了第二个）：关键原理做成可交互页面，▶ 播放、→ 单步、↺ 从头开始，有滑块的可以拖动参数看结果怎么变；GIF 版直接嵌在正文里。</li>
 <li><strong>对照原文</strong>：讲到教材和 slides 的地方都标了本地文本的行号（如 S&amp;B L4309–L4344），每章末尾的延伸阅读精确到章节、式号和行号。</li>
 <li><strong>术语不设门槛</strong>：缩写第一次出现就给英文全称并逐词解释（如 TD = Temporal Difference：时间上的 / 差分），全书缩写见 <a href="../lessons/appendix-glossary.html">缩写与术语表</a>。</li>
 <li><strong>每章都有代码对照</strong>：附录最后一节把本章的数字用 NumPy / PyTorch 跑一遍（Mac 上不需要 GPU），配测试核对和讲义一致，顺带讲代码里才看得到的坑（下标差 1、<code>1 − 0.7</code> 不等于 0.3、<code>torch.no_grad()</code>、<code>(1 − done)</code>……）；只算讲过的例子，不提前给练习答案。代码在 <code>solutions/chapter-code/</code>。每章还配了一个 Jupyter notebook（<code>solutions/chapter-code/notebooks/</code>），讲解和代码放在一起，一格一格边读边跑。</li>
@@ -110,7 +111,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 第 24 章  收尾：PPO → GRPO（LLM），接下来做 CS 285 HW2–HW4
 </code></pre>
 <h2 id="_7">目录</h2>
-<p>每章都配一个动画：<strong>GIF</strong> 在讲义正文里直接播放，<strong>▶ 交互</strong>是可以点按钮、拖滑块的页面（本地看需要起服务，见 <a href="../animations/index.html">动画目录</a>"跑起来看"）。</p>
+<p>每章都配动画，有的章配两个：<strong>GIF</strong> 在讲义正文里直接播放，<strong>▶ 交互</strong>是可以点按钮、拖滑块的页面（本地看需要起服务，见 <a href="../animations/index.html">动画目录</a>"跑起来看"）。</p>
 <table>
 <thead>
 <tr>
@@ -167,7 +168,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/06-policy.html">6</a></td>
 <td>策略 <span class="arithmatex">\(\pi(a \mid s)\)</span>：随机 / 确定性；RL 算法的三个部分</td>
 <td>策略是行事手册；跑样本 → 评估 → 改策略</td>
-<td><a href="../animations/l06-policy.gif">GIF</a> · <a href="../animations/l06-policy.html">▶ 交互</a></td>
+<td><a href="../animations/l06-policy.gif">GIF</a> · <a href="../animations/l06-policy.html">▶ 交互</a><br><a href="../animations/l06b-rl-loop.gif">GIF 2</a> · <a href="../animations/l06b-rl-loop.html">▶ 交互 2</a></td>
 <td>R10</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -183,7 +184,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/08-bellman.html">8</a></td>
 <td>Bellman 期望方程；直接解方程；5×5 网格</td>
 <td>今天 = 眼前奖励 + γ × 明天，取平均；A 格 8.8</td>
-<td><a href="../animations/l08-bellman.gif">GIF</a> · <a href="../animations/l08-bellman.html">▶ 交互</a></td>
+<td><a href="../animations/l08-bellman.gif">GIF</a> · <a href="../animations/l08-bellman.html">▶ 交互</a><br><a href="../animations/l08b-backup.gif">GIF 2</a> · <a href="../animations/l08b-backup.html">▶ 交互 2</a></td>
 <td>R13、R14</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -199,7 +200,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/10-policy-eval.html">10</a></td>
 <td>策略评估：反复套期望方程；4×4 网格</td>
 <td>旧值代右边、新值写左边，终点的 0 往外渗</td>
-<td><a href="../animations/l10-policy-eval.gif">GIF</a> · <a href="../animations/l10-policy-eval.html">▶ 交互</a></td>
+<td><a href="../animations/l10-policy-eval.gif">GIF</a> · <a href="../animations/l10-policy-eval.html">▶ 交互</a><br><a href="../animations/l10b-inplace.gif">GIF 2</a> · <a href="../animations/l10b-inplace.html">▶ 交互 2</a></td>
 <td>R17</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -223,7 +224,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/13-bandit.html">13</a></td>
 <td>探索与利用：多臂老虎机、ε-greedy、增量更新</td>
 <td>九成贪心一成乱试；新 = 旧 + 步长 × (目标 − 旧)</td>
-<td><a href="../animations/l13-bandit.gif">GIF</a> · <a href="../animations/l13-bandit.html">▶ 交互</a></td>
+<td><a href="../animations/l13-bandit.gif">GIF</a> · <a href="../animations/l13-bandit.html">▶ 交互</a><br><a href="../animations/l13b-incremental.gif">GIF 2</a> · <a href="../animations/l13b-incremental.html">▶ 交互 2</a></td>
 <td>R22、R23</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -231,7 +232,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/14-monte-carlo.html">14</a></td>
 <td>蒙特卡洛：first-visit、常数 α；随机游走</td>
 <td>一局玩完，用真实回报的平均估价值；要等终局</td>
-<td><a href="../animations/l14-monte-carlo.gif">GIF</a> · <a href="../animations/l14-monte-carlo.html">▶ 交互</a></td>
+<td><a href="../animations/l14-monte-carlo.gif">GIF</a> · <a href="../animations/l14-monte-carlo.html">▶ 交互</a><br><a href="../animations/l14b-first-visit.gif">GIF 2</a> · <a href="../animations/l14b-first-visit.html">▶ 交互 2</a></td>
 <td>R24</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -279,7 +280,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/20-policy-gradient.html">20</a></td>
 <td>策略梯度与 REINFORCE：log 导数技巧</td>
 <td><span class="arithmatex">\(\nabla J = \mathbb{E}[G\,\nabla\log\pi]\)</span>：好的推高，坏的压低</td>
-<td><a href="../animations/l20-policy-gradient.gif">GIF</a> · <a href="../animations/l20-policy-gradient.html">▶ 交互</a></td>
+<td><a href="../animations/l20-policy-gradient.gif">GIF</a> · <a href="../animations/l20-policy-gradient.html">▶ 交互</a><br><a href="../animations/l20b-log.gif">GIF 2</a> · <a href="../animations/l20b-log.html">▶ 交互 2</a></td>
 <td>R34、R35</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -287,7 +288,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/21-baseline.html">21</a></td>
 <td>baseline 与 reward-to-go：降方差</td>
 <td>只看比平常好多少；动作只管身后事</td>
-<td><a href="../animations/l21-baseline.gif">GIF</a> · <a href="../animations/l21-baseline.html">▶ 交互</a></td>
+<td><a href="../animations/l21-baseline.gif">GIF</a> · <a href="../animations/l21-baseline.html">▶ 交互</a><br><a href="../animations/l21b-reward-to-go.gif">GIF 2</a> · <a href="../animations/l21b-reward-to-go.html">▶ 交互 2</a></td>
 <td>R36、R37</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -295,7 +296,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/22-actor-critic-gae.html">22</a></td>
 <td>Actor-Critic、优势函数与 GAE</td>
 <td>演员演、评委打分；δ 当优势；λ 调偏差与方差</td>
-<td><a href="../animations/l22-actor-critic-gae.gif">GIF</a> · <a href="../animations/l22-actor-critic-gae.html">▶ 交互</a></td>
+<td><a href="../animations/l22-actor-critic-gae.gif">GIF</a> · <a href="../animations/l22-actor-critic-gae.html">▶ 交互</a><br><a href="../animations/l22b-ac-loop.gif">GIF 2</a> · <a href="../animations/l22b-ac-loop.html">▶ 交互 2</a></td>
 <td>R38、R39</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -303,7 +304,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <td><a href="../lessons/23-ppo.html">23</a></td>
 <td>从 TRPO 到 PPO：重要性采样、KL、剪裁</td>
 <td>旧数据乘比率；每次别改太多；比率剪在 0.8–1.2</td>
-<td><a href="../animations/l23-ppo.gif">GIF</a> · <a href="../animations/l23-ppo.html">▶ 交互</a></td>
+<td><a href="../animations/l23-ppo.gif">GIF</a> · <a href="../animations/l23-ppo.html">▶ 交互</a><br><a href="../animations/l23b-kl.gif">GIF 2</a> · <a href="../animations/l23b-kl.html">▶ 交互 2</a></td>
 <td>R40、R41</td>
 <td>正文完成，练习待做</td>
 </tr>
@@ -318,7 +319,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 </tbody>
 </table>
 <p>附录：<a href="../lessons/appendix-glossary.html">缩写与术语表</a>（遇到缩写先查这一页；每章开头另有一行"本章缩写"）。</p>
-<p><strong>状态说明</strong>：24 章正文、动画、代码对照、notebook 都已写完；每章末尾的 3 道练习还没作答。作答时按仓库约定把原话、对错、点评记进各章"练习与作答记录"，卡住或答错的地方补成新的复习卡片。</p>
+<p><strong>状态说明</strong>：24 章正文、33 个动画、代码对照（含"自己改一改"）、notebook 都已写完；每章末尾的 3 道练习还没作答。作答时按仓库约定把原话、对错、点评记进各章"练习与作答记录"，卡住或答错的地方补成新的复习卡片。</p>
 <h2 id="_8">本书之后</h2>
 <table>
 <thead>

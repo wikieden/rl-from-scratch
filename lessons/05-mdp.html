@@ -330,10 +330,20 @@ uv run python ch05_mdp.py</code></p>
 </tr>
 </tbody>
 </table>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">P[lo][0] = [(BETA, lo, R_SEARCH, False), (1 - BETA, hi, R_RESCUE, False)]  # 一组 (s, a) 的所有结果
+sum(p for p, ns, _, _ in P[s][a] if ns == s_next)  # p(s' | s, a)：把奖励那一维加掉
+sum(p * r for p, _, r, _ in P[s][a])  # r(s, a)：概率 × 奖励再加起来
+</code></pre>
 <p><strong>代码里才看得到的</strong>：</p>
 <ol>
 <li><code>P[s][a]</code> 这种"字典套列表"的写法，和 Gymnasium 里 FrozenLake、Taxi 等环境的 <code>env.unwrapped.P</code> 完全一样，以后可以直接拿来跑第 10–12 章的算法；</li>
 <li><code>1 − 0.7</code> 在电脑里算出来是 <code>0.30000000000000004</code>：小数在电脑里存不精确，比较概率时要用"差不多相等"（测试里的 <code>pytest.approx</code>），别用 <code>==</code>。</li>
+</ol>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>把"低电搜索没电被救"的 −3 改成 −10（复制 <code>P</code> 再改 <code>P[1][0]</code>），<code>expected_reward(P, 1, 0)</code> 从 0.5 变成 −1.6：一步平均奖励就是"概率 × 奖励"加起来。<code>check_sums</code> 仍然全是 1.0：改奖励不影响概率。</li>
+<li>把 <code>rl_envs.py</code> 里的 <code>ALPHA</code> 改成 0.5，再看 <code>check_sums(P)</code>：两条结果的概率仍然加起来是 1。</li>
 </ol><nav class="pager"><a href="04-expectation.html">← 第 4 章 · 概率与期望 expectation：按概率的加权平均</a><a href="06-policy.html">第 6 章 · 策略 policy π(a|s)：智能体的&quot;行事手册&quot; →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>

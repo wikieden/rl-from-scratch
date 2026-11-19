@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>增量更新</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 13 章 · 增量更新：旧估计 + 步长 × (目标 − 旧估计)</h1>
+<p class="sub">配套讲义：<a href="../lessons/13-bandit.html">第 13 章 · 探索与利用：多臂老虎机与 ε-greedy</a>。前 4 帧是讲义里的 2、4、6、8；后面是一台会变的机器：前 100 次平均 1，之后平均 3（编的，奖励带噪声）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="al">常数步长 α</label><input type="range" id="al" min="0.02" max="0.5" step="0.02" value="0.1"><span id="alv">0.10</span></div>
+<p class="note">看点：① 每来一个奖励，估计只往它那边挪"误差 × 步长"；② 步长 1/n：越往后挪得越少，正好是真平均；③ 机器在第 100 次变了：1/n 的线（蓝）跟得很慢，常数 α 的线（橙）很快追上 3；④ α 调大，追得快但更抖。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');
+
+let al=0.1,k=0,R=[],Qn=[],Qa=[];const DEMO=[2,4,6,8];
+function build(){R=[];for(let t=0;t<200;t++)R.push((t<100?1:3)+gauss());Qn=[0];Qa=[0];R.forEach((r,i)=>{Qn.push(Qn[i]+(r-Qn[i])/(i+1));Qa.push(Qa[i]+al*(r-Qa[i]))})}
+function draw(){clear(sv);
+  if(k<=4){txt('讲义的例子：奖励依次 2、4、6、8，步长 1/n',{x:340,y:28,'text-anchor':'middle',class:'cap'},sv);
+    let Q=0;const hd=['n','新奖励','误差','更新','新平均'];hd.forEach((h,j)=>txt(h,{x:110+j*115,y:70,'text-anchor':'middle',class:'m'},sv));
+    for(let i=0;i<k;i++){const r=DEMO[i],e=r-Q,nq=Q+e/(i+1);
+      [i+1,r,`${r} − ${fmt(Q,0)} = ${fmt(e,0)}`,`${fmt(Q,0)} + ${fmt(e,0)}/${i+1}`,fmt(nq,0)].forEach((c,j)=>{const t=txt(String(c),{x:110+j*115,y:105+i*38,'text-anchor':'middle',class:'big'},sv);if(i===k-1)t.style.fill='var(--warm)'});Q=nq}
+    if(k===4)txt('5 = (2 + 4 + 6 + 8) / 4 ✓，只记住"当前平均"和"拉了几次"',{x:340,y:300,'text-anchor':'middle',class:'c'},sv);return}
+  const t=Math.min((k-4)*20,200),gx=60,gy=50,gw=580,gh=280,lo=-1,hi=5,Y=v=>gy+gh-(v-lo)/(hi-lo)*gh,X=i=>gx+i/200*gw;
+  txt(`会变的机器：第 ${t} 次`,{x:340,y:28,'text-anchor':'middle',class:'cap'},sv);
+  el('line',{x1:gx,y1:gy+gh,x2:gx+gw,y2:gy+gh,stroke:'var(--line)'},sv);el('line',{x1:gx,y1:gy,x2:gx,y2:gy+gh,stroke:'var(--line)'},sv);
+  [0,1,2,3,4].forEach(v=>txt(String(v),{x:gx-10,y:Y(v)+4,'text-anchor':'end',class:'m'},sv));
+  el('path',{d:`M${X(0)},${Y(1)} L${X(100)},${Y(1)} L${X(100)},${Y(3)} L${X(200)},${Y(3)}`,fill:'none',stroke:'var(--muted)','stroke-dasharray':'5 4'},sv);
+  for(let i=0;i<t;i++)el('circle',{cx:X(i+1),cy:Y(clamp(R[i],lo,hi)),r:2,fill:'var(--muted)',opacity:.5},sv);
+  [[Qn,'var(--accent)','步长 1/n'],[Qa,'var(--warm)',`常数 α = ${al.toFixed(2)}`]].forEach(([Q,c,l],j)=>{let d='';for(let i=0;i<=t;i++)d+=(i?' L':'M')+X(i).toFixed(1)+','+Y(Q[i]).toFixed(1);
+    el('path',{d,fill:'none',stroke:c,'stroke-width':2.5},sv);el('line',{x1:gx+20,y1:gy+12+j*22,x2:gx+44,y2:gy+12+j*22,stroke:c,'stroke-width':3},sv);
+    txt(`${l}：现在 ${Q[t].toFixed(2)}`,{x:gx+52,y:gy+16+j*22},sv)});
+  txt('虚线：机器真正的平均',{x:gx+gw,y:gy+gh+22,'text-anchor':'end',class:'m'},sv);
+}
+function reset(s){seed(s);k=0;build();draw()}
+function next(){if(k>=14)return false;k++;draw();return true}
+$('al').oninput=e=>{al=+e.target.value;$('alv').textContent=al.toFixed(2);Qa=[0];R.forEach((r,i)=>Qa.push(Qa[i]+al*(r-Qa[i])));if(k<5)k=14;draw()};
+setupPlayer({captureSeed:5,reset,next},1000);
+
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

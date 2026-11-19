@@ -241,6 +241,15 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <li>贪心那排常常一直拉同一台、2 号估计停在 0（第二步）；ε-greedy 那排每台都被试过，2 号慢慢胜出（第三步）；</li>
 <li>滑块调 ε，看"选到最好机器的比例"怎么变；换一个随机种子再看贪心会不会被困住。</li>
 </ol>
+<h3 id="21n">动画演示 2：增量更新：1/n 和常数 α（第四步）</h3>
+<p><img alt="增量更新" src="../animations/l13b-incremental.gif" /></p>
+<p>可交互版：<a href="../animations/l13b-incremental.html">animations/l13b-incremental.html</a>（滑块调常数步长 α）</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>前 4 帧就是第四步的表：2、4、6、8 依次进来，每次只往新奖励挪"误差 ÷ n"，最后得到 5。</li>
+<li>后面是一台会变的机器（编的）：前 100 次平均 1，之后平均 3。蓝线是 1/n，越往后挪得越少，追不上；橙线是常数 α，很快追到 3。</li>
+<li>α 调大追得更快，但线也更抖：这就是"更看重最近的奖励"的代价。</li>
+</ol>
 <h2 id="_2">练习与作答记录</h2>
 <p><strong>题 1</strong>：ε = 0.2、有 4 台机器时，<strong>贪心那台</strong>被选中的概率是多少？（提示：随便试的那 0.2 里也可能抽到它。）</p>
 <p><strong>作答</strong>：（待作答）</p>
@@ -387,7 +396,12 @@ uv run python ch13_bandit.py</code></p>
 N[a] += 1
 Q[a] += (r - Q[a]) / N[a]                                                    # 增量平均
 </code></pre>
-<p><strong>代码里才看得到的</strong>：<code>np.argmax</code> 遇到并列时总是返回<strong>编号最小</strong>的那个，所以全 0 时贪心第一次一定拉 1 号机器，后面就可能一直困在 1 号。更公平的做法是在并列的里面随机挑（第 16 章的代码就是这样写的）。</p><nav class="pager"><a href="12-value-iteration.html">← 第 12 章 · 价值迭代与 GPI：评估只算一轮就改进</a><a href="14-monte-carlo.html">第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值 →</a></nav>
+<p><strong>代码里才看得到的</strong>：<code>np.argmax</code> 遇到并列时总是返回<strong>编号最小</strong>的那个，所以全 0 时贪心第一次一定拉 1 号机器，后面就可能一直困在 1 号。更公平的做法是在并列的里面随机挑（第 16 章的代码就是这样写的）。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>换 ε 跑 200 次实验：ε = 0.01 → 每步 1.306、最好机器 61%；ε = 0.1 → 1.426、89%；ε = 0.5 → 1.246、66%。试太少学不到，试太多又浪费，中间最好。</li>
+<li>把 <code>steps</code> 改成 5000，再比一次 ε = 0.01 和 ε = 0.1，看谁追上来了。</li>
+</ol><nav class="pager"><a href="12-value-iteration.html">← 第 12 章 · 价值迭代与 GPI：评估只算一轮就改进</a><a href="14-monte-carlo.html">第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

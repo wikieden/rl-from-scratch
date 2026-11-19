@@ -249,6 +249,15 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <li>下面是两层加权：π × r(s, a) 一项项乘出来再加（第三步）；</li>
 <li>滑块调 π(搜索 | 高电)，看一步的平均奖励怎么变。</li>
 </ol>
+<h3 id="2">动画演示 2：跑样本 → 评估 → 改策略，一圈圈转（第四步）</h3>
+<p><img alt="RL 算法的循环" src="../animations/l06b-rl-loop.gif" /></p>
+<p>可交互版：<a href="../animations/l06b-rl-loop.html">animations/l06b-rl-loop.html</a>（滑块调"每圈跑几次"）</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>每帧亮一个框：① 按现在的 π 跑 n 次；② 用跑出来的奖励估两个动作各值多少；③ 把 π 往估得高的那个挪 0.1（第四步的三框图）。</li>
+<li>例子是编的：一个状态、两个动作，搜索平均 +2、等待平均 +1，都带噪声。右下角的线是 π(搜索) 每圈的变化。</li>
+<li>把 n 拖到 2：估计常常出错，π 会往错的方向挪几次。② 估得准不准，决定 ③ 改得对不对。</li>
+</ol>
 <h2 id="_3">练习与作答记录</h2>
 <p><strong>题 1</strong>：另一份策略：高电时搜索 0.5、等待 0.5。算高电时一步的平均奖励 <span class="arithmatex">\(\mathbb{E}_\pi[R_{t+1} \mid \text{高电}]\)</span>。</p>
 <p><strong>作答</strong>：（待作答）</p>
@@ -372,7 +381,12 @@ uv run python ch06_policy.py</code></p>
 a = acts[rng.choice(len(acts), p=[pi[s][a] for a in acts])]   # 加权骰子
 sum(pi[s][a] * expected_reward(P, s, a) for a in pi[s])        # 先 π 后 p
 </code></pre>
-<p><strong>代码里才看得到的</strong>：<code>rng.choice(n, p=...)</code> 就是"加权骰子"。神经网络策略（第 20 章）里同样的事写成 <code>torch.distributions.Categorical(probs).sample()</code>。</p><nav class="pager"><a href="05-mdp.html">← 第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a)</a><a href="07-value.html">第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a) →</a></nav>
+<p><strong>代码里才看得到的</strong>：<code>rng.choice(n, p=...)</code> 就是"加权骰子"。神经网络策略（第 20 章）里同样的事写成 <code>torch.distributions.Categorical(probs).sample()</code>。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li><code>sample_action(pi, 1, rng)</code> 只掷 10 次，换几个种子：每次数出来的比例都和 0.2 / 0.3 / 0.5 差得很远；掷 10000 次时就很接近了。</li>
+<li>把 <code>ROBOT_PI</code> 里低电的策略改成搜索 0.6、等待 0.2、充电 0.2，再算 <code>expected_immediate_reward(P, pi, 1)</code>，看平均奖励是变大还是变小，想一想为什么。</li>
+</ol><nav class="pager"><a href="05-mdp.html">← 第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a)</a><a href="07-value.html">第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a) →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

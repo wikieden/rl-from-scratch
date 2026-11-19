@@ -222,6 +222,14 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <li>两排的竖线是到目前为止的平均，都慢慢靠到真实梯度 0.25（第三步：期望不变）；</li>
 <li>滑块调 b：b = 0 最散，b 接近 10.5 最集中；右下角是一局 [1, 0, 2, 0] 的 reward-to-go 演示（第四步）。</li>
 </ol>
+<h3 id="2reward-to-go">动画演示 2：reward-to-go 倒着加（第四步）</h3>
+<p><img alt="reward-to-go" src="../animations/l21b-reward-to-go.gif" /></p>
+<p>可交互版：<a href="../animations/l21b-reward-to-go.html">animations/l21b-reward-to-go.html</a>（无滑块，用 → 单步）</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>奖励 [1, 0, 2, 0]，从最后一步往前加：0 → 2 → 2 → 3，就是第四步表格的 reward-to-go 一列。</li>
+<li>最后一帧对比：整局总回报每一步都乘 3；reward-to-go 让 t = 3 的动作乘 0（标红），因为它之后没有奖励。</li>
+</ol>
 <h2 id="_2">练习与作答记录</h2>
 <p><strong>题 1</strong>：三台机器平均奖励 20、21、22，你会选什么当 baseline？抽到平均 20 的那台时，G − b 大约是正还是负？它的概率会被推高还是压低？</p>
 <p><strong>作答</strong>：（待作答）</p>
@@ -355,7 +363,12 @@ uv run python ch21_baseline.py</code></p>
 <pre><code class="language-python">out.append((G - baseline) * grad_log_softmax(theta, a)[1])   # 一个单样本梯度
 for r in reversed(rewards): G = r + gamma * G               # reward-to-go：又是第 3 章那个倒着推的循环
 </code></pre>
-<p><strong>代码里才看得到的</strong>：<code>reward_to_go</code> 和第 3 章的 <code>returns_backward</code>、第 14 章 MC 的倒着走是同一段代码。CS 285 HW2 的 <code>_discounted_reward_to_go</code> 也长这样。</p><nav class="pager"><a href="20-policy-gradient.html">← 第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略</a><a href="22-actor-critic-gae.html">第 22 章 · Actor-Critic、优势函数与 GAE：演员演，评委打分 →</a></nav>
+<p><strong>代码里才看得到的</strong>：<code>reward_to_go</code> 和第 3 章的 <code>returns_backward</code>、第 14 章 MC 的倒着走是同一段代码。CS 285 HW2 的 <code>_discounted_reward_to_go</code> 也长这样。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>换 baseline：<code>grad_samples(b)</code>，b = 5 → 方差 7.83；b = 10.5 → 0.25；b = 20 → 22.78。平均值都在 0.25 左右（不偏），方差在 b 接近平均奖励时最小。</li>
+<li><code>reward_to_go([1, 0, 2, 0], 0.9)</code> → [2.62, 1.8, 2.0, 0.0]：加上折扣，就是第 3 章倒着推的那个循环。</li>
+</ol><nav class="pager"><a href="20-policy-gradient.html">← 第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略</a><a href="22-actor-critic-gae.html">第 22 章 · Actor-Critic、优势函数与 GAE：演员演，评委打分 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

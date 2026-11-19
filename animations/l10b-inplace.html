@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>两张表与原地更新</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 10 章 · 两张表 vs 原地更新：同一个答案，原地版少扫 91 轮</h1>
+<p class="sub">配套讲义：<a href="../lessons/10-policy-eval.html">第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程</a>。4×4 网格（例 4.1），随机策略，γ = 1，停止条件 Δ < 10⁻⁶。原地版按从左到右、从上到下的顺序算。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="k">自己拖：跳到第 k 轮</label><input type="range" id="k" min="0" max="10" step="1" value="0"><span id="kv">0</span></div>
+<p class="note">看点：① 第 1 轮：两张表全是 −1（右边全用旧的 0）；原地版越往右下越负（−1.25、−1.5…），因为它用到了这一轮刚算好的邻居；② 新信息传得快，原地版 167 轮收敛，两张表要 258 轮；③ 收敛值一样：0、−14、−20、−22。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');
+
+function inplace(v){const u=v.slice();for(let s=0;s<16;s++){if(s===0||s===15)continue;let t=0;for(let a=0;a<4;a++){const[ns,rw]=grid4step(s,a);t+=(rw+u[ns])/4}u[s]=t}return u}
+function hist(f){const H=[Array(16).fill(0)];for(;;){const v=f(H[H.length-1]);H.push(v);if(Math.max(...v.map((x,i)=>Math.abs(x-H[H.length-2][i])))<1e-6||H.length>400)return H}}
+const H2=hist(v=>grid4sweep(v,false)),H1=hist(inplace),SHOW=[0,1,2,3,5,10,20,50,100,167,258];let k=0;
+function grid(H,x0,title,it){const i=Math.min(it,H.length-1),v=H[i],done=it>=H.length-1;
+  txt(title,{x:x0+140,y:46,'text-anchor':'middle',class:'cap'},sv);
+  txt(done?`第 ${H.length-1} 轮已收敛 ✓`:`第 ${it} 轮`,{x:x0+140,y:68,'text-anchor':'middle',class:'m'},sv).style.fill=done?'var(--good)':'';
+  const CS=68;for(let s=0;s<16;s++){const r=Math.floor(s/4),c=s%4,x=x0+c*CS,y=80+r*CS,term=s===0||s===15;
+    el('rect',{x,y,width:CS-4,height:CS-4,rx:6,fill:term?'var(--line)':heat(-v[s],0,22),stroke:'var(--line)'},sv);
+    txt(term?'终点':fmt(v[s],it<=3?2:1),{x:x+CS/2-2,y:y+CS/2+4,'text-anchor':'middle',class:'c'},sv)}}
+function draw(){clear(sv);const it=SHOW[k];grid(H2,30,'两张表',it);grid(H1,370,'原地更新（一张表）',it);
+  txt(it===0?'第 0 轮：全猜 0':it===1?'第 1 轮：左边全用旧值，右边用到了刚算好的邻居':it>=167?'原地版 167 轮，两张表 258 轮；答案相同':'',{x:340,y:385,'text-anchor':'middle',class:'cap'},sv)}
+function reset(){k=0;$('k').value=0;$('kv').textContent=0;draw()}
+function next(){if(k>=SHOW.length-1)return false;k++;$('k').value=k;$('kv').textContent=SHOW[k];draw();return true}
+$('k').oninput=e=>{ANIM.stop();k=+e.target.value;$('kv').textContent=SHOW[k];draw()};
+setupPlayer({captureSeed:1,reset,next},1200);
+
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

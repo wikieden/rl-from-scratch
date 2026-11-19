@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>reward-to-go</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 21 章 · reward-to-go：每一步只乘它之后的奖励</h1>
+<p class="sub">配套讲义：<a href="../lessons/21-baseline.html">第 21 章 · baseline 与 reward-to-go：给策略梯度降噪</a>。讲义的例子：一局 4 步，奖励 [1, 0, 2, 0]，不打折。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 380"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<p class="note">看点：① 从最后一步往前加：0 → 2 → 2 → 3（和第 3 章倒着推回报是同一个循环）；② 上面一排是整局总回报，每一步都乘 3；③ 下面一排是 reward-to-go：第 3 步之后什么都没有，乘 0，不该被推高；④ 两种在期望上一样，reward-to-go 少了噪声。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');
+
+const R=[1,0,2,0];let k=0;
+function draw(){clear(sv);const T=R.length,rtg=Array(T).fill(null);let G=0;
+  for(let j=0;j<Math.min(k,T);j++){const t=T-1-j;G+=R[t];rtg[t]=G}
+  txt(k===0?'一局 4 步的奖励':k<=T?`倒着第 ${k} 步：t = ${T-k} 之后的奖励加起来 = ${rtg[T-k]}`:'对比：每一步被推高多少',{x:340,y:28,'text-anchor':'middle',class:'cap'},sv);
+  for(let t=0;t<T;t++){const x=150+t*130,cur=k>0&&k<=T&&t===T-k;
+    el('rect',{x,y:50,width:110,height:50,rx:8,fill:cur?'var(--accent-bg)':'var(--bg)',stroke:cur?'var(--warm)':'var(--line)','stroke-width':cur?3:1},sv);
+    txt(`t = ${t}，r = ${R[t]}`,{x:x+55,y:81,'text-anchor':'middle',class:'big'},sv)}
+  const rows=[['整局总回报',R.map(()=>3),'var(--muted)'],['reward-to-go',rtg,'var(--accent)']];
+  rows.forEach(([name,vals,c],j)=>{const base=j?340:205;txt(name,{x:20,y:base-50,class:'c'},sv);
+    if(j===0&&k<=T)return;
+    el('line',{x1:130,y1:base,x2:670,y2:base,stroke:'var(--line)'},sv);
+    vals.forEach((v,t)=>{if(v===null)return;const x=170+t*130,h=v*22;el('rect',{x,y:base-h,width:70,height:Math.max(h,1),fill:c,opacity:.8},sv);
+      const tt=txt(String(v),{x:x+35,y:base-h-6,'text-anchor':'middle',class:'big'},sv);if(j&&t===3&&k>T)tt.style.fill='var(--warm)'})});
+  if(k>T)txt('t = 3 的动作之后没有奖励：总回报也推它 3（噪声），reward-to-go 推它 0',{x:340,y:372,'text-anchor':'middle',class:'m'},sv)}
+function reset(){k=0;draw()}
+function next(){if(k>R.length)return false;k++;draw();return true}
+setupPlayer({captureSeed:1,reset,next},1300);
+
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>log 与斜率</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 20 章 · log x 和它的斜率 1/x：x 越小，斜率越陡</h1>
+<p class="sub">配套讲义：<a href="../lessons/20-policy-gradient.html">第 20 章 · 策略梯度与 REINFORCE：不学价值，直接调策略</a>。切线的斜率就是导数（第 17 章）。x 换成某个动作的概率 π，log π 的导数是 1/π。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 380"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="x">自己拖：x</label><input type="range" id="x" min="0.1" max="3" step="0.05" value="2"><span id="xv">2.00</span></div>
+<p class="note">看点：① 橙点在曲线 log x 上移动，虚线是它的切线；② 切线斜率 = 1/x：x = 2 时 0.5，x = 1 时 1，x = 0.25 时 4；③ x = 1 时 log x = 0，x < 1 时 log x 是负的；④ 斜率是 ∇π / π 里那个"除以 π"：概率小的动作被抽中时，推得更猛。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');
+
+const XS=[2,1.5,1,0.75,0.5,0.35,0.25,0.15];let k=0,x=2;
+const gx=60,gy=40,gw=560,gh=290,X=v=>gx+v/3.2*gw,Y=v=>gy+gh*(1.6-v)/4.6;
+function draw(){clear(sv);
+  el('line',{x1:gx,y1:Y(0),x2:gx+gw,y2:Y(0),stroke:'var(--line)'},sv);el('line',{x1:X(0),y1:gy,x2:X(0),y2:gy+gh,stroke:'var(--line)'},sv);
+  [1,2,3].forEach(v=>txt(String(v),{x:X(v),y:Y(0)+16,'text-anchor':'middle',class:'m'},sv));[-2,-1,1].forEach(v=>txt(String(v),{x:X(0)-8,y:Y(v)+4,'text-anchor':'end',class:'m'},sv));
+  let d='';for(let i=0;i<=300;i++){const u=0.06+i/300*3.1;d+=(i?' L':'M')+X(u).toFixed(1)+','+Y(clamp(Math.log(u),-3,1.6)).toFixed(1)}
+  el('path',{d,fill:'none',stroke:'var(--accent)','stroke-width':2.5},sv);txt('log x',{x:X(3)-10,y:Y(Math.log(3))-10,class:'c'},sv);
+  const y0=Math.log(x),m=1/x,x1=Math.max(0.03,x-1.2),x2=Math.min(3.15,x+1.2);
+  el('line',{x1:X(x1),y1:Y(clamp(y0+m*(x1-x),-3,1.6)),x2:X(x2),y2:Y(clamp(y0+m*(x2-x),-3,1.6)),stroke:'var(--warm)','stroke-width':2,'stroke-dasharray':'6 4'},sv);
+  el('circle',{cx:X(x),cy:Y(y0),r:7,fill:'var(--warm)'},sv);
+  txt(`x = ${x.toFixed(2)}，log x = ${y0.toFixed(3)}，斜率 1/x = ${m.toFixed(2)}`,{x:340,y:24,'text-anchor':'middle',class:'cap'},sv);
+  txt('核对：(log(x + 0.0001) − log x) / 0.0001 = '+((Math.log(x+1e-4)-Math.log(x))/1e-4).toFixed(3),{x:gx+gw,y:gy+gh+30,'text-anchor':'end',class:'m'},sv)}
+function set(v){x=v;$('x').value=v;$('xv').textContent=v.toFixed(2);draw()}
+function reset(){k=0;set(XS[0])}
+function next(){if(k>=XS.length-1)return false;k++;set(XS[k]);return true}
+$('x').oninput=e=>{ANIM.stop();set(+e.target.value)};
+setupPlayer({captureSeed:1,reset,next},1100);
+
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

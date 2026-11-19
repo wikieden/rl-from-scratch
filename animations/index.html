@@ -123,125 +123,188 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 </tr>
 <tr>
 <td>10</td>
+<td>RL 算法的循环：跑样本 → 评估 → 改策略</td>
+<td><a href="../lessons/06-policy.html">讲义第 6 章</a></td>
+<td><a href="l06b-rl-loop.gif">l06b-rl-loop.gif</a></td>
+<td><a href="l06b-rl-loop.html">html</a></td>
+</tr>
+<tr>
+<td>11</td>
 <td>从低电出发跑很多局，回报平均 → v_π、q_π</td>
 <td><a href="../lessons/07-value.html">讲义第 7 章</a></td>
 <td><a href="l07-value.gif">l07-value.gif</a></td>
 <td><a href="l07-value.html">html</a></td>
 </tr>
 <tr>
-<td>11</td>
+<td>12</td>
 <td>5×5 网格：每格 = 四个方向打折平均（图 3.2）</td>
 <td><a href="../lessons/08-bellman.html">讲义第 8 章</a></td>
 <td><a href="l08-bellman.gif">l08-bellman.gif</a></td>
 <td><a href="l08-bellman.html">html</a></td>
 </tr>
 <tr>
-<td>12</td>
+<td>13</td>
+<td>回溯图：叶子按 p 汇成 q，再按 π 汇成 v（15.828）</td>
+<td><a href="../lessons/08-bellman.html">讲义第 8 章</a></td>
+<td><a href="l08b-backup.gif">l08b-backup.gif</a></td>
+<td><a href="l08b-backup.html">html</a></td>
+</tr>
+<tr>
+<td>14</td>
 <td>往前看一步挑最大：最优策略箭头（图 3.5）</td>
 <td><a href="../lessons/09-optimal.html">讲义第 9 章</a></td>
 <td><a href="l09-optimal.gif">l09-optimal.gif</a></td>
 <td><a href="l09-optimal.html">html</a></td>
 </tr>
 <tr>
-<td>13</td>
+<td>15</td>
 <td>4×4 网格策略评估逐轮（图 4.1），−1.75 的来历</td>
 <td><a href="../lessons/10-policy-eval.html">讲义第 10 章</a></td>
 <td><a href="l10-policy-eval.gif">l10-policy-eval.gif</a></td>
 <td><a href="l10-policy-eval.html">html</a></td>
 </tr>
 <tr>
-<td>14</td>
+<td>16</td>
+<td>两张表 258 轮 vs 原地更新 167 轮，答案相同</td>
+<td><a href="../lessons/10-policy-eval.html">讲义第 10 章</a></td>
+<td><a href="l10b-inplace.gif">l10b-inplace.gif</a></td>
+<td><a href="l10b-inplace.html">html</a></td>
+</tr>
+<tr>
+<td>17</td>
 <td>评估 ↔ 改进交替，策略不变即停</td>
 <td><a href="../lessons/11-policy-iteration.html">讲义第 11 章</a></td>
 <td><a href="l11-policy-iteration.gif">l11-policy-iteration.gif</a></td>
 <td><a href="l11-policy-iteration.html">html</a></td>
 </tr>
 <tr>
-<td>15</td>
+<td>18</td>
 <td>取平均 vs 取 max；GPI 示意</td>
 <td><a href="../lessons/12-value-iteration.html">讲义第 12 章</a></td>
 <td><a href="l12-value-iteration.gif">l12-value-iteration.gif</a></td>
 <td><a href="l12-value-iteration.html">html</a></td>
 </tr>
 <tr>
-<td>16</td>
+<td>19</td>
 <td>三台老虎机：贪心 vs ε-greedy</td>
 <td><a href="../lessons/13-bandit.html">讲义第 13 章</a></td>
 <td><a href="l13-bandit.gif">l13-bandit.gif</a></td>
 <td><a href="l13-bandit.html">html</a></td>
 </tr>
 <tr>
-<td>17</td>
+<td>20</td>
+<td>增量更新：1/n 是真平均，常数 α 追得上会变的机器</td>
+<td><a href="../lessons/13-bandit.html">讲义第 13 章</a></td>
+<td><a href="l13b-incremental.gif">l13b-incremental.gif</a></td>
+<td><a href="l13b-incremental.html">html</a></td>
+</tr>
+<tr>
+<td>21</td>
 <td>随机游走 first-visit MC，估计贴向 1/6…5/6</td>
 <td><a href="../lessons/14-monte-carlo.html">讲义第 14 章</a></td>
 <td><a href="l14-monte-carlo.gif">l14-monte-carlo.gif</a></td>
 <td><a href="l14-monte-carlo.html">html</a></td>
 </tr>
 <tr>
-<td>18</td>
+<td>22</td>
+<td>倒着走一遍，最后写入的就是 first-visit</td>
+<td><a href="../lessons/14-monte-carlo.html">讲义第 14 章</a></td>
+<td><a href="l14b-first-visit.gif">l14b-first-visit.gif</a></td>
+<td><a href="l14b-first-visit.html">html</a></td>
+</tr>
+<tr>
+<td>23</td>
 <td>TD 走一步就更新；TD vs MC 误差曲线</td>
 <td><a href="../lessons/15-td.html">讲义第 15 章</a></td>
 <td><a href="l15-td.gif">l15-td.gif</a></td>
 <td><a href="l15-td.html">html</a></td>
 </tr>
 <tr>
-<td>19</td>
+<td>24</td>
 <td>悬崖行走：SARSA 绕远路、Q-learning 贴边</td>
 <td><a href="../lessons/16-sarsa-qlearning.html">讲义第 16 章</a></td>
 <td><a href="l16-sarsa-qlearning.gif">l16-sarsa-qlearning.gif</a></td>
 <td><a href="l16-sarsa-qlearning.html">html</a></td>
 </tr>
 <tr>
-<td>20</td>
+<td>25</td>
 <td>梯度下降滑到谷底；直线拟合随机游走</td>
 <td><a href="../lessons/17-function-approx.html">讲义第 17 章</a></td>
 <td><a href="l17-function-approx.gif">l17-function-approx.gif</a></td>
 <td><a href="l17-function-approx.html">html</a></td>
 </tr>
 <tr>
-<td>21</td>
+<td>26</td>
 <td>经验回放抽卡片；目标网络隔一阵对齐</td>
 <td><a href="../lessons/18-dqn.html">讲义第 18 章</a></td>
 <td><a href="l18-dqn.gif">l18-dqn.gif</a></td>
 <td><a href="l18-dqn.html">html</a></td>
 </tr>
 <tr>
-<td>22</td>
+<td>27</td>
 <td>max 偏高 0.69；另一组估计打分偏差归零</td>
 <td><a href="../lessons/19-double-dqn.html">讲义第 19 章</a></td>
 <td><a href="l19-double-dqn.gif">l19-double-dqn.gif</a></td>
 <td><a href="l19-double-dqn.html">html</a></td>
 </tr>
 <tr>
-<td>23</td>
+<td>28</td>
 <td>REINFORCE：按回报推高刚才的动作</td>
 <td><a href="../lessons/20-policy-gradient.html">讲义第 20 章</a></td>
 <td><a href="l20-policy-gradient.gif">l20-policy-gradient.gif</a></td>
 <td><a href="l20-policy-gradient.html">html</a></td>
 </tr>
 <tr>
-<td>24</td>
+<td>29</td>
+<td>log x 的切线斜率 1/x：x 越小越陡</td>
+<td><a href="../lessons/20-policy-gradient.html">讲义第 20 章</a></td>
+<td><a href="l20b-log.gif">l20b-log.gif</a></td>
+<td><a href="l20b-log.html">html</a></td>
+</tr>
+<tr>
+<td>30</td>
 <td>减 baseline 后梯度样本方差降 100 多倍</td>
 <td><a href="../lessons/21-baseline.html">讲义第 21 章</a></td>
 <td><a href="l21-baseline.gif">l21-baseline.gif</a></td>
 <td><a href="l21-baseline.html">html</a></td>
 </tr>
 <tr>
-<td>25</td>
+<td>31</td>
+<td>reward-to-go 倒着加；和整局总回报对比</td>
+<td><a href="../lessons/21-baseline.html">讲义第 21 章</a></td>
+<td><a href="l21b-reward-to-go.gif">l21b-reward-to-go.gif</a></td>
+<td><a href="l21b-reward-to-go.html">html</a></td>
+</tr>
+<tr>
+<td>32</td>
 <td>δ 与 GAE 累加；λ = 0 / 1 两头</td>
 <td><a href="../lessons/22-actor-critic-gae.html">讲义第 22 章</a></td>
 <td><a href="l22-actor-critic-gae.gif">l22-actor-critic-gae.gif</a></td>
 <td><a href="l22-actor-critic-gae.html">html</a></td>
 </tr>
 <tr>
-<td>26</td>
+<td>33</td>
+<td>实用 actor-critic 一圈五步：评委 → GAE → 归一化 → 演员</td>
+<td><a href="../lessons/22-actor-critic-gae.html">讲义第 22 章</a></td>
+<td><a href="l22b-ac-loop.gif">l22b-ac-loop.gif</a></td>
+<td><a href="l22b-ac-loop.html">html</a></td>
+</tr>
+<tr>
+<td>34</td>
 <td>PPO 剪裁目标的形状（论文图 1）</td>
 <td><a href="../lessons/23-ppo.html">讲义第 23 章</a></td>
 <td><a href="l23-ppo.gif">l23-ppo.gif</a></td>
 <td><a href="l23-ppo.html">html</a></td>
 </tr>
 <tr>
-<td>27</td>
+<td>35</td>
+<td>KL 散度与信任区域：KL ≤ 0.02 只到 p ≈ 0.60</td>
+<td><a href="../lessons/23-ppo.html">讲义第 23 章</a></td>
+<td><a href="l23b-kl.gif">l23b-kl.gif</a></td>
+<td><a href="l23b-kl.html">html</a></td>
+</tr>
+<tr>
+<td>36</td>
 <td>GRPO 组内相对优势；全书地图</td>
 <td><a href="../lessons/24-wrap-up.html">讲义第 24 章</a></td>
 <td><a href="l24-wrap-up.gif">l24-wrap-up.gif</a></td>
@@ -249,7 +312,7 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 </tr>
 </tbody>
 </table>
-<p>讲义章节的动画文件名以 <code>l</code> 开头（l01 = 讲义第 1 章），和专题动画的编号区分开。</p>
+<p>讲义章节的动画文件名以 <code>l</code> 开头（l01 = 讲义第 1 章），和专题动画的编号区分开；同一章的第二个动画加 <code>b</code>（如 l08b）。</p>
 <h2 id="_2">跑起来看（按钮、滑块能动）</h2>
 <p>在仓库根目录的 Claude 会话里说"打开 cs285 动画"即可（<code>.claude/launch.json</code> 里的 <code>cs285-animations</code> 配置）。自己在终端跑：</p>
 <pre><code class="language-bash">python3 -m http.server 8345 --directory cs285-deep-rl/notes/animations

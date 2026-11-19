@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KL 与信任区域</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 23 章 · KL 散度与信任区域：只许离旧策略一小段</h1>
+<p class="sub">配套讲义：<a href="../lessons/23-ppo.html">第 23 章 · 从 TRPO 到 PPO：一批数据多用几次，但每次别改太多</a>。编的例子：两个动作，旧策略 [0.5, 0.5]，新策略 [p, 1 − p]，信任区域 KL ≤ δ = 0.02。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 380"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<div class="row ctl"><label for="p">自己拖：新策略的 p</label><input type="range" id="p" min="0.5" max="0.97" step="0.01" value="0.5"><span id="pv">0.50</span></div>
+<p class="note">看点：① p = 0.5 时两个策略一样，KL = 0；② p 往右挪，KL 先涨得慢、后涨得快；③ KL ≤ 0.02 只到 p ≈ 0.60（绿色那一段），这就是 TRPO 的信任区域；④ 右边两根柱子是两个动作的比率 π新/π旧，p = 0.9 时一个是 1.8、一个是 0.2，离 1 很远，第二步说的权重问题就来了。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');
+
+const PS=[0.5,0.55,0.6,0.65,0.7,0.8,0.9,0.95];let k=0,p=0.5;
+const KL=q=>0.5*Math.log(0.5/q)+0.5*Math.log(0.5/(1-q));
+const gx=50,gy=50,gw=380,gh=260,X=q=>gx+(q-0.5)/0.47*gw,Y=v=>gy+gh-Math.min(v,1.2)/1.2*gh;
+function draw(){clear(sv);const kl=KL(p),inR=kl<=0.02;
+  txt(`p = ${p.toFixed(2)}，KL(旧 ‖ 新) = ${kl.toFixed(4)}  ${inR?'在信任区域里':'跑出信任区域了'}`,{x:340,y:26,'text-anchor':'middle',class:'cap'},sv).style.fill=inR?'var(--good)':'var(--bad)';
+  el('rect',{x:X(0.5),y:gy,width:X(0.599)-X(0.5),height:gh,fill:'var(--good)',opacity:.15},sv);
+  el('line',{x1:gx,y1:gy+gh,x2:gx+gw,y2:gy+gh,stroke:'var(--line)'},sv);el('line',{x1:gx,y1:gy,x2:gx,y2:gy+gh,stroke:'var(--line)'},sv);
+  [0.5,0.6,0.7,0.8,0.9].forEach(q=>txt(q.toFixed(1),{x:X(q),y:gy+gh+16,'text-anchor':'middle',class:'m'},sv));
+  [0,0.5,1].forEach(v=>txt(String(v),{x:gx-8,y:Y(v)+4,'text-anchor':'end',class:'m'},sv));
+  txt('KL ≤ 0.02',{x:X(0.55),y:gy+16,'text-anchor':'middle',class:'m'},sv);
+  let d='';for(let i=0;i<=200;i++){const q=0.5+i/200*0.47;d+=(i?' L':'M')+X(q).toFixed(1)+','+Y(KL(q)).toFixed(1)}
+  el('path',{d,fill:'none',stroke:'var(--accent)','stroke-width':2.5},sv);el('circle',{cx:X(p),cy:Y(kl),r:7,fill:'var(--warm)'},sv);
+  txt('新策略的 p →',{x:gx+gw,y:gy+gh+34,'text-anchor':'end',class:'m'},sv);
+  const bx=480,base=310,s=60;txt('比率 π新 / π旧',{x:bx+80,y:62,'text-anchor':'middle',class:'c'},sv);
+  el('line',{x1:bx,y1:base-s,x2:bx+170,y2:base-s,stroke:'var(--muted)','stroke-dasharray':'4 4'},sv);txt('1',{x:bx-8,y:base-s+4,'text-anchor':'end',class:'m'},sv);
+  [[p/0.5,'动作 1'],[(1-p)/0.5,'动作 2']].forEach(([v,n],i)=>{const x=bx+20+i*80;el('rect',{x,y:base-v*s,width:50,height:v*s,fill:'var(--accent)',opacity:.75},sv);
+    txt(v.toFixed(2),{x:x+25,y:base-v*s-6,'text-anchor':'middle',class:'c'},sv);txt(n,{x:x+25,y:base+18,'text-anchor':'middle',class:'m'},sv)})}
+function set(v){p=v;$('p').value=v;$('pv').textContent=v.toFixed(2);draw()}
+function reset(){k=0;set(PS[0])}
+function next(){if(k>=PS.length-1)return false;k++;set(PS[k]);return true}
+$('p').oninput=e=>{ANIM.stop();set(+e.target.value)};
+setupPlayer({captureSeed:1,reset,next},1100);
+
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

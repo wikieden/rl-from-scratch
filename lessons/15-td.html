@@ -333,7 +333,12 @@ uv run python ch15_td.py</code></p>
 delta = target - V[s]
 V[s] += alpha * delta
 </code></pre>
-<p><strong>代码里才看得到的</strong>：MC 的代码（第 14 章）要先 <code>random_walk_episode</code> 拿到整局再更新；TD 的循环 <code>for s, r, ns in episode: td_update(...)</code> 每一步都能立刻更新。真正在线学习时，TD 连整局都不用存，这就是它在长任务里的优势。</p><nav class="pager"><a href="14-monte-carlo.html">← 第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值</a><a href="16-sarsa-qlearning.html">第 16 章 · SARSA 与 Q-learning：用 TD 学 q，学会怎么做 →</a></nav>
+<p><strong>代码里才看得到的</strong>：MC 的代码（第 14 章）要先 <code>random_walk_episode</code> 拿到整局再更新；TD 的循环 <code>for s, r, ns in episode: td_update(...)</code> 每一步都能立刻更新。真正在线学习时，TD 连整局都不用存，这就是它在长任务里的优势。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>换步长跑 100 局（100 次实验平均）：α = 0.05 → 误差 0.036；0.1 → 0.057；0.3 → 0.111。步子越大，每局后跳得越凶，停不稳。</li>
+<li>把 <code>compare(n_episodes=...)</code> 改成 10 和 300，看 TD 和 MC 谁先领先。</li>
+</ol><nav class="pager"><a href="14-monte-carlo.html">← 第 14 章 · 蒙特卡洛 MC：一局走完，用真实回报的平均估价值</a><a href="16-sarsa-qlearning.html">第 16 章 · SARSA 与 Q-learning：用 TD 学 q，学会怎么做 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

@@ -191,6 +191,15 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <li>之后每帧抽一次：箭头显示 <span class="arithmatex">\(G \times \nabla\log\pi\)</span> 往哪推、推多大；</li>
 <li>右边曲线是 π(好机器)，抖着往上走到接近 1；滑块调步长 α。</li>
 </ol>
+<h3 id="2log-x-1x">动画演示 2：log x 和它的斜率 1/x（第二步）</h3>
+<p><img alt="log 与斜率" src="../animations/l20b-log.gif" /></p>
+<p>可交互版：<a href="../animations/l20b-log.html">animations/l20b-log.html</a>（滑块拖 x）</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>橙点沿 log x 移动，虚线是切线。切线的斜率就是导数（第 17 章第二步）：x = 2 时 0.5，x = 1 时 1。</li>
+<li>x 越小，切线越陡：x = 0.25 时斜率是 4。图下面用"往右挪 0.0001"的办法核对斜率。</li>
+<li>把 x 换成某个动作的概率 π：<span class="arithmatex">\(\nabla\log\pi = \nabla\pi / \pi\)</span> 里的"除以 π"就是这个斜率。</li>
+</ol>
 <h2 id="_3">练习与作答记录</h2>
 <p><strong>题 1</strong>：θ = [0, 0]，抽到<strong>机器 0</strong>，拿到 G = 1，α = 0.1。写出 <span class="arithmatex">\(\nabla\log\pi(\text{机器 0})\)</span>，算更新后的 θ。</p>
 <p><strong>作答</strong>：（待作答）</p>
@@ -341,7 +350,12 @@ uv run python ch20_policy_gradient.py</code></p>
 <pre><code class="language-python">g = -softmax(theta); g[a] += 1                # ∇log π(a) = one-hot(a) − π
 theta += alpha * G * grad_log_softmax(theta, a)   # REINFORCE
 </code></pre>
-<p><strong>代码里才看得到的</strong>：真正的深度 RL 代码不手写梯度，而是写一个"假的 loss"让 PyTorch 求导：<code>loss = -(log_prob * G).mean()</code>，<code>loss.backward()</code> 得到的正好是 <span class="arithmatex">\(-G\nabla\log\pi\)</span>。CS 285 HW2 的 <code>update</code> 函数就是这样写的；这个 loss 的数值本身没有意义，只有它的梯度有意义。</p><nav class="pager"><a href="19-double-dqn.html">← 第 19 章 · 过估计与 Double DQN：max 会挑到&quot;运气好&quot;的那个</a><a href="21-baseline.html">第 21 章 · baseline 与 reward-to-go：给策略梯度降噪 →</a></nav>
+<p><strong>代码里才看得到的</strong>：真正的深度 RL 代码不手写梯度，而是写一个"假的 loss"让 PyTorch 求导：<code>loss = -(log_prob * G).mean()</code>，<code>loss.backward()</code> 得到的正好是 <span class="arithmatex">\(-G\nabla\log\pi\)</span>。CS 285 HW2 的 <code>update</code> 函数就是这样写的；这个 loss 的数值本身没有意义，只有它的梯度有意义。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>换步长：<code>reinforce_bandit(alpha=0.01 / 0.1 / 1.0)</code> 第 50 步时好机器的概率是 0.589、0.889、0.996，第 500 步是 0.885、0.992、0.997。步子大学得快，但一开始抽错几次也会被放大。</li>
+<li>θ = [1, 0] 时 <code>softmax</code> → [0.731, 0.269]，<code>grad_log_softmax(θ, 1)</code> → [−0.731, 0.731]：概率越小的动作被抽中时，推得越猛。</li>
+</ol><nav class="pager"><a href="19-double-dqn.html">← 第 19 章 · 过估计与 Double DQN：max 会挑到&quot;运气好&quot;的那个</a><a href="21-baseline.html">第 21 章 · baseline 与 reward-to-go：给策略梯度降噪 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

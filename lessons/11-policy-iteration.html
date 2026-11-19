@@ -281,7 +281,12 @@ uv run python ch11_policy_iteration.py</code></p>
     if new == pi: return pi, v, rounds    # 不变就停
     pi = new
 </code></pre>
-<p><strong>代码里才看得到的</strong>：<code>evaluate</code> 是作为参数传进去的：4×4 用第 10 章的迭代评估，5×5 直接用第 8 章的 <code>solve_v</code> 解方程。策略迭代只要求"能算出 <span class="arithmatex">\(v_\pi\)</span>"，用哪种办法都行。</p><nav class="pager"><a href="10-policy-eval.html">← 第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程</a><a href="12-value-iteration.html">第 12 章 · 价值迭代与 GPI：评估只算一轮就改进 →</a></nav>
+<p><strong>代码里才看得到的</strong>：<code>evaluate</code> 是作为参数传进去的：4×4 用第 10 章的迭代评估，5×5 直接用第 8 章的 <code>solve_v</code> 解方程。策略迭代只要求"能算出 <span class="arithmatex">\(v_\pi\)</span>"，用哪种办法都行。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>5×5 网格用 γ = 0.5 做策略迭代：<code>policy_iteration(G, 0.5, solve_v)</code> 3 轮就停，<span class="arithmatex">\(v_*(A) = 10.323\)</span>；再用 <code>show_policy</code> 打出箭头，看看远离 A 的格子箭头怎么变了。</li>
+<li>γ = 0.99：5 轮，<span class="arithmatex">\(v_*(A) = 204.04\)</span>。策略迭代的轮数几乎不随 γ 变。</li>
+</ol><nav class="pager"><a href="10-policy-eval.html">← 第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程</a><a href="12-value-iteration.html">第 12 章 · 价值迭代与 GPI：评估只算一轮就改进 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

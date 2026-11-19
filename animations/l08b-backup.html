@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>回溯图</title><link rel="stylesheet" href="anim.css">
+<style>svg text.big{font-size:15px}svg text.cap{font-size:15px;font-weight:500}svg text.c{font-size:14px}</style></head>
+<body><main>
+<h1>第 8 章 · 回溯图：叶子的值按概率往上汇总，汇到根上就是 v</h1>
+<p class="sub">配套讲义：<a href="../lessons/08-bellman.html">第 8 章 · Bellman 期望方程：今天的价值 = 眼前的奖励 + γ × 明天的价值</a>。机器人高电状态，γ = 0.9，精确值 v(高电) = 15.828、v(低电) = 13.869（书上 L4355–L4374 的 backup diagram）。</p>
+<div class="panel"><svg id="sv" viewBox="0 0 680 400"></svg></div>
+<div class="row"><button id="play">▶ 播放</button><button id="step">→ 单步</button><button id="reset">↺ 从头开始</button></div>
+<p class="note">看点：① 先算三片叶子：r + 0.9 × v(s')；② 按 p 汇到动作点，得到两个 q；③ 按 π 汇到根，得到 15.828，和左边的 v(高电) 一样；空心圆是状态，实心点是动作。</p>
+</main>
+<script src="anim.js"></script><script src="rl-common.js"></script>
+<script>
+const sv=$('sv');
+
+const V={hi:15.828,lo:13.869};let k=0;
+const leaves=[{x:120,a:0,p:0.8,s:'高电',r:2,v:2+0.9*V.hi},{x:300,a:0,p:0.2,s:'低电',r:2,v:2+0.9*V.lo},{x:530,a:1,p:1,s:'高电',r:1,v:1+0.9*V.hi}];
+const acts=[{x:210,name:'搜索',pi:0.9},{x:530,name:'等待',pi:0.1}];
+leaves.forEach(l=>l.v=Math.round(l.v*1000)/1000);// 和讲义一样，叶子先保留三位
+const q=[0.8*leaves[0].v+0.2*leaves[1].v,leaves[2].v],root=0.9*q[0]+0.1*q[1];
+function draw(){clear(sv);
+  const ry=60,ay=170,ly=290;
+  acts.forEach((a,i)=>{el('line',{x1:340,y1:ry,x2:a.x,y2:ay,stroke:k>=6?'var(--accent)':'var(--line)','stroke-width':k>=6?2.5:1.5},sv);
+    txt('π = '+a.pi,{x:(340+a.x)/2+(i?18:-18),y:(ry+ay)/2,'text-anchor':'middle',class:'m'},sv)});
+  leaves.forEach((l,i)=>{const a=acts[l.a],on=(k>=4&&l.a===0)||(k>=5&&l.a===1);
+    el('line',{x1:a.x,y1:ay,x2:l.x,y2:ly,stroke:on?'var(--accent)':'var(--line)','stroke-width':on?2.5:1.5},sv);
+    txt(`p = ${l.p}，r = +${l.r}`,{x:(a.x+l.x)/2+(l.x<a.x?-40:l.x>a.x?40:52),y:(ay+ly)/2+22,'text-anchor':'middle',class:'m'},sv);
+    el('circle',{cx:l.x,cy:ly,r:20,fill:'var(--bg)',stroke:k===i+1?'var(--warm)':'var(--text)','stroke-width':k===i+1?3:1.5},sv);
+    txt(l.s,{x:l.x,y:ly+5,'text-anchor':'middle',class:'m'},sv);
+    if(k>i)txt(`${l.r} + 0.9 × ${l.s==='高电'?V.hi:V.lo} = ${l.v.toFixed(3)}`,{x:l.x,y:ly+44,'text-anchor':'middle',class:'c'},sv)});
+  acts.forEach((a,i)=>{el('circle',{cx:a.x,cy:ay,r:9,fill:k===4+i?'var(--warm)':'var(--text)'},sv);
+    txt(a.name,{x:a.x+16,y:ay+5,class:'c'},sv);
+    if(k>=4+i)txt(`q = ${q[i].toFixed(3)}`,{x:a.x-14,y:ay+5,'text-anchor':'end',class:'c'},sv)});
+  el('circle',{cx:340,cy:ry,r:22,fill:'var(--bg)',stroke:k>=6?'var(--warm)':'var(--text)','stroke-width':k>=6?3:1.5},sv);txt('高电',{x:340,y:ry+5,'text-anchor':'middle',class:'m'},sv);
+  if(k>=6){const t=txt(`v = 0.9 × ${q[0].toFixed(3)} + 0.1 × ${q[1].toFixed(3)} = ${root.toFixed(3)} ✓`,{x:380,y:ry-28,class:'cap'},sv);t.style.fill='var(--warm)'}
+  const cap=['回溯图：顶上是状态，往下先分动作，再分结果','叶子 1：搜索后留在高电','叶子 2：搜索后掉到低电','叶子 3：等待后留在高电',`按 p 汇总：q(高电, 搜索) = 0.8 × ${leaves[0].v.toFixed(3)} + 0.2 × ${leaves[1].v.toFixed(3)} = ${q[0].toFixed(3)}`,'q(高电, 等待)：只有一种结果，就是 15.245','按 π 汇总到根：左右两边相等'];
+  txt(cap[k],{x:340,y:388,'text-anchor':'middle',class:'cap'},sv);
+}
+function reset(){k=0;draw()}
+function next(){if(k>=6)return false;k++;draw();return true}
+setupPlayer({captureSeed:1,reset,next},1400);
+
+</script><a href="https://wikieden.github.io/ai-books/" style="position:fixed;right:12px;bottom:12px;z-index:99;padding:4px 10px;border-radius:14px;background:rgba(127,127,127,.18);color:inherit;font:13px/1.6 system-ui,sans-serif;text-decoration:none">← 全部讲义书</a>
+</body></html>

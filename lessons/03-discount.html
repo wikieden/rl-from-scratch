@@ -344,7 +344,12 @@ uv run python ch03_discount.py</code></p>
 for t in reversed(range(len(rewards))):  # 从后往前
     G[t] = rewards[t] + gamma * G[t + 1]
 </code></pre>
-<p><strong>代码里才看得到的</strong>：倒着推的循环在后面会反复出现：CS 285 HW2 的 reward-to-go（第 21 章）、GAE（第 22 章）都是同一个 <code>reversed</code> 循环。</p><nav class="pager"><a href="02-return.html">← 第 2 章 · 奖励与回报 reward &amp; return：把一路的奖励加起来</a><a href="04-expectation.html">第 4 章 · 概率与期望 expectation：按概率的加权平均 →</a></nav>
+<p><strong>代码里才看得到的</strong>：倒着推的循环在后面会反复出现：CS 285 HW2 的 reward-to-go（第 21 章）、GAE（第 22 章）都是同一个 <code>reversed</code> 循环。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>奖励只在第 4 步给：<code>returns_backward([0, 0, 0, 1], 0.9)</code> → <code>[0.729, 0.81, 0.9, 1.0, 0.0]</code>；把 γ 换成 0.5 → <code>[0.125, 0.25, 0.5, 1.0, 0.0]</code>。γ 越小，远处的奖励传回来时缩得越厉害。</li>
+<li><code>discounted_return([1] * 2000, 0.99)</code> → 100.0，正好是 <span class="arithmatex">\(1/(1-0.99)\)</span>。γ 从 0.9 调到 0.99，"看得见"的步数从大约 10 步变成大约 100 步。</li>
+</ol><nav class="pager"><a href="02-return.html">← 第 2 章 · 奖励与回报 reward &amp; return：把一路的奖励加起来</a><a href="04-expectation.html">第 4 章 · 概率与期望 expectation：按概率的加权平均 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

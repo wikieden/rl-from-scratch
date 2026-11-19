@@ -297,7 +297,12 @@ uv run python ch09_optimal.py</code></p>
 <pre><code class="language-python">new = np.array([max(q_from_v(P, v, gamma, s, a) for a in P[s]) for s in P])   # 最优方程右边
 qs = {a: q_from_v(P, v, gamma, s, a) for a in P[s]}                           # 往前看一步
 </code></pre>
-<p><strong>代码里才看得到的</strong>：<code>optimal_v</code> 里那个 <code>while True</code> 循环，就是"从 0 开始反复套最优方程直到不再变"，这正是第 12 章的价值迭代；挑并列最优动作时用 <code>q &gt; best − eps</code> 而不是 <code>==</code>，因为 16.000000001 和 16.0 在电脑里不相等。</p><nav class="pager"><a href="08-bellman.html">← 第 8 章 · Bellman 期望方程：今天的价值 = 眼前的奖励 + γ × 明天的价值</a><a href="10-policy-eval.html">第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程 →</a></nav>
+<p><strong>代码里才看得到的</strong>：<code>optimal_v</code> 里那个 <code>while True</code> 循环，就是"从 0 开始反复套最优方程直到不再变"，这正是第 12 章的价值迭代；挑并列最优动作时用 <code>q &gt; best − eps</code> 而不是 <code>==</code>，因为 16.000000001 和 16.0 在电脑里不相等。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li><code>optimal_v(P, 0.5)</code> → [3.667, 2.0]，这时 <code>greedy_actions(P, v, 0.5, 1)</code> 给出的是 ['等待']，不再是 ['充电']：γ 小了，智能体只顾眼前，充电的 0 分不如等待的 +1。最优动作跟着 γ 变。</li>
+<li>把 γ 调回 0.9 再看一遍低电的最优动作，回到 ['充电']。</li>
+</ol><nav class="pager"><a href="08-bellman.html">← 第 8 章 · Bellman 期望方程：今天的价值 = 眼前的奖励 + γ × 明天的价值</a><a href="10-policy-eval.html">第 10 章 · 策略评估 policy evaluation：从 0 开始，反复套 Bellman 方程 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

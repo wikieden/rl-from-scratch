@@ -183,6 +183,15 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <li>走到 A 格时，四个箭头都指向 A'，<span class="arithmatex">\(10 + 0.9 \times (-1.3)\)</span>（第四步）；</li>
 <li>点任意一格，自己看它的方程；滑块调 γ，看全图怎么变（γ 越小越"近视"，A、B 附近才亮）。</li>
 </ol>
+<h3 id="2">动画演示 2：回溯图：叶子的值按概率往上汇总（第二步）</h3>
+<p><img alt="回溯图" src="../animations/l08b-backup.gif" /></p>
+<p>可交互版：<a href="../animations/l08b-backup.html">animations/l08b-backup.html</a>（无滑块，用 → 单步看每一层）</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>前三帧算三片叶子：r + 0.9 × v(s')，就是第二步表格的最后一列（16.245、14.482、15.245）。</li>
+<li>第四、五帧按 p 汇到动作点，得到 q(高电, 搜索) = 15.892 和 q(高电, 等待) = 15.245（第二步"从里往外读"的第 2 层）。</li>
+<li>最后一帧按 π 汇到根：0.9 × 15.892 + 0.1 × 15.245 = 15.828，和左边的 v(高电) 一样（第 3 层）。</li>
+</ol>
 <h2 id="_3">练习与作答记录</h2>
 <p><strong>题 1</strong>：用 <span class="arithmatex">\(v_\pi(\text{高电}) = 15.828\)</span>、<span class="arithmatex">\(v_\pi(\text{低电}) = 13.869\)</span>，按第二步的方法算 <span class="arithmatex">\(q_\pi(\text{低电}, \text{搜索})\)</span>。（低电搜索：0.7 → 低电 +2，0.3 → 高电 −3。）</p>
 <p><strong>作答</strong>：（待作答）</p>
@@ -316,7 +325,12 @@ uv run python ch08_bellman.py</code></p>
 P_pi[s, ns] += pa * p          # 合并出一步转移概率
 np.linalg.solve(np.eye(n) - gamma * P_pi, r_pi)   # (I − γP_π) v = r_π
 </code></pre>
-<p><strong>代码里才看得到的</strong>：<code>np.linalg.solve</code> 比先求逆再相乘更快也更准，解方程组时一律用它。第 10 章会看到另一种算法：不解方程，而是从 0 开始反复代入式 3.14，数会一轮轮逼近同一个答案。</p><nav class="pager"><a href="07-value.html">← 第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a)</a><a href="09-optimal.html">第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot; →</a></nav>
+<p><strong>代码里才看得到的</strong>：<code>np.linalg.solve</code> 比先求逆再相乘更快也更准，解方程组时一律用它。第 10 章会看到另一种算法：不解方程，而是从 0 开始反复代入式 3.14，数会一轮轮逼近同一个答案。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li><code>solve_v(P, pi, 0.5)</code> → [3.49, 1.766]，和第 7 章跑很多局估的 3.483 对得上。</li>
+<li>把低电的策略改成"必充电"（<code>{0: 0.0, 1: 0.0, 2: 1.0}</code>），<code>solve_v(P, pi2, 0.9)</code> → [16.351, 14.716]，两个状态都比原来的 15.828、13.869 高：换策略，价值就跟着变。</li>
+</ol><nav class="pager"><a href="07-value.html">← 第 7 章 · 价值函数 value function：v_π(s) 和 q_π(s, a)</a><a href="09-optimal.html">第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot; →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

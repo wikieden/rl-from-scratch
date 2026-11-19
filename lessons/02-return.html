@@ -317,7 +317,17 @@ uv run python ch02_return.py</code></p>
 </tr>
 </tbody>
 </table>
-<p><strong>代码里才看得到的</strong>：Python 列表下标从 0 开始，所以 <code>rewards[0]</code> 存的是 <span class="arithmatex">\(R_1\)</span>。<code>episode_return(rewards, t)</code> 写成 <code>sum(rewards[t:])</code>：<span class="arithmatex">\(G_t\)</span> 从 <span class="arithmatex">\(R_{t+1}\)</span> 开始，正好对应 <code>rewards[t]</code>。讲义的下标和代码的下标差 1，这是 RL 代码里最常见的错位。</p><nav class="pager"><a href="01-agent-environment.html">← 第 1 章 · 智能体与环境 agent &amp; environment</a><a href="03-discount.html">第 3 章 · 折扣 discount γ：远处的奖励打个折 →</a></nav>
+<p><strong>关键几行</strong>：</p>
+<pre><code class="language-python">def episode_return(rewards, t=0):
+    return sum(rewards[t:])  # rewards[0] 是 R_1，G_t 从 R_{t+1} 加到最后
+[episode_return(rewards, t) for t in range(len(rewards) + 1)]  # 最后一个是 G_T = 0
+</code></pre>
+<p><strong>代码里才看得到的</strong>：Python 列表下标从 0 开始，所以 <code>rewards[0]</code> 存的是 <span class="arithmatex">\(R_1\)</span>。<code>episode_return(rewards, t)</code> 写成 <code>sum(rewards[t:])</code>：<span class="arithmatex">\(G_t\)</span> 从 <span class="arithmatex">\(R_{t+1}\)</span> 开始，正好对应 <code>rewards[t]</code>。讲义的下标和代码的下标差 1，这是 RL 代码里最常见的错位。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li><code>all_returns([0, 0, 0, 10])</code> → <code>[10, 10, 10, 10, 0]</code>：奖励只在最后一步给，前面每一步的回报也都是 10。</li>
+<li><code>all_returns([1] * 4)</code> → <code>[4, 3, 2, 1, 0]</code>：每步都有奖励时，越往后剩下的越少。</li>
+</ol><nav class="pager"><a href="01-agent-environment.html">← 第 1 章 · 智能体与环境 agent &amp; environment</a><a href="03-discount.html">第 3 章 · 折扣 discount γ：远处的奖励打个折 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

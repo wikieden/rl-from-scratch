@@ -308,7 +308,12 @@ uv run python ch04_expectation.py</code></p>
 <pre><code class="language-python">float(values @ probs)                           # 期望：值和概率做点积
 rng.choice(values, size=n, p=probs).mean()      # 按概率抽 n 次再取平均
 </code></pre>
-<p><strong>代码里才看得到的</strong>：期望就是"值向量"和"概率向量"的<strong>点积</strong>（Transformer 讲义第 2 章）：对位相乘再相加。<code>rng = np.random.default_rng(0)</code> 固定了随机种子，每次跑出来的 2.5、3.008 都一样，方便核对。</p><nav class="pager"><a href="03-discount.html">← 第 3 章 · 折扣 discount γ：远处的奖励打个折</a><a href="05-mdp.html">第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a) →</a></nav>
+<p><strong>代码里才看得到的</strong>：期望就是"值向量"和"概率向量"的<strong>点积</strong>（Transformer 讲义第 2 章）：对位相乘再相加。<code>rng = np.random.default_rng(0)</code> 固定了随机种子，每次跑出来的 2.5、3.008 都一样，方便核对。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li>骰子扭 10 / 100 / 10000 次：<code>sample_mean(range(1, 7), [1/6] * 6, n)</code> → 3.8、3.77、3.496，越来越接近期望 3.5。换个 <code>seed</code> 再跑，前两个数会变，最后一个几乎不变。</li>
+<li>把扭蛋概率改成一半一半：<code>expectation([10, 0], [0.5, 0.5])</code> → 5.0。期望跟着概率走。</li>
+</ol><nav class="pager"><a href="03-discount.html">← 第 3 章 · 折扣 discount γ：远处的奖励打个折</a><a href="05-mdp.html">第 5 章 · 马尔可夫决策过程 MDP：环境的&quot;说明书&quot; p(s&#x27;, r | s, a) →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>

@@ -311,6 +311,11 @@ opt.zero_grad(); loss.backward(); opt.step()                   # 第 17 章的�
 <li><strong><code>torch.no_grad()</code></strong>：告诉 PyTorch 这一段不要记录梯度：目标 y 当成常数（第三步"目标固定"在代码里就是这一行）；</li>
 <li><strong><code>gather</code></strong>：网络一次输出两个动作的 Q，但 loss 只能用"实际做了的那个动作"的 Q，<code>gather(1, A)</code> 按动作编号把它挑出来；</li>
 <li><strong><code>(1 - D)</code></strong>：回合结束时没有下一步，乘 0 把 <span class="arithmatex">\(\gamma\max Q\)</span> 去掉；忘了这一项是 DQN 最常见的 bug 之一。</li>
+</ol>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li><code>train_dqn(sync_every=1000)</code>：目标网络 1000 步才对齐一次，3000 步后 Q(·, 右) 是 0.09、0.055、0.81、0.9、1.0，离终点远的两格还没学到。目标网络对齐得太慢，价值往回传也慢。</li>
+<li><code>train_dqn(steps=500)</code> → 0.66、0.73、0.808、0.902、1.001：这个小走廊 500 步就够了。</li>
 </ol><nav class="pager"><a href="17-function-approx.html">← 第 17 章 · 函数近似与梯度下降：表格装不下，换成一个会&quot;猜&quot;的函数</a><a href="19-double-dqn.html">第 19 章 · 过估计与 Double DQN：max 会挑到&quot;运气好&quot;的那个 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>

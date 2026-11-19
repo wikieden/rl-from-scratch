@@ -186,6 +186,15 @@ footer{max-width:860px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-
 <li>右下的曲线是每轮最大变化 Δ，越来越小（第三步）；</li>
 <li>滑块跳到第 k 轮，对照图 4.1 的 k = 0、1、2、3、10、∞。</li>
 </ol>
+<h3 id="2-vs">动画演示 2：两张表 vs 原地更新（第四步）</h3>
+<p><img alt="两张表与原地更新" src="../animations/l10b-inplace.gif" /></p>
+<p>可交互版：<a href="../animations/l10b-inplace.html">animations/l10b-inplace.html</a>（滑块跳到第 k 轮）</p>
+<p><strong>怎么看</strong>：</p>
+<ol>
+<li>第 1 轮：左边两张表全是 −1，因为右边全用上一轮的 0；右边原地更新越往右下越负（−1.25、−1.5、−1.84…），因为它用到了这一轮刚算好的邻居。</li>
+<li>同样的停止条件（Δ &lt; 10⁻⁶），原地版 167 轮收敛，两张表 258 轮：新信息传得快。</li>
+<li>收敛值一样：0、−14、−20、−22。两种写法只影响快慢，不影响答案。</li>
+</ol>
 <h2 id="_2">练习与作答记录</h2>
 <p><strong>题 1</strong>：第 2 轮里，第 2 行第 2 列那格（不挨着终点）为什么是 −2？列出它四个方向的值。</p>
 <p><strong>作答</strong>：（待作答）</p>
@@ -314,7 +323,12 @@ uv run python ch10_policy_eval.py</code></p>
 if np.max(np.abs(new - v)) &lt; theta:   # Δ &lt; θ 就停
     return new
 </code></pre>
-<p><strong>代码里才看得到的</strong>：终点在代码里写成"做什么都留在原地、奖励 0、<code>done=True</code>"，<code>q_from_v</code> 遇到 <code>done</code> 就不加 <span class="arithmatex">\(\gamma v(s')\)</span>，所以终点的价值一直是 0。把 <code>sweep</code> 改成"算一格马上写回 v"就是原地版本，可以自己试试它要几轮收敛。</p><nav class="pager"><a href="09-optimal.html">← 第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot;</a><a href="11-policy-iteration.html">第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估 →</a></nav>
+<p><strong>代码里才看得到的</strong>：终点在代码里写成"做什么都留在原地、奖励 0、<code>done=True</code>"，<code>q_from_v</code> 遇到 <code>done</code> 就不加 <span class="arithmatex">\(\gamma v(s')\)</span>，所以终点的价值一直是 0。把 <code>sweep</code> 改成"算一格马上写回 v"就是原地版本，可以自己试试它要几轮收敛。</p>
+<p><strong>自己改一改</strong>（不影响练习答案）：</p>
+<ol>
+<li><code>policy_evaluation(..., theta=1e-2, history=True)</code>：88 轮就停，价值是 0、−13.9、−19.84、−21.83；<code>theta=1e-6</code> 要 257 轮，才到 −14、−20、−22。θ 决定"差多少算收敛"。</li>
+<li>把 γ 从 1 改成 0.9：88 轮收敛，第一行变成 0、−5.28、−7.13、−7.65。打折以后"远处的 −1"变轻了，所以数小得多。</li>
+</ol><nav class="pager"><a href="09-optimal.html">← 第 9 章 · 最优价值与 Bellman 最优方程：把&quot;平均&quot;换成&quot;挑最好的&quot;</a><a href="11-policy-iteration.html">第 11 章 · 策略改进与策略迭代：评估一下，改一改，再评估 →</a></nav>
 </main>
 <footer>来自个人学习仓库的对话讲义，含练习作答记录。源码：<a href="https://github.com/wikieden/rl-from-scratch">github.com/wikieden/rl-from-scratch</a>。更多讲义书：<a href="https://wikieden.github.io/ai-books/">AI 算法图解讲义（合集）</a></footer>
 </body></html>
